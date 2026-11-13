@@ -40,10 +40,11 @@ jobs:
         run: ./gradlew --no-daemon assembleDebug -PbuildNumber=${{ github.run_number }} 2>&1 | tee build.log
         shell: bash
 
-      - name: Show compiler errors (e: lines)
+      - name: "Show compiler errors (e: lines)"
         if: always()
         shell: bash
-        run: grep -E '^(e|w): ' build.log | head -100 || true
+        run: |
+          grep -E '^(e|w): ' build.log | head -100 || true
 
       - name: Rename APK with build number
         shell: bash
