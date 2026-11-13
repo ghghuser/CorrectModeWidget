@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CorrectMode</string>
+
+    <!-- 用語: 「着信音」= 音あり/バイブ/ミュートの切替。「DND」= サイレントモード(通知の制限)。両者は別物。 -->
+    <string name="ringer_label">着信音</string>
+    <string name="ringer_hint">音あり / バイブ / ミュート</string>
+    <string name="ringer_normal">音あり</string>
+    <string name="ringer_vibrate">バイブ</string>
+    <string name="ringer_mute">ミュート</string>
+    <string name="dnd_label">DND</string>
+    <string name="dnd_hint">サイレントモード</string>
+    <string name="dnd_off">オフ</string>
+    <string name="dnd_priority">優先のみ</string>
+    <string name="dnd_alarms">アラームのみ</string>
+    <string name="dnd_none">すべてブロック</string>
+    <string name="dnd_forced_note">このDNDの段階ではAndroid自身が端末を消音にするため、着信音の設定は変更しません。</string>
+
+    <string name="senders_none">なし</string>
+    <string name="senders_any">全員</string>
+    <string name="senders_contacts">連絡先のみ</string>
+    <string name="senders_starred">スター付きのみ</string>
+
+    <string name="allow_calls">着信</string>
+    <string name="allow_messages">メッセージ</string>
+    <string name="allow_media">メディア(音楽・動画・ゲーム)</string>
+    <string name="allow_media_bt">Bluetooth音声の接続中だけメディアも許可</string>
+    <string name="allow_media_bt_short">メディア(Bluetooth音声の接続中のみ)</string>
+    <string name="allow_alarms">アラーム</string>
+    <string name="allow_system">システム音(タッチ音など)</string>
+    <string name="allow_nothing">なし</string>
+    <string name="allowed_prefix">許可:</string>
+    <string name="priority_allows">「優先のみ」で通すもの</string>
+
+    <string name="preset_vib_dnd">マナーモード(バイブ+DND優先のみ)</string>
+    <string name="preset_vib">バイブのみ</string>
+    <string name="preset_mute">ミュートのみ</string>
+    <string name="preset_dnd">DND優先のみ(音あり)</string>
+    <string name="preset_normal">通常</string>
+
+    <string name="state_on">オン</string>
+    <string name="state_off">オフ</string>
+    <string name="turn_on">オンにする</string>
+    <string name="release">解除</string>
+    <string name="add">追加</string>
+    <string name="edit">編集</string>
+    <string name="delete">削除</string>
+    <string name="save">保存</string>
+    <string name="fix">設定</string>
+    <string name="name">名前</string>
+    <string name="new_profile">新しいプロファイル</string>
+    <string name="profile_new_title">プロファイルの新規作成</string>
+    <string name="profile_edit_title">プロファイルの編集</string>
+    <string name="delete_confirm">「%1$s」を削除しますか?</string>
+
+    <string name="status_title">現在の状態</string>
+    <string name="status_none">何もオンになっていません</string>
+    <string name="status_bt_media">🎧 Bluetooth音声の接続中:いまメディアを許可しています</string>
+    <string name="until_time">%1$sまで</string>
+    <string name="no_limit">期限なし</string>
+    <string name="released_text">解除しました。元の設定に戻しました。</string>
+    <string name="ended_external">端末が外から変更されたため、オフにしました(%1$s)。設定は上書きしていません。</string>
+
+    <string name="duration_label">自動解除</string>
+    <string name="duration_ask">毎回選ぶ</string>
+    <string name="duration_none">期限なし</string>
+    <string name="duration_30">30分</string>
+    <string name="duration_60">1時間</string>
+    <string name="duration_120">2時間</string>
+    <string name="duration_minutes">%1$d分</string>
+    <string name="duration_time">時刻を指定…</string>
+
+    <string name="perm_title">許可</string>
+    <string name="perm_dnd">サイレントモード(DND)へのアクセス</string>
+    <string name="perm_dnd_hint">必須です。許可がないと何も切り替えられません。</string>
+    <string name="perm_notif">通知</string>
+    <string name="perm_notif_hint">「オン中」の通知と解除ボタンの表示に必要です。</string>
+    <string name="perm_bt">Bluetooth(付近のデバイス)</string>
+    <string name="perm_bt_hint">イヤホンの検出と、車載機器との区別に必要です。</string>
+    <string name="perm_alarm">正確なアラーム(自動解除)</string>
+    <string name="perm_alarm_hint">許可がないと、自動解除が数分遅れることがあります。</string>
+
+    <string name="profiles_title">プロファイル</string>
+    <string name="profiles_hint">プロファイル=「着信音」と「DND」の組み合わせ1つ。それぞれをウィジェットのボタンにできます。</string>
+    <string name="widget_howto">ホーム画面を長押し → ウィジェット → CorrectMode。「トグル」は1x1(プロファイル1つ)、「切り替え」は横並びのボタン(複数のプロファイル)です。</string>
+    <string name="widget_toggle_title">CorrectMode トグル</string>
+    <string name="widget_switch_title">CorrectMode 切り替え</string>
+    <string name="widget_toggle_desc">プロファイル1つ:タップでオン/オフ。</string>
+    <string name="widget_switch_desc">複数のプロファイル:タップでそれに切り替え、オン中のものをタップで解除。</string>
+    <string name="widget_pick_one">このウィジェットのプロファイルを選んでください。</string>
+    <string name="widget_pick_many">このウィジェットに並べるプロファイルを選んでください。</string>
+    <string name="widget_pick_none">プロファイルを1つ以上選んでください。</string>
+    <string name="widget_setup">タップしてウィジェットを設定</string>
+    <string name="no_profiles">プロファイルがありません。アプリで作成してください。</string>
+
+    <string name="behavior_title">動作</string>
+    <string name="look_title">ウィジェットの見た目</string>
+    <string name="icon_pick">アイコン</string>
+    <string name="icon_custom">好きな絵文字を入力</string>
+    <string name="image_choose">画像を選ぶ…</string>
+    <string name="image_remove">画像を外す</string>
+    <string name="color_auto">自動</string>
+    <string name="color_bg_off">背景色(オフ時)</string>
+    <string name="color_bg_on">背景色(オン時)</string>
+    <string name="color_fg_off">アイコン・文字色(オフ時)</string>
+    <string name="color_fg_on">アイコン・文字色(オン時)</string>
+    <string name="shape">形</string>
+    <string name="shape_pill">円・カプセル</string>
+    <string name="shape_round">角丸</string>
+    <string name="shape_round_l">大きな角丸</string>
+    <string name="shape_square">四角</string>
+    <string name="icon_size">アイコンの大きさ</string>
+    <string name="size_small">小</string>
+    <string name="size_medium">中</string>
+    <string name="size_large">大</string>
+    <string name="show_label">ウィジェットに名前を表示</string>
+
+    <string name="settings_title">設定</string>
+    <string name="language">言語</string>
+    <string name="lang_system">システムに従う</string>
+    <string name="bt_target">「メディア許可」の対象のBluetooth機器</string>
+    <string name="bt_all">すべてのBluetooth音声機器</string>
+    <string name="bt_earphone">ヘッドセット・ヘッドホンのみ</string>
+    <string name="bt_target_hint">「Bluetooth音声の接続中だけメディアも許可」を選んだプロファイルにだけ関係します。「ヘッドセットのみ」では車載機器やスピーカーは数えません。</string>
+    <string name="vol_restore">解除時の音量</string>
+    <string name="vol_off">音量には触れない</string>
+    <string name="vol_saved">オンにする前の音量に戻す</string>
+    <string name="vol_fixed">決めた音量にする</string>
+    <string name="vol_hint">着信音・通知の音量は、着信音が「音あり」に戻る場合だけ復元します。</string>
+    <string name="vol_ring">着信音</string>
+    <string name="vol_notification">通知</string>
+    <string name="vol_media">メディア</string>
+    <string name="vol_alarm">アラーム</string>
+
+    <string name="terms_title">このアプリの用語</string>
+    <string name="terms_body">着信音 = 音あり/バイブ/ミュートの切替(英語圏で「Silent mode」と呼ばれるもの)。\nDND = Do Not Disturb(日本語の「サイレントモード」)。\n取り違えを避けるため、このアプリでは「着信音」と「DND」とだけ書きます。\nプロファイル = この2つの組み合わせ1つ。</string>
+
+    <string name="diag_title">診断</string>
+    <string name="diag_version">バージョン %1$s(ビルド %2$d)</string>
+    <string name="diag_no_error">エラーは記録されていません。</string>
+    <string name="diag_last_error">直近のエラー:</string>
+    <string name="diag_clear">消去</string>
+
+    <string name="channel_active">オン中のプロファイル</string>
+    <string name="channel_info">お知らせ</string>
+
+    <string name="err_no_access">サイレントモード(DND)へのアクセスが許可されていません。開いた設定画面でCorrectModeを許可してください。</string>
+    <string name="err_apply_failed">オンにできませんでした(%1$s)。元の設定に戻しました。</string>
+    <string name="err_restore_failed">元の設定を完全には戻せませんでした(%1$s)。音の設定を確認してください。</string>
+    <string name="err_verify_dnd">DNDが「%1$s」になりませんでした</string>
+    <string name="err_verify_ringer">着信音が「%1$s」になりませんでした</string>
+    <string name="err_bt_policy">Bluetooth用のメディア許可を更新できませんでした(%1$s)</string>
+    <string name="err_profile_missing">このプロファイルは存在しません。</string>
+    <string name="err_image">画像のエラー:%1$s</string>
+</resources>

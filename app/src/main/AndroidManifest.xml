@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- DND access (the user grants it in system settings) -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <!-- Detect headsets / earphones. Runtime permission. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- "Active" notification. Runtime permission. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Exact auto release. The app still works without it (inexact alarm). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Re-register the auto release after a reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Deliberately NO INTERNET permission. -->
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ProfileEditActivity"
+            android:exported="false" />
+
+        <!-- Exported only because the launcher must be able to start the widget configuration. The
+             activity checks that the widget id really belongs to this app. -->
+        <activity
+            android:name=".WidgetConfigActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <!-- Target of every widget tap. Own task, not in recents, not exported (only our PendingIntent). -->
+        <activity
+            android:name=".TapActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@style/TapTheme" />
+
+        <receiver
+            android:name=".ToggleWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_toggle_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/toggle_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".SwitchWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_switch_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/switch_widget_info" />
+        </receiver>
+
+        <!-- Private: only reachable through our own PendingIntents. -->
+        <receiver
+            android:name=".ExpireReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".ActionReceiver"
+            android:exported="false" />
+
+        <!-- These two must be exported: the senders are the system / the Bluetooth stack, not this app.
+             All actions are protected broadcasts (apps cannot send them) and are checked again in code. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".BtReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
