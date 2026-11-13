@@ -18,8 +18,12 @@ class ExpireReceiver : BroadcastReceiver() {
 /** Notification "Release" button. Not exported. */
 class ActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Notifier.ACTION_RELEASE) return
-        Engine.release(context, Reason.USER)
+        when (intent.action) {
+            Notifier.ACTION_RELEASE -> Engine.release(context, Reason.USER)
+            // The user swiped the "on" notification away: put it back if a profile is still on
+            // (reconcile re-checks the real state and does nothing when nothing is on).
+            Notifier.ACTION_REPOST -> Engine.reconcile(context)
+        }
     }
 }
 
@@ -56,7 +60,7 @@ class BtReceiver : BroadcastReceiver() {
             } catch (e: Exception) { null }
         } else null
         try { Engine.onBtChanged(app, gone) } catch (e: Exception) { }
-        h.postDelayed({ try { Engine.onBtChanged(app) } catch (e: Exception) { } }, 3000)
+        h.postDelayed({ try { Engine.onBtChanged(app, gone) } catch (e: Exception) { } }, 3000)
         h.postDelayed({
             try { Engine.onBtChanged(app) } catch (e: Exception) { }
             pending.finish()

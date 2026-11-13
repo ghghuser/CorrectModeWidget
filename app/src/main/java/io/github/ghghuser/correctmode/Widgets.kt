@@ -164,7 +164,14 @@ open class BaseWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
-        Store.removeWidgets(context, appWidgetIds)
+        // The providers are exported (the launcher needs that), so another app could send a fake "deleted".
+        // A real deletion has already removed the id from the system, so ids that still exist are ignored.
+        val alive = try {
+            val mgr = AppWidgetManager.getInstance(context)
+            (mgr.getAppWidgetIds(ComponentName(context, ToggleWidgetProvider::class.java)) +
+                mgr.getAppWidgetIds(ComponentName(context, SwitchWidgetProvider::class.java))).toSet()
+        } catch (e: Exception) { emptySet() }
+        Store.removeWidgets(context, appWidgetIds.filter { it !in alive }.toIntArray())
     }
 }
 

@@ -152,4 +152,9 @@
     <string name="err_bt_policy">Could not update the media permission for Bluetooth (%1$s)</string>
     <string name="err_profile_missing">This profile no longer exists.</string>
     <string name="err_image">Image error: %1$s</string>
+
+    <string name="allow_other">Reminders / events / repeat callers / conversations</string>
+    <string name="err_verify_policy">The “Priority only” allow list did not match (still allowed: %1$s)</string>
+    <string name="err_schedule">Could not schedule the auto release (%1$s). Please release it yourself.</string>
+    <string name="warn_dnd_remains">DND is still on. On Android 15+ an app can only switch off its own DND rule, so DND turned on by you or by another mode stays on.</string>
 </resources>

@@ -109,7 +109,7 @@ object Flow {
     fun toggle(a: Activity, p: Profile, onDone: () -> Unit) {
         if (Store.state(a).activeId == p.id) {
             val r = Engine.release(a, Reason.USER)
-            if (!r.ok) Ui.toast(a, r.message ?: "", true)
+            if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
             onDone()
         } else start(a, p, onDone)
     }
@@ -170,10 +170,8 @@ object Flow {
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
         val r = Engine.activate(a, p, expiresAt)
-        if (!r.ok) {
-            Ui.toast(a, r.message ?: "", true)
-            if (r.needAccess) Ui.openAccessSettings(a)
-        }
+        if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
+        if (!r.ok && r.needAccess) Ui.openAccessSettings(a)
         onDone()
     }
 }

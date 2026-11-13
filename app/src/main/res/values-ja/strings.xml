@@ -152,4 +152,9 @@
     <string name="err_bt_policy">Bluetooth用のメディア許可を更新できませんでした(%1$s)</string>
     <string name="err_profile_missing">このプロファイルは存在しません。</string>
     <string name="err_image">画像のエラー:%1$s</string>
+
+    <string name="allow_other">リマインダー・予定・繰り返し着信・会話</string>
+    <string name="err_verify_policy">「優先のみ」の許可項目が意図と一致しませんでした(許可されたまま:%1$s)</string>
+    <string name="err_schedule">自動解除を予約できませんでした(%1$s)。手動で解除してください。</string>
+    <string name="warn_dnd_remains">DNDはオンのままです。Android 15以降のアプリは自分のDNDルールしかオフにできないため、あなたや別のモードがオンにしたDNDは残ります。</string>
 </resources>

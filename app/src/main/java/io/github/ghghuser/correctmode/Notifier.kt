@@ -49,6 +49,7 @@ object Notifier {
     private const val ID_ACTIVE = 1
     private const val ID_INFO = 2
     const val ACTION_RELEASE = "io.github.ghghuser.correctmode.RELEASE"
+    const val ACTION_REPOST = "io.github.ghghuser.correctmode.REPOST"
 
     private fun nm(ctx: Context) = ctx.getSystemService(NotificationManager::class.java)
 
@@ -78,6 +79,10 @@ object Notifier {
                 ctx, 3, Intent(ctx, ActionReceiver::class.java).setAction(ACTION_RELEASE),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
+            val repost = PendingIntent.getBroadcast(
+                ctx, 4, Intent(ctx, ActionReceiver::class.java).setAction(ACTION_REPOST),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
             val until = if (st.expiresAt > 0) {
                 c.getString(R.string.until_time, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(st.expiresAt)))
             } else c.getString(R.string.no_limit)
@@ -91,6 +96,7 @@ object Notifier {
                 .setOnlyAlertOnce(true)
                 .setCategory(Notification.CATEGORY_STATUS)
                 .setContentIntent(openApp(ctx))
+                .setDeleteIntent(repost)
                 .addAction(Notification.Action.Builder(Icon.createWithResource(ctx, R.drawable.ic_stat), c.getString(R.string.release), release).build())
             if (st.expiresAt > 0) {
                 b.setWhen(st.expiresAt).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)

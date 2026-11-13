@@ -24,6 +24,10 @@ object Bt {
      *   from the phone speaker). Leaving it out makes the answer correct immediately.
      */
     fun audioConnected(ctx: Context, excludeAddress: String? = null): Boolean {
+        // Without BLUETOOTH_CONNECT Android does not deliver the connect / disconnect broadcasts to this app.
+        // "Media allowed" could then never be switched off again when the earphones are removed (the music
+        // would play from the speaker). So without the permission the answer is always "not connected".
+        if (!hasConnectPermission(ctx)) return false
         return try {
             val am = ctx.getSystemService(AudioManager::class.java)
             val earphoneOnly = Store.btMode(ctx) == BtMode.EARPHONE_ONLY

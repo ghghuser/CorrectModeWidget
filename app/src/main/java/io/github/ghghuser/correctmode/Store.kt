@@ -31,6 +31,10 @@ object Store {
         sp(ctx).edit().putInt("volFixed$index", pct.coerceIn(0, 100)).commit()
     }
 
+    /** How many times in a row a release could not restore the settings (see Engine.release). */
+    fun releaseFailures(ctx: Context): Int = sp(ctx).getInt("relFail", 0)
+    fun setReleaseFailures(ctx: Context, n: Int) { sp(ctx).edit().putInt("relFail", n).commit() }
+
     fun lastError(ctx: Context): String? = sp(ctx).getString("lastError", null)
     fun setLastError(ctx: Context, msg: String?) {
         sp(ctx).edit().apply { if (msg == null) remove("lastError") else putString("lastError", msg) }.commit()

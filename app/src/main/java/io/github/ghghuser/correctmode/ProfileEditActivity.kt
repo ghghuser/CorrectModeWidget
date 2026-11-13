@@ -395,7 +395,7 @@ class ProfileEditActivity : Activity() {
         if (st.activeId == p.id) {
             // it is on right now: apply the edited version, keeping the same end time
             val r = Engine.activate(this, p, st.expiresAt)
-            if (!r.ok) Ui.toast(this, r.message ?: "", true)
+            if (!r.ok || r.message != null) Ui.toast(this, r.message ?: "", true)
         }
         Widgets.updateAll(this)
         finish()

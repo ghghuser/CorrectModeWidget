@@ -86,7 +86,7 @@ class MainActivity : Activity() {
             if (st.btMedia && p.dnd == Dnd.PRIORITY && p.mediaOnBt) card.addView(Ui.text(this, s(R.string.status_bt_media), 13f))
             card.addView(Ui.button(this, s(R.string.release)) {
                 val r = Engine.release(this, Reason.USER)
-                if (!r.ok) Ui.toast(this, r.message ?: "", true)
+                if (!r.ok || r.message != null) Ui.toast(this, r.message ?: "", true)
                 rebuild()
             })
         }
