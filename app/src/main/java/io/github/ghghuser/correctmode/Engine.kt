@@ -51,9 +51,13 @@ object Engine {
 
     // ---- public API -----------------------------------------------------------------------
 
-    /** expiresAt: epoch millis, 0 = no limit. If another profile is active this is a "switch". */
+    /**
+     * expiresAt: epoch millis, 0 = no limit. If another profile is active this is a "switch".
+     * previousContent: when the ACTIVE profile was just edited, its content from BEFORE the edit. The rollback
+     * target must be what is really applied on the phone, not the new (possibly failing) version.
+     */
     @Synchronized
-    fun activate(ctx: Context, p: Profile, expiresAt: Long): Result {
+    fun activate(ctx: Context, p: Profile, expiresAt: Long, previousContent: Profile? = null): Result {
         val app = ctx.applicationContext
         if (!hasAccess(app)) {
             return Result(false, Loc.str(app, R.string.err_no_access), needAccess = true)
@@ -70,11 +74,13 @@ object Engine {
             Store.saveState(app, st) // 1. save before touching anything
             val problem = applySystem(app, p, bt)
             if (problem != null) {
-                Result(false, failAndRollBack(app, prev, snap, bt, problem))
+                Result(false, failAndRollBack(app, prev, snap, bt, problem, previousContent))
             } else {
                 Store.setLastError(app, null)
                 Store.setReleaseFailures(app, 0)
                 scheduleSafely(app, expiresAt)
+                // The audio system can still list a just-removed earphone: look again shortly after.
+                if (bt) Scheduler.scheduleRecheck(app, 10_000L)
                 Notifier.showActive(app, p, st)
                 Widgets.updateAll(app)
                 // "DND: off" cannot switch off a DND that the user / another mode turned on (Android 15+).
@@ -83,7 +89,7 @@ object Engine {
         } catch (e: Exception) {
             Log.e(TAG, "activate", e)
             val snap = snapForRollback
-            if (snap != null) Result(false, failAndRollBack(app, prev, snap, bt, describe(e)))
+            if (snap != null) Result(false, failAndRollBack(app, prev, snap, bt, describe(e), previousContent))
             else {
                 val msg = Loc.str(app, R.string.err_apply_failed, describe(e))
                 Store.setLastError(app, msg)
@@ -120,9 +126,12 @@ object Engine {
         if (problem != null && !noAccess && tries < MAX_RELEASE_TRIES) {
             // The restore failed although we have access: the phone is most likely STILL in the quiet state.
             // Stay "on" (that is the truth, and the saved original state is kept) so a retry is possible.
-            // The time limit is dropped so a failing alarm cannot loop.
+            // Auto release: try again in a minute (bounded by MAX_RELEASE_TRIES, so it cannot loop).
+            // A release by hand is not retried automatically: the user is looking at the screen.
+            val retryAt = if (reason == Reason.EXPIRED) System.currentTimeMillis() + 60_000L else 0L
             Store.setReleaseFailures(app, tries)
-            Store.saveState(app, st.copy(expiresAt = 0L))
+            Store.saveState(app, st.copy(expiresAt = retryAt))
+            if (retryAt > 0) scheduleSafely(app, retryAt)
             val msg = Loc.str(app, R.string.err_restore_failed, problem)
             Store.setLastError(app, msg)
             Notifier.info(app, msg)
@@ -177,6 +186,7 @@ object Engine {
         }
         if (st.expiresAt > 0) Scheduler.schedule(app, st.expiresAt)
         onBtChanged(app)
+        reapplyPolicyIfWidened(app, p, Store.state(app).btMedia)
         Notifier.showActive(app, p, Store.state(app))
         Widgets.updateAll(app)
     }
@@ -191,7 +201,8 @@ object Engine {
         val bt = Bt.audioConnected(app, justDisconnected)
         if (bt == st.btMedia) return
         try {
-            if (p.dnd == Dnd.PRIORITY && p.mediaOnBt && !p.media && hasAccess(app)) {
+            if (p.dnd == Dnd.PRIORITY && p.mediaOnBt && !p.media) {
+                if (!hasAccess(app)) throw IllegalStateException(Loc.str(app, R.string.err_no_access))
                 var problem: String? = null
                 for (i in 0 until 2) {
                     nm(app).notificationPolicy = buildPolicy(p, bt, nm(app).notificationPolicy)
@@ -205,15 +216,48 @@ object Engine {
             Store.saveState(app, st.copy(btMedia = bt))
         } catch (e: Exception) {
             Log.w(TAG, "onBtChanged", e)
-            Store.setLastError(app, Loc.str(app, R.string.err_bt_policy, describe(e)))
+            val msg = Loc.str(app, R.string.err_bt_policy, describe(e))
+            Store.setLastError(app, msg)
+            // Not saved as "in sync", so the next event retries. Do not wait for one: tell the user and retry.
+            Notifier.info(app, msg)
+            Scheduler.scheduleRecheck(app, 60_000L)
         }
     }
 
     // ---- internals ------------------------------------------------------------------------
 
+    /**
+     * Another app / the user may have allowed more than the profile allows (media, alarms, ...). That is
+     * LOUDER than asked, so it is written back. Not unverified-fatal: if it cannot be fixed the session
+     * stays on and the reason is shown in the diagnostics.
+     */
+    private fun reapplyPolicyIfWidened(app: Context, p: Profile, bt: Boolean) {
+        if (p.dnd != Dnd.PRIORITY) return
+        try {
+            if (policyProblem(app, p, bt) == null) return
+            val n = nm(app)
+            n.notificationPolicy = buildPolicy(p, bt, n.notificationPolicy)
+            val again = policyProblem(app, p, bt)
+            if (again != null) Store.setLastError(app, Loc.str(app, R.string.err_apply_failed, again))
+        } catch (e: Exception) {
+            Log.w(TAG, "reapplyPolicy", e)
+        }
+    }
+
     private fun endExternally(app: Context, why: String) {
+        val snap = Store.state(app).snapshot
         Scheduler.cancel(app)
         Store.clearState(app)
+        // The ringer is left alone (the user just changed it), but OUR DND rule is switched off, so the
+        // phone is not left in a hidden DND that the app no longer shows.
+        if (hasAccess(app)) {
+            try {
+                if (IMPLICIT_RULE) nm(app).setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+                else if (snap != null && snap.filter in 1..4) nm(app).setInterruptionFilter(snap.filter)
+            } catch (e: Exception) {
+                Log.w(TAG, "endExternally", e)
+            }
+        }
         Notifier.cancelActive(app)
         Notifier.info(app, Loc.str(app, R.string.ended_external, why))
         Widgets.updateAll(app)
@@ -224,10 +268,12 @@ object Engine {
      * profile when this was a switch (a failed switch must never make the phone louder), otherwise the
      * saved original state.
      */
-    private fun failAndRollBack(app: Context, prev: State, snap: Snapshot, bt: Boolean, problem: String): String {
+    private fun failAndRollBack(
+        app: Context, prev: State, snap: Snapshot, bt: Boolean, problem: String, previousContent: Profile? = null,
+    ): String {
         val msg = Loc.str(app, R.string.err_apply_failed, problem)
         Log.w(TAG, "activate failed: $problem")
-        val prevProfile = Store.profile(app, prev.activeId)
+        val prevProfile = previousContent ?: Store.profile(app, prev.activeId)
         var backToPrevious = false
         if (prevProfile != null && prev.snapshot != null) {
             backToPrevious = try { applySystem(app, prevProfile, bt) == null } catch (e: Exception) { false }

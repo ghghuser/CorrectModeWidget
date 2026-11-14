@@ -387,6 +387,7 @@ class ProfileEditActivity : Activity() {
     private fun save() {
         if (p.name.isBlank()) p.name = s(R.string.new_profile)
         val st = Store.state(this)
+        val before = Store.profile(this, p.id) // what is really applied on the phone if it is on now
         Store.upsert(this, p)
         val keep = p.imageFile
         created.filter { it != keep }.forEach { Store.imageFile(this, it).delete() }
@@ -394,7 +395,7 @@ class ProfileEditActivity : Activity() {
         saved = true
         if (st.activeId == p.id) {
             // it is on right now: apply the edited version, keeping the same end time
-            val r = Engine.activate(this, p, st.expiresAt)
+            val r = Engine.activate(this, p, st.expiresAt, previousContent = before)
             if (!r.ok || r.message != null) Ui.toast(this, r.message ?: "", true)
         }
         Widgets.updateAll(this)

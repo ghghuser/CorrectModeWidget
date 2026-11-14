@@ -36,6 +36,27 @@ object Scheduler {
 
     fun cancel(ctx: Context) {
         ctx.getSystemService(AlarmManager::class.java).cancel(pi(ctx))
+        ctx.getSystemService(AlarmManager::class.java).cancel(recheckPi(ctx))
+    }
+
+    const val ACTION_RECHECK = "io.github.ghghuser.correctmode.RECHECK"
+
+    private fun recheckPi(ctx: Context): PendingIntent = PendingIntent.getBroadcast(
+        ctx, 5,
+        Intent(ctx, ExpireReceiver::class.java).setAction(ACTION_RECHECK),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    /** One short "look at the real state again" alarm (Bluetooth race, failed media-permission update). */
+    fun scheduleRecheck(ctx: Context, delayMs: Long) {
+        val am = ctx.getSystemService(AlarmManager::class.java)
+        val at = System.currentTimeMillis() + delayMs
+        try {
+            if (am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, recheckPi(ctx))
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, recheckPi(ctx))
+        } catch (e: SecurityException) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, recheckPi(ctx))
+        }
     }
 }
 

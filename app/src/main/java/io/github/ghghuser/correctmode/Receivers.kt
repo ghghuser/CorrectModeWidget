@@ -10,7 +10,9 @@ import android.os.Looper
 /** Auto release alarm. Not exported: only our own PendingIntent can reach it. */
 class ExpireReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Scheduler.ACTION_EXPIRE) return
+        // EXPIRE = auto release; RECHECK = a short "look at the real state again" alarm. Both end in reconcile,
+        // which re-reads the device, so a forged or early call can never do more than that.
+        if (intent.action != Scheduler.ACTION_EXPIRE && intent.action != Scheduler.ACTION_RECHECK) return
         Engine.reconcile(context)
     }
 }

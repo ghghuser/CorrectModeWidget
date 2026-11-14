@@ -26,6 +26,12 @@ class TapActivity : Activity() {
             finishNow()
             return
         }
+        // A double tap must not turn it on and straight off again (that would put the loud state back).
+        val st = Store.state(this)
+        if (st.activeId == p.id && System.currentTimeMillis() - st.startedAt < 2000L) {
+            finishNow()
+            return
+        }
         Flow.toggle(this, p) { finishNow() }
     }
 
