@@ -36,6 +36,18 @@ jobs:
         continue-on-error: true
         run: yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
+      # Optional: branding/icon.svg or branding/icon.png becomes the launcher icon. Never fails the build.
+      - name: Custom launcher icon (best effort)
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ -f branding/icon.svg ] || [ -f branding/icon.png ]; then
+            python3 -m pip install --quiet pillow cairosvg || echo "pip failed - default icon is used"
+            python3 .github/scripts/make_icon.py || echo "icon conversion failed - default icon is used"
+          else
+            echo "no custom icon - default icon is used"
+          fi
+
       - name: Build debug APK
         run: ./gradlew --no-daemon assembleDebug -PbuildNumber=${{ github.run_number }} 2>&1 | tee build.log
         shell: bash

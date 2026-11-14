@@ -81,15 +81,19 @@ object Widgets {
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
 
         val bmp = p.imageFile?.let { BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
+        val iconRes = FlatIcons.res(p.iconKey)
+        // priority: own picture, then built-in flat icon, then emoji
+        rv.setViewVisibility(R.id.item_image, if (bmp != null) View.VISIBLE else View.GONE)
+        rv.setViewVisibility(R.id.item_icon, if (bmp == null && iconRes != null) View.VISIBLE else View.GONE)
+        rv.setViewVisibility(R.id.item_emoji, if (bmp == null && iconRes == null) View.VISIBLE else View.GONE)
         if (bmp != null) {
             rv.setImageViewBitmap(R.id.item_image, bmp)
-            rv.setViewVisibility(R.id.item_image, View.VISIBLE)
-            rv.setViewVisibility(R.id.item_emoji, View.GONE)
+        } else if (iconRes != null) {
+            rv.setImageViewResource(R.id.item_icon, iconRes)
+            rv.setColorInt(R.id.item_icon, "setColorFilter", fg.first, fg.second)
         } else {
             rv.setTextViewText(R.id.item_emoji, p.emoji)
             rv.setColorInt(R.id.item_emoji, "setTextColor", fg.first, fg.second)
-            rv.setViewVisibility(R.id.item_emoji, View.VISIBLE)
-            rv.setViewVisibility(R.id.item_image, View.GONE)
         }
         rv.setViewVisibility(R.id.item_label, if (p.showLabel) View.VISIBLE else View.GONE)
         rv.setTextViewText(R.id.item_label, p.name)
@@ -153,6 +157,8 @@ object Widgets {
         rv.setTextViewText(R.id.item_emoji, "⚙")
         rv.setColorInt(R.id.item_emoji, "setTextColor", FG_OFF.first, FG_OFF.second)
         rv.setViewVisibility(R.id.item_image, View.GONE)
+        rv.setViewVisibility(R.id.item_icon, View.GONE)
+        rv.setViewVisibility(R.id.item_emoji, View.VISIBLE)
         rv.setViewVisibility(R.id.item_label, View.GONE)
         rv.setContentDescription(R.id.item_root, Loc.str(ctx, R.string.widget_setup))
         rv.setOnClickPendingIntent(R.id.item_root, configIntent(ctx, id))

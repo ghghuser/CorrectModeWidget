@@ -1,5 +1,6 @@
 package io.github.ghghuser.correctmode
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 /** Ringer = what the volume key / "vibrate / mute" setting does. NOT the same thing as DND. */
@@ -70,6 +71,14 @@ data class Profile(
     var shape: Int = Shape.ROUND_L,
     var iconSize: Int = IconSize.MEDIUM,
     var showLabel: Boolean = false,
+    /** 0 = left tab, 1 = right tab (the user can name both) */
+    var tab: Int = 0,
+    /** key of a built-in flat icon (see FlatIcons); null = emoji */
+    var iconKey: String? = null,
+    /** what to do with the volumes when this profile is released (VolMode) */
+    var volMode: Int = VolMode.OFF,
+    /** percent 0..100 for ring, notification, media, alarm (used with VolMode.FIXED) */
+    var volFixed: List<Int> = listOf(50, 50, 50, 50),
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id); put("name", name)
@@ -82,6 +91,9 @@ data class Profile(
         bgOn?.let { put("bgOn", it) }; bgOff?.let { put("bgOff", it) }
         fgOn?.let { put("fgOn", it) }; fgOff?.let { put("fgOff", it) }
         put("shape", shape); put("iconSize", iconSize); put("showLabel", showLabel)
+        put("tab", tab)
+        iconKey?.let { put("icon", it) }
+        put("vm", volMode); put("vf", JSONArray(volFixed))
     }
 
     companion object {
@@ -106,6 +118,10 @@ data class Profile(
             shape = o.optInt("shape", Shape.ROUND_L).coerceIn(0, 3),
             iconSize = o.optInt("iconSize", IconSize.MEDIUM).coerceIn(0, 2),
             showLabel = o.optBoolean("showLabel", false),
+            tab = o.optInt("tab", 0).coerceIn(0, 1),
+            iconKey = if (o.has("icon")) o.optString("icon").takeIf { FlatIcons.has(it) } else null,
+            volMode = o.optInt("vm", VolMode.OFF).coerceIn(0, 2),
+            volFixed = (0 until 4).map { i -> o.optJSONArray("vf")?.optInt(i, 50)?.coerceIn(0, 100) ?: 50 },
         )
     }
 }
@@ -166,3 +182,6 @@ data class State(
         )
     }
 }
+
+/** Text put in front of the profile name where no picture is shown (notification, dialogs). */
+fun Profile.titlePrefix(): String = if (imageFile == null && iconKey == null) "$emoji " else ""

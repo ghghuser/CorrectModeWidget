@@ -115,7 +115,7 @@ object Engine {
                     val r = restoreSnapshot(app, snap)
                     // Volumes only AFTER the ringer / DND are back: while DND is still on, Android can refuse
                     // (or flip the ringer) when the ring volume is changed.
-                    if (r == null) restoreVolumes(app, snap)
+                    if (r == null) restoreVolumes(app, snap, Store.profile(app, st.activeId))
                     r
                 } catch (e: Exception) {
                     describe(e)
@@ -488,8 +488,8 @@ object Engine {
      * Optional volume restore. Ring / notification volumes are only touched when the restored ringer is
      * "sound": changing the ring volume while the ringer is vibrate/mute could switch the ringer on.
      */
-    private fun restoreVolumes(ctx: Context, snap: Snapshot) {
-        val mode = Store.volMode(ctx)
+    private fun restoreVolumes(ctx: Context, snap: Snapshot, p: Profile?) {
+        val mode = p?.volMode ?: return // the setting belongs to the profile that is being released
         if (mode == VolMode.OFF) return
         val am = am(ctx)
         STREAMS.forEachIndexed { idx, stream ->
@@ -498,7 +498,7 @@ object Engine {
             val target = if (mode == VolMode.FIXED) {
                 val min = am.getStreamMinVolume(stream)
                 val max = am.getStreamMaxVolume(stream)
-                (min + (max - min) * Store.volFixed(ctx, idx) / 100.0).roundToInt()
+                (min + (max - min) * p.volFixed.getOrElse(idx) { 50 } / 100.0).roundToInt()
             } else {
                 snap.volumes[stream] ?: return@forEachIndexed
             }

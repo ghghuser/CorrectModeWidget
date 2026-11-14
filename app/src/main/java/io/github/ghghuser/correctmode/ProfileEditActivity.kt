@@ -23,7 +23,9 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.ImageView
 import android.widget.ScrollView
+import android.widget.SeekBar
 import android.widget.TextView
 import java.io.FileOutputStream
 import kotlin.math.roundToInt
@@ -62,6 +64,7 @@ class ProfileEditActivity : Activity() {
     private lateinit var colorsBox: LinearLayout
     private lateinit var removeImg: android.widget.Button
     private lateinit var emojiEdit: EditText
+    private lateinit var iconBox: GridLayout
 
     private fun s(id: Int, vararg a: Any): String = getString(id, *a)
 
@@ -69,7 +72,7 @@ class ProfileEditActivity : Activity() {
         super.onCreate(savedInstanceState)
         val ex = Store.profile(this, intent?.getStringExtra("id"))
         isNew = ex == null
-        p = ex?.copy() ?: Profile(Store.newId(), s(R.string.new_profile))
+        p = ex?.copy() ?: Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
         origImage = ex?.imageFile
         title = s(if (isNew) R.string.profile_new_title else R.string.profile_edit_title)
 
@@ -78,9 +81,9 @@ class ProfileEditActivity : Activity() {
         buildBehavior(root)
         buildLook(root)
         buildButtons(root)
-        val scroll = ScrollView(this).apply { addView(root) }
-        scroll.applyBottomInsets()
-        setContentView(scroll)
+        // the check mark at the top right saves (the "Save" button at the bottom does the same)
+        val check = Ui.headerButton(this, "✓", s(R.string.save)) { save() }
+        setContentView(Ui.screen(this, title.toString(), true, root, listOf(check)))
         refreshBehavior()
         refreshLook()
     }
@@ -200,6 +203,38 @@ class ProfileEditActivity : Activity() {
         }
         setDurText()
         card.addView(durBtn)
+
+        // what happens to the volumes when THIS profile is released
+        val volBox = Ui.vbox(this)
+        fun refreshVol() {
+            volBox.removeAllViews()
+            val labels = listOf(s(R.string.vol_off), s(R.string.vol_saved), s(R.string.vol_fixed))
+            volBox.addView(Ui.button(this, s(R.string.vol_restore) + ": " + labels[p.volMode]) {
+                Ui.choose(this, s(R.string.vol_restore), labels, p.volMode) { i -> p.volMode = i; refreshVol() }
+            })
+            volBox.addView(Ui.text(this, s(R.string.vol_hint), 12f, secondary = true))
+            if (p.volMode == VolMode.FIXED) {
+                listOf(R.string.vol_ring, R.string.vol_notification, R.string.vol_media, R.string.vol_alarm).forEachIndexed { idx, res ->
+                    val label = Ui.text(this, s(res) + ": " + p.volFixed[idx] + "%", 13f)
+                    volBox.addView(label)
+                    volBox.addView(SeekBar(this).apply {
+                        max = 100
+                        progress = p.volFixed[idx]
+                        setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                            override fun onProgressChanged(sb: SeekBar, value: Int, fromUser: Boolean) {
+                                label.text = s(res) + ": " + value + "%"
+                            }
+                            override fun onStartTrackingTouch(sb: SeekBar) {}
+                            override fun onStopTrackingTouch(sb: SeekBar) {
+                                p.volFixed = p.volFixed.toMutableList().also { it[idx] = sb.progress }
+                            }
+                        })
+                    })
+                }
+            }
+        }
+        refreshVol()
+        card.addView(volBox)
         root.addView(card)
     }
 
@@ -219,13 +254,17 @@ class ProfileEditActivity : Activity() {
         val card = Ui.card(this)
         card.addView(Ui.text(this, s(R.string.look_title), 16f, bold = true))
 
+        card.addView(Ui.text(this, s(R.string.icon_flat_pick), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
+        iconBox = GridLayout(this).apply { columnCount = 6 }
+        card.addView(iconBox)
+
         card.addView(Ui.text(this, s(R.string.icon_pick), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
         val grid = GridLayout(this).apply { columnCount = 8 }
         for (e in EMOJIS) {
             grid.addView(Ui.text(this, e, 26f).apply {
                 setPadding(dp(6), dp(6), dp(6), dp(6))
                 setOnClickListener {
-                    p.emoji = e; p.imageFile = null
+                    p.emoji = e; p.imageFile = null; p.iconKey = null
                     emojiEdit.setText(e)
                     refreshLook()
                 }
@@ -239,7 +278,7 @@ class ProfileEditActivity : Activity() {
             filters = arrayOf(InputFilter.LengthFilter(8))
             setSingleLine()
             onChange {
-                if (hasFocus() && it.isNotEmpty()) { p.emoji = it; p.imageFile = null; refreshLook() }
+                if (hasFocus() && it.isNotEmpty()) { p.emoji = it; p.imageFile = null; p.iconKey = null; refreshLook() }
             }
         }
         card.addView(emojiEdit)
@@ -282,7 +321,28 @@ class ProfileEditActivity : Activity() {
         root.addView(card)
     }
 
+    private fun fillIcons() {
+        iconBox.removeAllViews()
+        val tint = android.content.res.ColorStateList.valueOf(Ui.text(this, "").currentTextColor)
+        for ((key, res) in FlatIcons.ALL) {
+            val selected = p.imageFile == null && p.iconKey == key
+            iconBox.addView(ImageView(this).apply {
+                setImageResource(res)
+                imageTintList = tint
+                setPadding(dp(8), dp(8), dp(8), dp(8))
+                contentDescription = key
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(10).toFloat()
+                    if (selected) { setColor(0x331F6FEB); setStroke(dp(2), 0xFF1F6FEB.toInt()) } else setStroke(dp(1), 0x33808080)
+                }
+                layoutParams = GridLayout.LayoutParams().apply { width = dp(46); height = dp(46); setMargins(dp(3), dp(3), dp(3), dp(3)) }
+                setOnClickListener { p.iconKey = key; p.imageFile = null; refreshLook() }
+            })
+        }
+    }
+
     private fun refreshLook() {
+        fillIcons()
         removeImg.visibility = if (p.imageFile != null) View.VISIBLE else View.GONE
         colorsBox.removeAllViews()
         colorsBox.addView(colorRow(s(R.string.color_bg_off), { p.bgOff }, { p.bgOff = it }))
@@ -364,6 +424,7 @@ class ProfileEditActivity : Activity() {
         }
         created.add(name)
         p.imageFile = name
+        p.iconKey = null
     }
 
     // ---- save / delete --------------------------------------------------------------------

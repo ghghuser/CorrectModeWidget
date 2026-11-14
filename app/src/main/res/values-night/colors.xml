@@ -2,4 +2,6 @@
 <resources>
     <color name="widget_bg_default">#30343A</color>
     <color name="widget_fg_default">#E3E6EA</color>
+    <color name="bg_top">#12203A</color>
+    <color name="bg_bottom">#0C1018</color>
 </resources>

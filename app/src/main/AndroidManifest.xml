@@ -30,6 +30,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false" />
+
         <!-- configChanges: rotating the screen must not throw away what is being edited (uiMode is left out
              on purpose so a dark/light switch still rebuilds the colours). -->
         <activity

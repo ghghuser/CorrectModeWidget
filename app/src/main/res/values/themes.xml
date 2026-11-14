@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.DayNight" />
+    <!-- No system action bar: every screen draws its own header (see Ui.screen) and handles the system bars
+         itself, because Android 15+ forces edge-to-edge. The background is a faint blue gradient. -->
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
 
     <!-- Invisible host for the duration dialog / widget tap (own task, never stays on screen). -->
     <style name="TapTheme" parent="@android:style/Theme.DeviceDefault.DayNight">

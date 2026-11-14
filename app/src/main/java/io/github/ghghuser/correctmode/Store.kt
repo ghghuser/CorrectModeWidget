@@ -22,13 +22,14 @@ object Store {
     fun btMode(ctx: Context): Int = sp(ctx).getInt("btMode", BtMode.ALL_AUDIO)
     fun setBtMode(ctx: Context, v: Int) { sp(ctx).edit().putInt("btMode", v).commit() }
 
-    fun volMode(ctx: Context): Int = sp(ctx).getInt("volMode", VolMode.OFF)
-    fun setVolMode(ctx: Context, v: Int) { sp(ctx).edit().putInt("volMode", v).commit() }
+    // ---- tab names (null = the default name) ----------------------------------------------
 
-    /** index: 0 ring, 1 notification, 2 media, 3 alarm; percent 0..100 */
-    fun volFixed(ctx: Context, index: Int): Int = sp(ctx).getInt("volFixed$index", 50).coerceIn(0, 100)
-    fun setVolFixed(ctx: Context, index: Int, pct: Int) {
-        sp(ctx).edit().putInt("volFixed$index", pct.coerceIn(0, 100)).commit()
+    fun rawTabName(ctx: Context, i: Int): String? = sp(ctx).getString("tab$i", null)?.takeIf { it.isNotBlank() }
+    fun tabName(ctx: Context, i: Int): String =
+        rawTabName(ctx, i) ?: Loc.str(ctx, if (i == 0) R.string.tab_default_0 else R.string.tab_default_1)
+    fun setTabName(ctx: Context, i: Int, name: String?) {
+        val n = name?.trim()?.take(20)
+        sp(ctx).edit().apply { if (n.isNullOrEmpty()) remove("tab$i") else putString("tab$i", n) }.commit()
     }
 
     /** How many times in a row a release could not restore the settings (see Engine.release). */
@@ -60,9 +61,9 @@ object Store {
         val s = sp(ctx).getString("profiles", null) ?: return seed(ctx)
         return try {
             val arr = JSONArray(s)
-            (0 until arr.length()).mapNotNull { i ->
+            migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
                 try { Profile.fromJson(arr.getJSONObject(i)) } catch (e: Exception) { null }
-            }
+            })
         } catch (e: Exception) { emptyList() }
     }
 
@@ -96,13 +97,56 @@ object Store {
         sp(ctx).edit().putString("widgets", w.toString()).commit()
     }
 
+    /** Moves up / down among the profiles of the SAME tab. */
     fun move(ctx: Context, id: String, delta: Int) {
         val list = profiles(ctx).toMutableList()
         val i = list.indexOfFirst { it.id == id }
-        val j = i + delta
-        if (i < 0 || j < 0 || j >= list.size) return
+        if (i < 0) return
+        var j = i + delta
+        while (j in list.indices && list[j].tab != list[i].tab) j += delta
+        if (j !in list.indices) return
         val t = list[i]; list[i] = list[j]; list[j] = t
         save(ctx, list)
+    }
+
+    /** Moves a profile to the other tab (it goes to the end of that tab). */
+    fun setTab(ctx: Context, id: String, tab: Int) {
+        val list = profiles(ctx).toMutableList()
+        val i = list.indexOfFirst { it.id == id }
+        if (i < 0) return
+        val p = list.removeAt(i)
+        p.tab = tab.coerceIn(0, 1)
+        list.add(p)
+        save(ctx, list)
+    }
+
+    /** Replaces the whole list (import). */
+    fun replaceProfiles(ctx: Context, list: List<Profile>) { save(ctx, list) }
+
+    // ---- one-time: the old preset emoji become the new flat icons ---------------------------
+
+    private fun namesBoth(ctx: Context, id: Int): Set<String> = listOf("ja", "en").map {
+        val c = android.content.res.Configuration(ctx.resources.configuration)
+        c.setLocale(Locale.forLanguageTag(it))
+        ctx.createConfigurationContext(c).getString(id)
+    }.toSet()
+
+    private fun migrateIcons(ctx: Context, list: List<Profile>): List<Profile> {
+        if (sp(ctx).getBoolean("iconMig1", false)) return list
+        val map = listOf(
+            Triple(R.string.preset_vib_dnd, "🤫", "bell_off"), Triple(R.string.preset_vib, "📳", "vibrate"),
+            Triple(R.string.preset_mute, "🔕", "volume_off"), Triple(R.string.preset_dnd, "🌙", "moon"),
+            Triple(R.string.preset_normal, "🔔", "bell"),
+        )
+        var changed = false
+        for (p in list) {
+            if (p.iconKey != null || p.imageFile != null) continue
+            val hit = map.firstOrNull { (res, emoji, _) -> p.emoji == emoji && p.name in namesBoth(ctx, res) } ?: continue
+            p.iconKey = hit.third; changed = true
+        }
+        if (changed) save(ctx, list)
+        sp(ctx).edit().putBoolean("iconMig1", true).commit()
+        return list
     }
 
     fun newId(): String = UUID.randomUUID().toString().replace("-", "").take(12)
@@ -142,13 +186,14 @@ object Store {
     private fun seed(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
         val list = listOf(
-            Profile(newId(), c.getString(R.string.preset_vib_dnd), Ringer.VIBRATE, Dnd.PRIORITY, emoji = "🤫"),
-            Profile(newId(), c.getString(R.string.preset_vib), Ringer.VIBRATE, Dnd.OFF, emoji = "📳"),
-            Profile(newId(), c.getString(R.string.preset_mute), Ringer.MUTE, Dnd.OFF, emoji = "🔕"),
-            Profile(newId(), c.getString(R.string.preset_dnd), Ringer.NORMAL, Dnd.PRIORITY, emoji = "🌙"),
-            Profile(newId(), c.getString(R.string.preset_normal), Ringer.NORMAL, Dnd.OFF, emoji = "🔔"),
+            Profile(newId(), c.getString(R.string.preset_vib_dnd), Ringer.VIBRATE, Dnd.PRIORITY, emoji = "🤫", iconKey = "bell_off"),
+            Profile(newId(), c.getString(R.string.preset_vib), Ringer.VIBRATE, Dnd.OFF, emoji = "📳", iconKey = "vibrate"),
+            Profile(newId(), c.getString(R.string.preset_mute), Ringer.MUTE, Dnd.OFF, emoji = "🔕", iconKey = "volume_off"),
+            Profile(newId(), c.getString(R.string.preset_dnd), Ringer.NORMAL, Dnd.PRIORITY, emoji = "🌙", iconKey = "moon"),
+            Profile(newId(), c.getString(R.string.preset_normal), Ringer.NORMAL, Dnd.OFF, emoji = "🔔", iconKey = "bell"),
         )
         save(ctx, list)
+        sp(ctx).edit().putBoolean("iconMig1", true).commit()
         return list
     }
 

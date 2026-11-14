@@ -107,7 +107,7 @@ object Notifier {
             val until = if (st.expiresAt > 0) {
                 c.getString(R.string.until_time, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(st.expiresAt)))
             } else c.getString(R.string.no_limit)
-            val title = (if (p.imageFile == null) p.emoji + " " else "") + p.name
+            val title = p.titlePrefix() + p.name
             val b = Notification.Builder(ctx, CH_ACTIVE)
                 .setSmallIcon(R.drawable.ic_stat)
                 .setContentTitle(title)

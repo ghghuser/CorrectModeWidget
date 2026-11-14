@@ -3,4 +3,7 @@
     <color name="launcher_bg">#1F6FEB</color>
     <color name="widget_bg_default">#E3E6EA</color>
     <color name="widget_fg_default">#30343A</color>
+    <!-- faint blue, kept light so text stays easy to read -->
+    <color name="bg_top">#E2EEFF</color>
+    <color name="bg_bottom">#F8FAFF</color>
 </resources>

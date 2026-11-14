@@ -2,33 +2,31 @@ package io.github.ghghuser.correctmode
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
-import android.view.View
 import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.SeekBar
-import android.widget.TextView
 import java.text.DateFormat
 import java.util.Date
 
+/** Main screen = the profiles (two tabs). Everything else lives behind the gear icon (SettingsActivity). */
 class MainActivity : Activity() {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(Loc.wrap(newBase))
 
     private lateinit var content: LinearLayout
+    private var tab = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        title = Loc.str(this, R.string.app_name)
-        content = Ui.vbox(this).apply { setPadding(dp(16), dp(8), dp(16), dp(24)) }
-        val scroll = ScrollView(this).apply { addView(content) }
-        scroll.applyBottomInsets()
-        setContentView(scroll)
-        if (savedInstanceState == null) askRuntimePermissionsOnce()
+        tab = try { getSharedPreferences("ui", MODE_PRIVATE).getInt("tab", 0).coerceIn(0, 1) } catch (e: Exception) { 0 }
+        content = Ui.vbox(this).apply { setPadding(dp(16), dp(4), dp(16), dp(24)) }
+        val gear = Ui.headerButton(this, "⚙", s(R.string.settings_title)) {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+        setContentView(Ui.screen(this, s(R.string.app_name), false, content, listOf(gear)))
+        if (savedInstanceState == null) askFirstTime()
     }
 
     override fun onResume() {
@@ -37,34 +35,55 @@ class MainActivity : Activity() {
         rebuild()
     }
 
-    private fun askRuntimePermissionsOnce() {
+    private fun s(id: Int, vararg a: Any): String = getString(id, *a)
+
+    // ---- first start: ask for the permissions that are still missing -----------------------
+
+    private fun askFirstTime() {
         val prefs = getSharedPreferences("ui", MODE_PRIVATE)
         if (prefs.getBoolean("askedPerms", false)) return
         prefs.edit().putBoolean("askedPerms", true).apply()
-        val missing = listOf(Manifest.permission.POST_NOTIFICATIONS, Manifest.permission.BLUETOOTH_CONNECT)
-            .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
-        if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 1)
+        val missing = missingRuntime()
+        if (missing.isEmpty() && Engine.hasAccess(this)) return
+        AlertDialog.Builder(this)
+            .setTitle(s(R.string.perm_first_title))
+            .setMessage(s(R.string.perm_first_body))
+            .setPositiveButton(s(R.string.perm_first_go)) { _, _ ->
+                if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), 1) else openAccessIfMissing()
+            }
+            .setNegativeButton(s(R.string.perm_first_later), null)
+            .show()
     }
+
+    private fun missingRuntime(): List<String> =
+        listOf(Manifest.permission.POST_NOTIFICATIONS, Manifest.permission.BLUETOOTH_CONNECT)
+            .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+
+    private fun openAccessIfMissing() { if (!Engine.hasAccess(this)) Ui.openAccessSettings(this) }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Engine.reconcile(this)
         rebuild()
+        if (requestCode == 1) openAccessIfMissing() // next step of the first-start flow
     }
 
-    private fun s(id: Int, vararg a: Any): String = getString(id, *a)
+    // ---- screen ---------------------------------------------------------------------------
 
     private fun rebuild() {
         content.removeAllViews()
+        addNoAccessBanner()
         addStatus()
-        addPermissions()
         addProfiles()
-        addSettings()
-        addTerms()
-        addDiagnostics()
     }
 
-    // ---- status ---------------------------------------------------------------------------
+    private fun addNoAccessBanner() {
+        if (Engine.hasAccess(this)) return
+        val card = Ui.card(this)
+        card.addView(Ui.text(this, "⚠️ " + s(R.string.perm_dnd_hint), 14f))
+        card.addView(Ui.button(this, s(R.string.fix)) { Ui.openAccessSettings(this) })
+        content.addView(card)
+    }
 
     private fun addStatus() {
         val st = Store.state(this)
@@ -93,49 +112,31 @@ class MainActivity : Activity() {
         content.addView(card)
     }
 
-    // ---- permissions ----------------------------------------------------------------------
-
-    private fun permRow(card: LinearLayout, label: String, ok: Boolean, hint: String, fix: (() -> Unit)?) {
-        val row = Ui.hbox(this)
-        row.addView(Ui.text(this, (if (ok) "✅ " else "⚠️ ") + label, 14f), Ui.lp(0, weight = 1f))
-        if (!ok && fix != null) row.addView(Ui.button(this, s(R.string.fix)) { fix() })
-        card.addView(row)
-        if (!ok) card.addView(Ui.text(this, hint, 12f, secondary = true))
-    }
-
-    private fun addPermissions() {
-        val card = Ui.card(this)
-        card.addView(Ui.text(this, s(R.string.perm_title), 16f, bold = true))
-        permRow(card, s(R.string.perm_dnd), Engine.hasAccess(this), s(R.string.perm_dnd_hint)) { Ui.openAccessSettings(this) }
-        permRow(card, s(R.string.perm_notif), checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED, s(R.string.perm_notif_hint)) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 2)
-        }
-        permRow(card, s(R.string.perm_bt), Bt.hasConnectPermission(this), s(R.string.perm_bt_hint)) {
-            requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 3)
-        }
-        permRow(card, s(R.string.perm_alarm), Scheduler.canExact(this), s(R.string.perm_alarm_hint)) {
-            try {
-                startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))
-            } catch (e: Exception) {
-                Ui.toast(this, e.javaClass.simpleName + ": " + e.message, true)
-            }
-        }
-        content.addView(card)
-    }
-
-    // ---- profiles -------------------------------------------------------------------------
-
     private fun addProfiles() {
         val head = Ui.hbox(this)
         head.addView(Ui.text(this, s(R.string.profiles_title), 18f, bold = true), Ui.lp(0, weight = 1f))
         head.addView(Ui.button(this, s(R.string.add)) {
-            startActivity(Intent(this, ProfileEditActivity::class.java))
+            startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("tab", tab))
         })
         content.addView(head)
         content.addView(Ui.text(this, s(R.string.profiles_hint), 12f, secondary = true))
 
+        content.addView(Ui.tabBar(this, listOf(Store.tabName(this, 0), Store.tabName(this, 1)), tab, { i ->
+            tab = i
+            try { getSharedPreferences("ui", MODE_PRIVATE).edit().putInt("tab", i).apply() } catch (e: Exception) { }
+            rebuild()
+        }) { i ->
+            Ui.promptText(this, s(R.string.tab_rename_title), s(R.string.tab_rename_hint), Store.rawTabName(this, i) ?: "", 20) { name ->
+                Store.setTabName(this, i, name)
+                rebuild()
+            }
+        })
+        content.addView(Ui.text(this, s(R.string.tab_hint), 11f, secondary = true))
+
         val activeId = Store.state(this).activeId
-        for (p in Store.profiles(this)) {
+        val list = Store.profiles(this).filter { it.tab == tab }
+        if (list.isEmpty()) content.addView(Ui.text(this, s(R.string.tab_empty), 13f, secondary = true).apply { setPadding(0, dp(12), 0, dp(12)) })
+        for (p in list) {
             val active = p.id == activeId
             val card = Ui.card(this)
             val top = Ui.hbox(this)
@@ -148,6 +149,8 @@ class MainActivity : Activity() {
             card.addView(top)
 
             val btns = Ui.hbox(this)
+            // right tab: "⇐" to the LEFT of "turn on"; left tab: "⇒" to the right of "▼"
+            if (tab == 1) btns.addView(Ui.button(this, "⇐") { moveTo(p, 0) }.apply { contentDescription = s(R.string.move_left) })
             btns.addView(Ui.button(this, s(if (active) R.string.release else R.string.turn_on)) {
                 Flow.toggle(this, p) { rebuild() }
             }, Ui.lp(0, weight = 1f))
@@ -156,87 +159,16 @@ class MainActivity : Activity() {
             }, Ui.lp(0, weight = 1f))
             btns.addView(Ui.button(this, "▲") { Store.move(this, p.id, -1); Widgets.updateAll(this); rebuild() })
             btns.addView(Ui.button(this, "▼") { Store.move(this, p.id, +1); Widgets.updateAll(this); rebuild() })
+            if (tab == 0) btns.addView(Ui.button(this, "⇒") { moveTo(p, 1) }.apply { contentDescription = s(R.string.move_right) })
             card.addView(btns)
             content.addView(card)
         }
         content.addView(Ui.text(this, s(R.string.widget_howto), 12f, secondary = true))
     }
 
-    // ---- settings -------------------------------------------------------------------------
-
-    private fun addSettings() {
-        content.addView(Ui.text(this, s(R.string.settings_title), 18f, bold = true).apply { setPadding(0, dp(12), 0, 0) })
-        val card = Ui.card(this)
-
-        val langs = listOf("system", "ja", "en")
-        val langLabels = listOf(s(R.string.lang_system), "日本語", "English")
-        val langNow = langs.indexOf(Store.language(this)).coerceAtLeast(0)
-        card.addView(Ui.button(this, s(R.string.language) + ": " + langLabels[langNow]) {
-            Ui.choose(this, s(R.string.language), langLabels, langNow) { i ->
-                Store.setLanguage(this, langs[i])
-                Widgets.updateAll(this)
-                recreate()
-            }
-        })
-
-        val btLabels = listOf(s(R.string.bt_all), s(R.string.bt_earphone))
-        val btNow = Store.btMode(this)
-        card.addView(Ui.button(this, s(R.string.bt_target) + ": " + btLabels[btNow]) {
-            Ui.choose(this, s(R.string.bt_target), btLabels, btNow) { i ->
-                Store.setBtMode(this, i)
-                Engine.onBtChanged(this)
-                rebuild()
-            }
-        })
-        card.addView(Ui.text(this, s(R.string.bt_target_hint), 12f, secondary = true))
-
-        val volLabels = listOf(s(R.string.vol_off), s(R.string.vol_saved), s(R.string.vol_fixed))
-        val volNow = Store.volMode(this)
-        card.addView(Ui.button(this, s(R.string.vol_restore) + ": " + volLabels[volNow]) {
-            Ui.choose(this, s(R.string.vol_restore), volLabels, volNow) { i ->
-                Store.setVolMode(this, i)
-                rebuild()
-            }
-        })
-        card.addView(Ui.text(this, s(R.string.vol_hint), 12f, secondary = true))
-        if (volNow == VolMode.FIXED) {
-            val names = listOf(R.string.vol_ring, R.string.vol_notification, R.string.vol_media, R.string.vol_alarm)
-            names.forEachIndexed { idx, nameRes ->
-                val label = Ui.text(this, s(nameRes) + ": " + Store.volFixed(this, idx) + "%", 13f)
-                val bar = SeekBar(this).apply {
-                    max = 100
-                    progress = Store.volFixed(this@MainActivity, idx)
-                    setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                        override fun onProgressChanged(sb: SeekBar, value: Int, fromUser: Boolean) {
-                            label.text = s(nameRes) + ": " + value + "%"
-                        }
-                        override fun onStartTrackingTouch(sb: SeekBar) {}
-                        override fun onStopTrackingTouch(sb: SeekBar) { Store.setVolFixed(this@MainActivity, idx, sb.progress) }
-                    })
-                }
-                card.addView(label)
-                card.addView(bar)
-            }
-        }
-        content.addView(card)
-    }
-
-    // ---- terms / diagnostics --------------------------------------------------------------
-
-    private fun addTerms() {
-        val card = Ui.card(this)
-        card.addView(Ui.text(this, s(R.string.terms_title), 16f, bold = true))
-        card.addView(Ui.text(this, s(R.string.terms_body), 13f))
-        content.addView(card)
-    }
-
-    private fun addDiagnostics() {
-        val card = Ui.card(this)
-        card.addView(Ui.text(this, s(R.string.diag_title), 16f, bold = true))
-        card.addView(Ui.text(this, s(R.string.diag_version, BuildConfig.VERSION_NAME, BuildConfig.BUILD_NUMBER), 13f))
-        val err = Store.lastError(this)
-        card.addView(Ui.text(this, if (err == null) s(R.string.diag_no_error) else s(R.string.diag_last_error) + "\n" + err, 13f))
-        if (err != null) card.addView(Ui.button(this, s(R.string.diag_clear)) { Store.setLastError(this, null); rebuild() })
-        content.addView(card)
+    private fun moveTo(p: Profile, toTab: Int) {
+        Store.setTab(this, p.id, toTab)
+        Widgets.updateAll(this)
+        rebuild()
     }
 }
