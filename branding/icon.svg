@@ -67,8 +67,8 @@
     <path d="M432 512 L512 432"/>
   </g>
 
-  <!-- 縁・タイル・絵文字をまとめて中心基準で0.80倍(背景と四隅の装飾は全面のまま) -->
-  <g transform="translate(256 256) scale(0.80) translate(-256 -256)">
+  <!-- 縁・タイル・絵文字をまとめて中心基準で0.86倍(背景と四隅の装飾は全面のまま) -->
+  <g transform="translate(256 256) scale(0.86) translate(-256 -256)">
   <!-- 立体感のある縁(ベゼル) -->
   <rect x="12" y="12" width="488" height="488" rx="112" fill="url(#frame)"/>
   <rect x="13" y="13" width="486" height="486" rx="111" fill="none" stroke="url(#hi)" stroke-width="2.5"/>
