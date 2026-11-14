@@ -73,7 +73,7 @@ object Widgets {
     }
 
     /** Shared by the real widgets and the preview in the editor. */
-    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?) {
+    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false) {
         val dp = ctx.resources.displayMetrics.density
         val bg = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val fg = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
@@ -100,16 +100,27 @@ object Widgets {
         rv.setViewPadding(R.id.item_content, pad, pad, pad, pad)
 
         val state = Loc.str(ctx, if (active) R.string.state_on else R.string.state_off)
+        rv.setFloat(R.id.item_root, "setAlpha", if (dim) 0.35f else 1f)
         rv.setContentDescription(R.id.item_root, p.name + ": " + state)
         if (tap != null) rv.setOnClickPendingIntent(R.id.item_root, tap)
     }
 
+    /** Toggle: one or more profiles. Each tap goes to the next one; after the last one it turns off. */
     private fun buildToggle(ctx: Context, id: Int): RemoteViews {
-        val p = Store.widgetProfiles(ctx, id)?.firstNotNullOfOrNull { Store.profile(ctx, it) }
-            ?: return placeholder(ctx, id)
+        val list = Store.widgetProfiles(ctx, id)?.mapNotNull { Store.profile(ctx, it) }
+        if (list.isNullOrEmpty()) return placeholder(ctx, id)
+        val activeId = Store.state(ctx).activeId
+        val on = list.firstOrNull { it.id == activeId }
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
-        bindItem(ctx, rv, p, Store.state(ctx).activeId == p.id, tapIntent(ctx, p.id))
+        bindItem(ctx, rv, on ?: list.first(), on != null, cycleIntent(ctx, id))
         return rv
+    }
+
+    fun cycleIntent(ctx: Context, widgetId: Int): PendingIntent {
+        val i = Intent(ctx, TapActivity::class.java)
+            .setData(Uri.parse("correctmode://cycle/$widgetId"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return PendingIntent.getActivity(ctx, 0, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
     private fun buildSwitch(ctx: Context, mgr: AppWidgetManager, id: Int): RemoteViews {
@@ -121,9 +132,14 @@ object Widgets {
         val vertical = h > w * 1.3
         val rv = RemoteViews(ctx.packageName, if (vertical) R.layout.widget_switch_v else R.layout.widget_switch_h)
         val activeId = Store.state(ctx).activeId
+        val oneIsOn = list.any { it.id == activeId }
+        // A RemoteViews update is applied on top of the view that is already on screen: without this the
+        // buttons are appended again on every update (they multiplied until the launcher redrew).
+        rv.removeAllViews(R.id.switch_container)
         for (p in list) {
             val item = RemoteViews(ctx.packageName, if (vertical) R.layout.widget_item_v else R.layout.widget_item_h)
-            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id))
+            // while one of this widget's profiles is on, all the others are greyed out
+            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id)
             rv.addView(R.id.switch_container, item)
         }
         return rv

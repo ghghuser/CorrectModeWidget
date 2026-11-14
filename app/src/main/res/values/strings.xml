@@ -82,13 +82,13 @@
 
     <string name="profiles_title">Profiles</string>
     <string name="profiles_hint">A profile is one combination of ringer and DND. Each profile can be a widget button.</string>
-    <string name="widget_howto">Long-press the home screen, choose Widgets, then CorrectMode. “Toggle” is 1x1 (one profile), “Switch” is a row of buttons (several profiles).</string>
+    <string name="widget_howto">Long-press the home screen → Widgets → CorrectMode. "Toggle" is 1x1 with one profile (on/off) or several (each tap goes to the next, then off). "Switch" is a row of buttons; all but the active one are greyed out.</string>
     <string name="widget_toggle_title">CorrectMode toggle</string>
     <string name="widget_switch_title">CorrectMode switch</string>
     <string name="widget_toggle_desc">One profile: tap to turn it on or off.</string>
     <string name="widget_switch_desc">Several profiles: tap one to switch to it, tap the active one to release.</string>
-    <string name="widget_pick_one">Choose the profile for this widget.</string>
-    <string name="widget_pick_many">Choose the profiles for this widget.</string>
+    <string name="widget_pick_one">Choose the profiles for this toggle (a profile = a Ringer + DND combination). With several, each tap goes to the next one from the top, and after the last one it turns off.</string>
+    <string name="widget_pick_many">Choose the profiles to show in this widget (a profile = a Ringer + DND combination).</string>
     <string name="widget_pick_none">Choose at least one profile.</string>
     <string name="widget_setup">Tap to set up this widget</string>
     <string name="no_profiles">No profiles yet. Create one in the app.</string>
@@ -157,4 +157,6 @@
     <string name="err_verify_policy">The “Priority only” allow list did not match (still allowed: %1$s)</string>
     <string name="err_schedule">Could not schedule the auto release (%1$s). Please release it yourself.</string>
     <string name="warn_dnd_remains">DND is still on. On Android 15+ an app can only switch off its own DND rule, so DND turned on by you or by another mode stays on.</string>
+    <string name="widget_pick_count">Profiles available: %1$d (add / edit them in the app)</string>
+    <string name="widget_open_app">Open the app (add / edit profiles)</string>
 </resources>

@@ -88,7 +88,9 @@ object Ui {
 
     fun openAccessSettings(a: Activity) {
         try {
-            a.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+            // NEW_TASK: the widget tap screen removes its own task when it finishes; the settings screen
+            // must not be part of that task (it used to disappear right after opening).
+            a.startActivity(Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         } catch (e: Exception) {
             toast(a, e.javaClass.simpleName + ": " + e.message, true)
         }

@@ -31,13 +31,15 @@ class WidgetConfigActivity : Activity() {
         setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId))
         valid = true
 
-        val multi = info.provider.className == SwitchWidgetProvider::class.java.name
-        title = Loc.str(this, if (multi) R.string.widget_switch_title else R.string.widget_toggle_title)
+        val multi = true // the toggle can hold several profiles too (each tap = next one)
+        val isSwitch = info.provider.className == SwitchWidgetProvider::class.java.name
+        title = Loc.str(this, if (isSwitch) R.string.widget_switch_title else R.string.widget_toggle_title)
 
         val profiles = Store.profiles(this)
         val current = Store.widgetProfiles(this, widgetId) ?: emptyList()
         val root = Ui.vbox(this).apply { setPadding(dp(16), dp(12), dp(16), dp(12)) }
-        root.addView(Ui.text(this, Loc.str(this, if (multi) R.string.widget_pick_many else R.string.widget_pick_one), 15f))
+        root.addView(Ui.text(this, Loc.str(this, if (isSwitch) R.string.widget_pick_many else R.string.widget_pick_one), 15f))
+        root.addView(Ui.text(this, Loc.str(this, R.string.widget_pick_count, Store.profiles(this).size), 12f, secondary = true))
 
         val checks = ArrayList<Pair<Profile, android.widget.CompoundButton>>()
         val group = RadioGroup(this)
@@ -56,6 +58,9 @@ class WidgetConfigActivity : Activity() {
         }
         if (!multi) root.addView(group)
 
+        root.addView(Ui.button(this, Loc.str(this, R.string.widget_open_app)) {
+            startActivity(Intent(this, MainActivity::class.java))
+        })
         val buttons = Ui.hbox(this)
         buttons.addView(Ui.button(this, getString(android.R.string.cancel)) { finish() }, Ui.lp(0, weight = 1f))
         buttons.addView(

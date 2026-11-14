@@ -82,13 +82,13 @@
 
     <string name="profiles_title">プロファイル</string>
     <string name="profiles_hint">プロファイル=「着信音」と「DND」の組み合わせ1つ。それぞれをウィジェットのボタンにできます。</string>
-    <string name="widget_howto">ホーム画面を長押し → ウィジェット → CorrectMode。「トグル」は1x1(プロファイル1つ)、「切り替え」は横並びのボタン(複数のプロファイル)です。</string>
+    <string name="widget_howto">ホーム画面を長押し → ウィジェット → CorrectMode。「トグル」は1x1で、選んだプロファイルを1つ(オン/オフ)または複数(タップごとに順番に切り替え→最後でオフ)。「切り替え」は横並びのボタンで、使用中以外はグレーになります。</string>
     <string name="widget_toggle_title">CorrectMode トグル</string>
     <string name="widget_switch_title">CorrectMode 切り替え</string>
     <string name="widget_toggle_desc">プロファイル1つ:タップでオン/オフ。</string>
     <string name="widget_switch_desc">複数のプロファイル:タップでそれに切り替え、オン中のものをタップで解除。</string>
-    <string name="widget_pick_one">このウィジェットのプロファイルを選んでください。</string>
-    <string name="widget_pick_many">このウィジェットに並べるプロファイルを選んでください。</string>
+    <string name="widget_pick_one">このトグルに入れるプロファイルを選んでください(プロファイル=着信音とDNDの組み合わせ)。複数選ぶと、タップするたびに 上から順に切り替わり、最後のあとでオフになります。</string>
+    <string name="widget_pick_many">このウィジェットに並べるプロファイルを選んでください(プロファイル=着信音とDNDの組み合わせ)。</string>
     <string name="widget_pick_none">プロファイルを1つ以上選んでください。</string>
     <string name="widget_setup">タップしてウィジェットを設定</string>
     <string name="no_profiles">プロファイルがありません。アプリで作成してください。</string>
@@ -157,4 +157,6 @@
     <string name="err_verify_policy">「優先のみ」の許可項目が意図と一致しませんでした(許可されたまま:%1$s)</string>
     <string name="err_schedule">自動解除を予約できませんでした(%1$s)。手動で解除してください。</string>
     <string name="warn_dnd_remains">DNDはオンのままです。Android 15以降のアプリは自分のDNDルールしかオフにできないため、あなたや別のモードがオンにしたDNDは残ります。</string>
+    <string name="widget_pick_count">登録済みのプロファイル: %1$d件(追加・編集はアプリで)</string>
+    <string name="widget_open_app">アプリを開く(プロファイルの追加・編集)</string>
 </resources>
