@@ -202,8 +202,8 @@ class WizardActivity : Activity() {
         appBox.addView(Ui.button(this, s(R.string.apps_open_btn)) { Ui.openPrioritySettings(this) })
         body.addView(appBox, Ui.lp())
 
-        muteRow(s(R.string.wiz_row_alarm), null, muteAlarm, { muteAlarm = it })
-        muteRow(s(R.string.wiz_row_media), null, muteMedia, { muteMedia = it }) { box, on ->
+        muteRow(s(R.string.wiz_row_alarm), s(R.string.wiz_alarm_note), muteAlarm, { muteAlarm = it })
+        muteRow(s(R.string.wiz_row_media), s(R.string.wiz_media_note), muteMedia, { muteMedia = it }) { box, on ->
             if (on) box.addView(CheckBox(this).apply {
                 text = s(R.string.wiz_media_bt_opt); isChecked = p.mediaOnBt
                 setOnCheckedChangeListener { _, v -> p.mediaOnBt = v }
@@ -212,7 +212,7 @@ class WizardActivity : Activity() {
         muteRow(s(R.string.wiz_row_touch), null, muteTouch, { muteTouch = it })
         muteRow(s(R.string.wiz_row_rem), null, muteRem, { muteRem = it })
         muteRow(s(R.string.wiz_row_evt), null, muteEvt, { muteEvt = it })
-        body.addView(small(s(R.string.wiz_foot1), 8), Ui.lp())
+        body.addView(small(s(if (vib) R.string.wiz_foot2 else R.string.wiz_foot2_mute), 8), Ui.lp())
         nav(s(R.string.wiz_next)) { applySounds(); go(AUTO) }
     }
 

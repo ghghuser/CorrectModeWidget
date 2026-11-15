@@ -293,14 +293,14 @@
     <string name="wiz_a_all_sub">音を全て鳴らさないプロファイルを作ります。音量を上げることもできなくなります。\nバイブありでも挙動は同じなのでミュートにしてあります。\n※アラームも鳴りません。アラームだけ鳴らしたいときは、一番上の項目を選んでください。</string>
     <string name="wiz_a_none">いいえ、音を鳴らす</string>
     <string name="wiz_a_none_sub">音を全て鳴らすプロファイルを作ります。</string>
-    <string name="wiz_foot1">※振動は、着信や通知が来たときに動作します。</string>
+    <string name="wiz_foot1">※振動は、着信や通知が来たときに動作します。ただし「消したい音がある」を選ぶと、アプリの通知は振動も止まります。</string>
     <string name="wiz_q2_hint_vib">チェックした音が消えます。着信とメッセージは、音の代わりにバイブで知らせます。</string>
     <string name="wiz_q2_hint_mute">チェックした音が消えます。ミュートなので、着信とメッセージは音も振動もありません。</string>
     <string name="wiz_row_calls">着信またはメッセージ</string>
     <string name="wiz_calls_sub">「全員 / 連絡先のみ / スター付きのみ / 鳴らさない」から、知らせる相手を選べます。選んだ相手はバイブで知らせます。それ以外の相手は、バイブも鳴りません。</string>
     <string name="wiz_calls_mute_note">音も振動もありません(ミュートのため)。</string>
     <string name="wiz_row_apps">アプリの通知</string>
-    <string name="wiz_apps_note">通知音は消えます。鳴らしたいアプリは端末の設定で選べます(全プロファイル共通の設定です)。</string>
+    <string name="wiz_apps_note">通知音も振動も止まります。鳴らしたい(振動させたい)アプリは、端末の設定で選べます(全プロファイル共通の設定です)。</string>
     <string name="apps_open_btn">鳴らすアプリを選ぶ(端末の設定を開く)</string>
     <string name="apps_open_fail">設定画面を開けませんでした。端末の設定で「サイレントモード/DND」を探してください。</string>
     <string name="wiz_row_alarm">アラーム</string>
@@ -317,4 +317,8 @@
     <string name="add_pattern">基本パターンから選ぶ</string>
     <string name="add_pattern_title">基本パターン</string>
     <string name="tab_hint_presets">基本パターンです。編集できます。編集画面の「初期化」で元に戻せます。</string>
+    <string name="wiz_foot2">※アプリの通知は、音と一緒に振動も止まります。振動で知らせるのは、上で選んだ着信・メッセージの相手だけです。</string>
+    <string name="wiz_foot2_mute">※ミュートでは、振動はありません。</string>
+    <string name="wiz_alarm_note">チェックしないと、バイブやミュートでもアラームは鳴ります。</string>
+    <string name="wiz_media_note">チェックしないと、バイブやミュートでも動画や音楽は鳴ります。</string>
 </resources>

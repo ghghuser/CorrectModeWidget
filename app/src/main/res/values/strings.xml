@@ -293,14 +293,14 @@
     <string name="wiz_a_all_sub">Creates a profile with no sound whatsoever. The volume cannot be raised either.\nIt behaves the same with or without vibration, so it uses Mute.\n※Alarms do not sound either. To keep only the alarm, choose the top option.</string>
     <string name="wiz_a_none">No, let it sound</string>
     <string name="wiz_a_none_sub">Creates a profile where everything sounds.</string>
-    <string name="wiz_foot1">※Vibration works when a call or notification comes in.</string>
+    <string name="wiz_foot1">※Vibration works when a call or notification comes in. But if you choose that some sounds should go, app notifications stop vibrating too.</string>
     <string name="wiz_q2_hint_vib">Checked sounds are turned off. Calls and messages notify you by vibration instead.</string>
     <string name="wiz_q2_hint_mute">Checked sounds are turned off. With Mute, calls and messages have no sound and no vibration.</string>
     <string name="wiz_row_calls">Calls or messages</string>
     <string name="wiz_calls_sub">Choose who may notify you: everyone / contacts / starred / nobody. They notify you by vibration. Everyone else does not even vibrate.</string>
     <string name="wiz_calls_mute_note">No sound and no vibration (because of Mute).</string>
     <string name="wiz_row_apps">App notifications</string>
-    <string name="wiz_apps_note">Their sounds are turned off. Apps that may still sound are chosen in the system settings (shared by all profiles).</string>
+    <string name="wiz_apps_note">Their sound and vibration stop. Apps that may still sound or vibrate are chosen in the system settings (shared by all profiles).</string>
     <string name="apps_open_btn">Choose apps that may sound (opens system settings)</string>
     <string name="apps_open_fail">Could not open the settings screen. Look for Do Not Disturb in the system settings.</string>
     <string name="wiz_row_alarm">Alarms</string>
@@ -317,4 +317,8 @@
     <string name="add_pattern">Pick a ready-made pattern</string>
     <string name="add_pattern_title">Ready-made patterns</string>
     <string name="tab_hint_presets">Ready-made patterns. You can edit them; Reset in the editor returns them to the first state.</string>
+    <string name="wiz_foot2">※App notifications stop vibrating along with their sound. Only the calls and messages chosen above notify you by vibration.</string>
+    <string name="wiz_foot2_mute">※With Mute there is no vibration.</string>
+    <string name="wiz_alarm_note">If unchecked, alarms still sound even in Vibrate or Mute.</string>
+    <string name="wiz_media_note">If unchecked, video and music still sound even in Vibrate or Mute.</string>
 </resources>
