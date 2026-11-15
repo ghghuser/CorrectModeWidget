@@ -105,6 +105,7 @@ object Backup {
             val keep = list.mapNotNull { it.imageFile }.toSet()
             Store.imageDir(app).listFiles()?.forEach { if (it.name !in keep) it.delete() }
             Widgets.updateAll(app)
+            Schedules.reschedule(app)
             return null
         } catch (e: Failure) {
             written.forEach { Store.imageFile(app, it).delete() }
