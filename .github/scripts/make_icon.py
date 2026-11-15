@@ -1,24 +1,37 @@
-"""Turns branding/icon.svg or branding/icon.png into the adaptive launcher icon. Best effort:
+"""Turns icon/icon.svg or icon/icon.png into the adaptive launcher icon. Best effort:
 the workflow step ignores a failure of this script (the default icon is then kept)."""
 import os, sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-SVG = os.path.join(ROOT, "branding", "icon.svg")
-PNG = os.path.join(ROOT, "branding", "icon.png")
+SVG = os.path.join(ROOT, "icon", "icon.svg")
+PNG = os.path.join(ROOT, "icon", "icon.png")
 RES = os.path.join(ROOT, "app", "src", "main", "res")
 SIZE = 432  # 108 dp at xxxhdpi
 
+# optional picture for the widget picker (independent of the launcher icon)
+WP = os.path.join(ROOT, "icon", "widget_preview.png")
+if os.path.isfile(WP) and os.path.getsize(WP) < 1_000_000:
+    try:
+        wp = Image.open(WP).convert("RGBA")
+        if max(wp.size) > 1024:
+            wp.thumbnail((1024, 1024), Image.LANCZOS)
+        os.makedirs(os.path.join(RES, "drawable-nodpi"), exist_ok=True)
+        wp.save(os.path.join(RES, "drawable-nodpi", "widget_preview.png"))
+        print("custom widget preview written")
+    except Exception as e:  # keep the default (app icon)
+        print("widget preview skipped:", e)
+
 if os.path.isfile(SVG):
     import cairosvg
-    tmp = os.path.join(ROOT, "branding", ".icon_from_svg.png")
+    tmp = os.path.join(ROOT, "icon", ".icon_from_svg.png")
     cairosvg.svg2png(url=SVG, write_to=tmp, output_width=1024, output_height=1024)
     src = Image.open(tmp).convert("RGBA")
     os.remove(tmp)
 elif os.path.isfile(PNG):
     src = Image.open(PNG).convert("RGBA")
 else:
-    print("no branding/icon.svg or icon.png - nothing to do")
+    print("no icon/icon.svg or icon.png - nothing to do")
     sys.exit(0)
 
 w, h = src.size

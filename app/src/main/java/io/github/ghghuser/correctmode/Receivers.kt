@@ -12,8 +12,10 @@ class ExpireReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // EXPIRE = auto release; RECHECK = a short "look at the real state again" alarm. Both end in reconcile,
         // which re-reads the device, so a forged or early call can never do more than that.
-        if (intent.action != Scheduler.ACTION_EXPIRE && intent.action != Scheduler.ACTION_RECHECK) return
-        Engine.reconcile(context)
+        when (intent.action) {
+            Scheduler.ACTION_EXPIRE, Scheduler.ACTION_RECHECK -> Engine.reconcile(context)
+            Schedules.ACTION -> Schedules.runDue(context) // timer that turns a profile on
+        }
     }
 }
 
@@ -36,7 +38,10 @@ class ActionReceiver : BroadcastReceiver() {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> Engine.reconcile(context)
+            Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                Engine.reconcile(context)
+                Schedules.runDue(context) // also re-registers the timer alarm
+            }
         }
     }
 }

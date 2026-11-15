@@ -46,7 +46,7 @@ An Android 16/17 widget app that switches combinations of **Ringer** (sound / vi
 
 ## アプリのアイコンを変える
 
-[branding/](branding/README.md) に `icon.svg` または `icon.png` を置いて push すると、ビルド時にランチャーアイコンへ変換されます(失敗しても標準アイコンのままビルドは成功)。
+[icon/](icon/README.md) に `icon.svg` または `icon.png` を置いて push すると、ビルド時にランチャーアイコンへ変換されます(失敗しても標準アイコンのままビルドは成功)。
 
 ## 権限
 

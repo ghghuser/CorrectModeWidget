@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.Gravity
+import android.view.View
 import android.widget.LinearLayout
 import java.text.DateFormat
 import java.util.Date
@@ -31,7 +33,9 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        tab = try { getSharedPreferences("ui", MODE_PRIVATE).getInt("tab", tab).coerceIn(0, 1) } catch (e: Exception) { tab }
         Engine.reconcile(this)
+        Schedules.reschedule(this) // safety net: keeps the timer alarm in step with the profiles
         rebuild()
     }
 
@@ -115,9 +119,7 @@ class MainActivity : Activity() {
     private fun addProfiles() {
         val head = Ui.hbox(this)
         head.addView(Ui.text(this, s(R.string.profiles_title), 18f, bold = true), Ui.lp(0, weight = 1f))
-        head.addView(Ui.button(this, s(R.string.add)) {
-            startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("tab", tab))
-        })
+        head.addView(Ui.button(this, s(R.string.add)) { chooseHowToAdd() })
         content.addView(head)
         content.addView(Ui.text(this, s(R.string.profiles_hint), 12f, secondary = true))
 
@@ -132,43 +134,84 @@ class MainActivity : Activity() {
             }
         })
         content.addView(Ui.text(this, s(R.string.tab_hint), 11f, secondary = true))
+        content.addView(Ui.text(this, s(R.string.main_hint), 11f, secondary = true))
+        content.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(4), 0, dp(2)) })
 
         val activeId = Store.state(this).activeId
         val list = Store.profiles(this).filter { it.tab == tab }
         if (list.isEmpty()) content.addView(Ui.text(this, s(R.string.tab_empty), 13f, secondary = true).apply { setPadding(0, dp(12), 0, dp(12)) })
-        for (p in list) {
-            val active = p.id == activeId
-            val card = Ui.card(this)
-            val top = Ui.hbox(this)
-            top.addView(Widgets.preview(this, p, active, 52))
-            val col = Ui.vbox(this).apply { setPadding(dp(12), 0, 0, 0) }
-            col.addView(Ui.text(this, p.name, 16f, bold = true))
-            col.addView(Ui.text(this, Describe.detail(this, p), 12f, secondary = true))
-            col.addView(Ui.text(this, s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), 12f, secondary = true))
-            top.addView(col, Ui.lp(0, weight = 1f))
-            card.addView(top)
-
-            val btns = Ui.hbox(this)
-            // right tab: "⇐" to the LEFT of "turn on"; left tab: "⇒" to the right of "▼"
-            if (tab == 1) btns.addView(Ui.button(this, "⇐") { moveTo(p, 0) }.apply { contentDescription = s(R.string.move_left) })
-            btns.addView(Ui.button(this, s(if (active) R.string.release else R.string.turn_on)) {
-                Flow.toggle(this, p) { rebuild() }
-            }, Ui.lp(0, weight = 1f))
-            btns.addView(Ui.button(this, s(R.string.edit)) {
-                startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("id", p.id))
-            }, Ui.lp(0, weight = 1f))
-            btns.addView(Ui.button(this, "▲") { Store.move(this, p.id, -1); Widgets.updateAll(this); rebuild() })
-            btns.addView(Ui.button(this, "▼") { Store.move(this, p.id, +1); Widgets.updateAll(this); rebuild() })
-            if (tab == 0) btns.addView(Ui.button(this, "⇒") { moveTo(p, 1) }.apply { contentDescription = s(R.string.move_right) })
-            card.addView(btns)
-            content.addView(card)
-        }
+        for (p in list) content.addView(profileCard(p, p.id == activeId))
         content.addView(Ui.text(this, s(R.string.widget_howto), 12f, secondary = true))
+    }
+
+    /** Icon = turn on / off. Text area = edit (long press: menu). Right column = move up / down / to the other tab. */
+    private fun profileCard(p: Profile, active: Boolean): View {
+        val card = Ui.card(this, active)
+        val row = Ui.hbox(this)
+        row.gravity = Gravity.TOP
+
+        val icon = Widgets.preview(this, p, active, 60)
+        icon.contentDescription = p.name + ": " + s(if (active) R.string.release else R.string.turn_on)
+        icon.setOnClickListener { Flow.toggle(this, p) { rebuild() } }
+        row.addView(icon, Ui.lp(dp(60), dp(60)))
+
+        val col = Ui.vbox(this).apply { setPadding(dp(12), 0, dp(8), 0) }
+        col.addView(Ui.text(this, p.name, 16f, bold = true))
+        col.addView(Ui.text(this, Describe.chips(p), 14f))
+        col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
+        val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
+        col.addView(Ui.text(this, extra, 12f, secondary = true))
+        col.setOnClickListener { edit(p) }
+        col.setOnLongClickListener { showMenu(p); true }
+        row.addView(col, Ui.lp(0, weight = 1f))
+
+        // arrows: all the same size; the tab move is set apart so it is not hit by mistake
+        val arrows = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL }
+        fun arrow(symbol: String, desc: String, topGap: Int, onClick: () -> Unit) {
+            arrows.addView(Ui.button(this, symbol, onClick).apply {
+                minWidth = 0; minHeight = 0; setPadding(0, 0, 0, 0); contentDescription = desc
+            }, Ui.lp(dp(48), dp(40)).apply { topMargin = dp(topGap) })
+        }
+        arrow("▲", s(R.string.move_up), 0) { Store.move(this, p.id, -1); Widgets.updateAll(this); rebuild() }
+        arrow("▼", s(R.string.move_down), 4) { Store.move(this, p.id, +1); Widgets.updateAll(this); rebuild() }
+        if (tab == 0) arrow("⇛", s(R.string.move_right), 14) { moveTo(p, 1) }
+        else arrow("⇚", s(R.string.move_left), 14) { moveTo(p, 0) }
+        row.addView(arrows)
+        card.addView(row)
+        return card
+    }
+
+    private fun edit(p: Profile) {
+        startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("id", p.id))
+    }
+
+    private fun showMenu(p: Profile) {
+        val items = arrayOf(s(R.string.menu_edit), s(R.string.menu_copy), s(R.string.delete))
+        AlertDialog.Builder(this).setTitle(p.titlePrefix() + p.name).setItems(items) { _, which ->
+            when (which) {
+                0 -> edit(p)
+                1 -> { ProfileOps.copy(this, p); tab = 0; rebuild() }
+                else -> AlertDialog.Builder(this)
+                    .setMessage(s(R.string.delete_confirm, p.name))
+                    .setPositiveButton(s(R.string.delete)) { _, _ -> ProfileOps.delete(this, p); rebuild() }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+        }.show()
+    }
+
+    private fun chooseHowToAdd() {
+        val items = arrayOf(s(R.string.add_wizard), s(R.string.add_manual))
+        AlertDialog.Builder(this).setTitle(s(R.string.add_choose_title)).setItems(items) { _, which ->
+            val cls = if (which == 0) WizardActivity::class.java else ProfileEditActivity::class.java
+            startActivity(Intent(this, cls).putExtra("tab", tab))
+        }.show()
     }
 
     private fun moveTo(p: Profile, toTab: Int) {
         Store.setTab(this, p.id, toTab)
         Widgets.updateAll(this)
+        Ui.toast(this, s(R.string.moved_to, Store.tabName(this, toTab)))
         rebuild()
     }
 }

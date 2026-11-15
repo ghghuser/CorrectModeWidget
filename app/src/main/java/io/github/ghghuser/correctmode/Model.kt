@@ -36,6 +36,32 @@ object IconSize {
     const val LARGE = 2
 }
 
+/**
+ * The behaviours that really differ: ringer (3) x DND (4) = 12 combinations, but with DND "alarms only" /
+ * "block everything" Android overrides the ringer, so only 8 are distinct. ("Priority only" has further
+ * choices: who may call / message, media, alarms, touch sounds.)
+ */
+object Patterns {
+    val ALL: List<Pair<Int, Int>> = listOf(
+        Ringer.NORMAL to Dnd.OFF, Ringer.VIBRATE to Dnd.OFF, Ringer.MUTE to Dnd.OFF,
+        Ringer.NORMAL to Dnd.PRIORITY, Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.PRIORITY,
+        Ringer.VIBRATE to Dnd.ALARMS, Ringer.VIBRATE to Dnd.NONE,
+    )
+    val NAMES = listOf(
+        R.string.pat_1, R.string.pat_2, R.string.pat_3, R.string.pat_4,
+        R.string.pat_5, R.string.pat_6, R.string.pat_7, R.string.pat_8,
+    )
+    val ICONS = listOf("bell", "vibrate", "volume_off", "moon", "bell_off", "dnd", "bed", "flight")
+
+    fun indexOf(p: Profile): Int =
+        ALL.indexOfFirst { it.second == p.dnd && (p.dnd >= Dnd.ALARMS || it.first == p.ringer) }
+}
+
+/** Stored colour value 0 = "no background" (a real colour always has the alpha bits set). */
+object ColorMark {
+    const val TRANSPARENT = 0
+}
+
 object BtMode {
     const val ALL_AUDIO = 0
     const val EARPHONE_ONLY = 1
@@ -79,6 +105,16 @@ data class Profile(
     var volMode: Int = VolMode.OFF,
     /** percent 0..100 for ring, notification, media, alarm (used with VolMode.FIXED) */
     var volFixed: List<Int> = listOf(50, 50, 50, 50),
+    /** short vibration when this profile is switched from a widget */
+    var tapVibe: Boolean = false,
+    /** timer that turns this profile ON by itself (see Schedules) */
+    var schedOn: Boolean = false,
+    /** minutes since midnight */
+    var schedStart: Int = 22 * 60,
+    /** minutes since midnight; -1 = no end time (then the profile's own auto release applies) */
+    var schedEnd: Int = -1,
+    /** bit 0 = Monday ... bit 6 = Sunday */
+    var schedDays: Int = 127,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id); put("name", name)
@@ -94,6 +130,8 @@ data class Profile(
         put("tab", tab)
         iconKey?.let { put("icon", it) }
         put("vm", volMode); put("vf", JSONArray(volFixed))
+        put("vib", tapVibe)
+        put("son", schedOn); put("ss", schedStart); put("se", schedEnd); put("sd", schedDays)
     }
 
     companion object {
@@ -122,6 +160,11 @@ data class Profile(
             iconKey = if (o.has("icon")) o.optString("icon").takeIf { FlatIcons.has(it) } else null,
             volMode = o.optInt("vm", VolMode.OFF).coerceIn(0, 2),
             volFixed = (0 until 4).map { i -> o.optJSONArray("vf")?.optInt(i, 50)?.coerceIn(0, 100) ?: 50 },
+            tapVibe = o.optBoolean("vib", false),
+            schedOn = o.optBoolean("son", false),
+            schedStart = o.optInt("ss", 22 * 60).coerceIn(0, 1439),
+            schedEnd = o.optInt("se", -1).coerceIn(-1, 1439),
+            schedDays = o.optInt("sd", 127).and(127).let { if (it == 0) 127 else it },
         )
     }
 }

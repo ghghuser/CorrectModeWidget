@@ -94,15 +94,21 @@ object Ui {
         return row
     }
 
-    fun promptText(a: Activity, title: String, hint: String, initial: String, maxLen: Int, cb: (String) -> Unit) {
+    fun promptText(
+        a: Activity, title: String, hint: String, initial: String, maxLen: Int,
+        numeric: Boolean = false, onCancel: (() -> Unit)? = null, cb: (String) -> Unit,
+    ) {
         val et = android.widget.EditText(a).apply {
             setText(initial); setSelection(initial.length); setSingleLine()
+            if (numeric) inputType = android.text.InputType.TYPE_CLASS_DATETIME or android.text.InputType.TYPE_DATETIME_VARIATION_TIME
             filters = arrayOf(android.text.InputFilter.LengthFilter(maxLen))
             this.hint = hint
         }
         AlertDialog.Builder(a).setTitle(title).setView(et)
             .setPositiveButton(android.R.string.ok) { _, _ -> cb(et.text.toString()) }
-            .setNegativeButton(android.R.string.cancel, null).show()
+            .setNegativeButton(android.R.string.cancel) { _, _ -> onCancel?.invoke() }
+            .setOnCancelListener { onCancel?.invoke() }
+            .show()
     }
 
     fun text(ctx: Context, s: CharSequence, sp: Float = 14f, bold: Boolean = false, secondary: Boolean = false): TextView =
@@ -110,8 +116,20 @@ object Ui {
             text = s
             setTextSize(TypedValue.COMPLEX_UNIT_SP, sp)
             if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
-            if (secondary) alpha = 0.75f
+            // dark theme: slightly brighter text than the system default, for readability on the blue
+            if (ctx.isNight()) setTextColor(0xFFF3F6FB.toInt())
+            if (secondary) alpha = if (ctx.isNight()) 0.82f else 0.75f
         }
+
+    fun clock(minutes: Int): String = "%02d:%02d".format(minutes / 60, minutes % 60)
+
+    /** "⏰ 22:00–07:00 Mon Tue" or null when the profile has no timer. */
+    fun timerLabel(ctx: Context, p: Profile): String? {
+        if (!p.schedOn) return null
+        val days = if (p.schedDays == 127) Loc.str(ctx, R.string.sched_everyday)
+        else Loc.str(ctx, R.string.sched_day_names).split(',').filterIndexed { i, _ -> (p.schedDays shr i) and 1 != 0 }.joinToString(" ")
+        return "⏰ " + clock(p.schedStart) + (if (p.schedEnd >= 0) "–" + clock(p.schedEnd) else "") + " " + days
+    }
 
     fun button(ctx: Context, s: CharSequence, onClick: () -> Unit): Button =
         Button(ctx).apply {
@@ -127,13 +145,14 @@ object Ui {
         gravity = Gravity.CENTER_VERTICAL
     }
 
-    fun card(ctx: Context): LinearLayout = vbox(ctx).apply {
+    /** Light card on the blue background, with a clearly visible edge; the active profile gets a blue edge. */
+    fun card(ctx: Context, active: Boolean = false): LinearLayout = vbox(ctx).apply {
         val pad = ctx.dp(12)
         setPadding(pad, pad, pad, pad)
         background = GradientDrawable().apply {
             cornerRadius = ctx.dp(14).toFloat()
-            setColor(ctx.themeColor(android.R.attr.colorBackgroundFloating, Color.WHITE))
-            setStroke(ctx.dp(1), 0x33808080)
+            setColor(ctx.getColor(R.color.card_bg))
+            if (active) setStroke(ctx.dp(2), 0xFF1F6FEB.toInt()) else setStroke((ctx.resources.displayMetrics.density * 1.5f).toInt(), ctx.getColor(R.color.card_stroke))
         }
         layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             .apply { setMargins(0, ctx.dp(6), 0, ctx.dp(6)) }
@@ -176,10 +195,14 @@ object Ui {
 
 /** Turning a profile on / off from the widget, the main screen or the notification. */
 object Flow {
+    /** Set by TapActivity while it handles a widget tap: a successful switch then gives the profile's vibration. */
+    @Volatile var fromWidget = false
+
     fun toggle(a: Activity, p: Profile, onDone: () -> Unit) {
         if (Store.state(a).activeId == p.id) {
             val r = Engine.release(a, Reason.USER)
             if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
+            if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, false)
             onDone()
         } else start(a, p, onDone)
     }
@@ -198,22 +221,67 @@ object Flow {
         }
     }
 
+    /** "5", "90" = minutes, "1:30" = 1 h 30 min. null = not a usable number (1 minute .. 24 hours). */
+    fun parseMinutes(text: String): Int? {
+        val t = text.trim()
+        val m = if (':' in t) {
+            val parts = t.split(':')
+            val h = parts.getOrNull(0)?.toIntOrNull() ?: return null
+            val mi = parts.getOrNull(1)?.toIntOrNull() ?: return null
+            if (parts.size != 2) return null
+            h * 60 + mi
+        } else t.toIntOrNull() ?: return null
+        return if (m in 1..1440) m else null
+    }
+
     private fun ask(a: Activity, p: Profile, onDone: () -> Unit) {
-        val labels = listOf(
-            Ui.durationLabel(a, 30), Ui.durationLabel(a, 60), Ui.durationLabel(a, 120),
-            Loc.str(a, R.string.duration_time), Ui.durationLabel(a, Dur.NONE),
-        )
-        AlertDialog.Builder(a)
-            .setTitle(p.titlePrefix() + p.name)
-            .setItems(labels.toTypedArray()) { _, which ->
-                when (which) {
-                    0 -> go(a, p, System.currentTimeMillis() + 30 * 60_000L, onDone)
-                    1 -> go(a, p, System.currentTimeMillis() + 60 * 60_000L, onDone)
-                    2 -> go(a, p, System.currentTimeMillis() + 120 * 60_000L, onDone)
-                    3 -> pickTime(a, p, onDone)
-                    else -> go(a, p, 0L, onDone)
+        val box = Ui.vbox(a).apply { setPadding(a.dp(16), a.dp(8), a.dp(16), 0) }
+        var dialog: AlertDialog? = null
+        val remember = android.widget.CheckBox(a).apply { text = Loc.str(a, R.string.ask_dont_again) }
+
+        // a fixed length (minutes, 0 = no limit): with the tick, it is kept for next time after one more confirmation
+        fun pickDuration(minutes: Int) {
+            dialog?.dismiss()
+            if (!remember.isChecked) { go(a, p, if (minutes == 0) 0L else System.currentTimeMillis() + minutes * 60_000L, onDone); return }
+            val label = if (minutes == 0) Ui.durationLabel(a, Dur.NONE) else Ui.durationLabel(a, minutes)
+            AlertDialog.Builder(a)
+                .setMessage(Loc.str(a, R.string.ask_dont_again_confirm, label))
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    Store.upsert(a, p.copy(duration = if (minutes == 0) Dur.NONE else minutes))
+                    Widgets.updateAll(a)
+                    go(a, p, if (minutes == 0) 0L else System.currentTimeMillis() + minutes * 60_000L, onDone)
                 }
+                .setNegativeButton(android.R.string.cancel) { _, _ -> ask(a, p, onDone) } // back to the question
+                .setOnCancelListener { ask(a, p, onDone) }
+                .show()
+        }
+
+        fun row(label: String, onClick: () -> Unit) {
+            box.addView(Ui.button(a, label) { onClick() })
+        }
+        row(Ui.durationLabel(a, 30)) { pickDuration(30) }
+        row(Ui.durationLabel(a, 60)) { pickDuration(60) }
+        row(Ui.durationLabel(a, 120)) { pickDuration(120) }
+        row(Loc.str(a, R.string.duration_free)) {
+            dialog?.dismiss()
+            Ui.promptText(a, Loc.str(a, R.string.duration_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
+                val m = parseMinutes(text)
+                if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
+                else if (remember.isChecked) pickDuration(m) else go(a, p, System.currentTimeMillis() + m * 60_000L, onDone)
             }
+        }
+        row(Loc.str(a, R.string.duration_time)) {
+            if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
+            dialog?.dismiss(); pickTime(a, p, onDone)
+        }
+        row(Ui.durationLabel(a, Dur.NONE)) { pickDuration(0) }
+        // bottom right: "do not ask again"
+        box.addView(remember, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            gravity = Gravity.END; topMargin = a.dp(8)
+        })
+        dialog = AlertDialog.Builder(a)
+            .setTitle(p.titlePrefix() + p.name)
+            .setView(android.widget.ScrollView(a).apply { addView(box) })
             .setOnCancelListener { onDone() }
             .show()
     }
@@ -242,6 +310,7 @@ object Flow {
         val r = Engine.activate(a, p, expiresAt)
         if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
         if (!r.ok && r.needAccess) Ui.openAccessSettings(a)
+        if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, true)
         if (r.ok) nagPermissions(a, p)
         onDone()
     }
@@ -264,3 +333,6 @@ object Flow {
         } catch (e: Exception) { /* the toast was shown; nothing else to do */ }
     }
 }
+
+fun Context.isNight(): Boolean =
+    (resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES

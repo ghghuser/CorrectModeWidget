@@ -36,11 +36,8 @@ class ProfileEditActivity : Activity() {
 
     private companion object {
         const val REQ_IMG = 10
-        val EMOJIS = listOf(
-            "🤫", "📳", "🔕", "🔔", "🌙", "😴", "🎧", "🚗",
-            "🏢", "📚", "🎬", "🍽", "✈", "🏥", "🙏", "⛔",
-            "🔇", "🔈", "🧘", "💼", "🏠", "🚆", "🎮", "🎵",
-        )
+        // a short list: any emoji can be typed below, and any picture can be chosen
+        val EMOJIS = listOf("🤫", "📳", "🔕", "🔔", "🌙", "🎧", "🚗", "🏢", "📚", "🎬", "🏠", "💼")
         val PALETTE = listOf(
             0xFF1F6FEBL, 0xFF0F9D8AL, 0xFF2E7D32L, 0xFFF9A825L, 0xFFEF6C00L, 0xFFD32F2FL, 0xFFC2185BL,
             0xFF7B1FA2L, 0xFF455A64L, 0xFF000000L, 0xFFFFFFFFL, 0xFFE3E6EAL, 0xFF30343AL, 0xFF8AB4FFL,
@@ -65,6 +62,12 @@ class ProfileEditActivity : Activity() {
     private lateinit var removeImg: android.widget.Button
     private lateinit var emojiEdit: EditText
     private lateinit var iconBox: GridLayout
+    private lateinit var lookCard: LinearLayout
+    private lateinit var scroll: ScrollView
+    private lateinit var modeHolder: LinearLayout
+    private lateinit var choiceBox: LinearLayout
+    private lateinit var schedBox: LinearLayout
+    private var modeSet = true
 
     private fun s(id: Int, vararg a: Any): String = getString(id, *a)
 
@@ -78,12 +81,16 @@ class ProfileEditActivity : Activity() {
 
         val root = Ui.vbox(this).apply { setPadding(dp(16), dp(8), dp(16), dp(24)) }
         buildNameAndPreview(root)
+        modeSet = try { getSharedPreferences("ui", MODE_PRIVATE).getBoolean("editModeSet", true) } catch (e: Exception) { true }
         buildBehavior(root)
+        buildSchedule(root)
         buildLook(root)
         buildButtons(root)
         // the check mark at the top right saves (the "Save" button at the bottom does the same)
         val check = Ui.headerButton(this, "✓", s(R.string.save)) { save() }
-        setContentView(Ui.screen(this, title.toString(), true, root, listOf(check)))
+        val screen = Ui.screen(this, title.toString(), true, root, listOf(check))
+        scroll = (screen as LinearLayout).getChildAt(1) as ScrollView
+        setContentView(screen)
         refreshBehavior()
         refreshLook()
     }
@@ -122,6 +129,8 @@ class ProfileEditActivity : Activity() {
             val col = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(dp(6), 0, dp(6), 0) }
             col.addView(Widgets.preview(this, p, on, 72))
             col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true))
+            // tap the preview: jump to the look settings
+            col.setOnClickListener { scroll.post { scroll.smoothScrollTo(0, lookCard.top) } }
             previewBox.addView(col)
         }
     }
@@ -131,13 +140,14 @@ class ProfileEditActivity : Activity() {
     private fun buildNameAndPreview(root: LinearLayout) {
         previewBox = Ui.hbox(this)
         root.addView(previewBox)
+        root.addView(Ui.text(this, s(R.string.preview_hint), 11f, secondary = true))
         root.addView(Ui.text(this, s(R.string.name), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
         root.addView(EditText(this).apply {
             setText(p.name)
             inputType = InputType.TYPE_CLASS_TEXT
             filters = arrayOf(InputFilter.LengthFilter(30))
             setSingleLine()
-            onChange { p.name = it; effectText.text = Describe.detail(this@ProfileEditActivity, p); updatePreview() }
+            onChange { p.name = it; updateMatrix(); updatePreview() }
         })
     }
 
@@ -147,15 +157,13 @@ class ProfileEditActivity : Activity() {
         val card = Ui.card(this)
         card.addView(Ui.text(this, s(R.string.behavior_title), 16f, bold = true))
 
-        card.addView(Ui.text(this, s(R.string.ringer_label) + " (" + s(R.string.ringer_hint) + ")", 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
-        card.addView(radios(listOf(Ringer.NORMAL, Ringer.VIBRATE, Ringer.MUTE).map { Describe.ringer(this, it) }, p.ringer) {
-            p.ringer = it; refreshBehavior()
-        })
-
-        card.addView(Ui.text(this, s(R.string.dnd_label) + " (" + s(R.string.dnd_hint) + ")", 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
-        card.addView(radios(listOf(Dnd.OFF, Dnd.PRIORITY, Dnd.ALARMS, Dnd.NONE).map { Describe.dnd(this, it) }, p.dnd) {
-            p.dnd = it; refreshBehavior()
-        })
+        // two ways to pick the same two things (ringer + DND): a ready-made combination, or each one
+        modeHolder = Ui.vbox(this)
+        choiceBox = Ui.vbox(this)
+        card.addView(modeHolder)
+        card.addView(choiceBox)
+        fillMode()
+        fillChoice()
 
         forcedNote = Ui.text(this, s(R.string.dnd_forced_note), 12f, secondary = true)
         card.addView(forcedNote)
@@ -193,16 +201,24 @@ class ProfileEditActivity : Activity() {
         effectText = Ui.text(this, "", 13f).apply { setPadding(0, dp(8), 0, dp(4)) }
         card.addView(effectText)
 
-        val durLabels = DURATIONS.map { Ui.durationLabel(this, it) }
+        val durLabels = DURATIONS.map { Ui.durationLabel(this, it) } + s(R.string.duration_free)
         val durBtn = Ui.button(this, "") {}
         fun setDurText() { durBtn.text = s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration) }
         durBtn.setOnClickListener {
             Ui.choose(this, s(R.string.duration_label), durLabels, DURATIONS.indexOf(p.duration)) { i ->
-                p.duration = DURATIONS[i]; setDurText()
+                if (i < DURATIONS.size) { p.duration = DURATIONS[i]; setDurText() }
+                else Ui.promptText(this, s(R.string.duration_free_title), s(R.string.duration_free_hint), "", 6, numeric = true) { t ->
+                    val m = Flow.parseMinutes(t)
+                    if (m == null) Ui.toast(this, s(R.string.duration_free_bad), true) else { p.duration = m; setDurText() }
+                }
             }
         }
         setDurText()
         card.addView(durBtn)
+        card.addView(CheckBox(this).apply {
+            text = s(R.string.opt_tap_vibe); isChecked = p.tapVibe
+            setOnCheckedChangeListener { _, v -> p.tapVibe = v }
+        })
 
         // what happens to the volumes when THIS profile is released
         val volBox = Ui.vbox(this)
@@ -238,13 +254,108 @@ class ProfileEditActivity : Activity() {
         root.addView(card)
     }
 
+    // ---- timer: turns the profile on by itself ----------------------------------------------
+
+    private fun pickClock(initial: Int, onPick: (Int) -> Unit) {
+        android.app.TimePickerDialog(
+            this, { _, h, m -> onPick(h * 60 + m) }, initial / 60, initial % 60,
+            android.text.format.DateFormat.is24HourFormat(this),
+        ).show()
+    }
+
+    private fun buildSchedule(root: LinearLayout) {
+        val card = Ui.card(this)
+        card.addView(Ui.text(this, s(R.string.sched_title), 16f, bold = true))
+        card.addView(CheckBox(this).apply {
+            text = s(R.string.sched_enable); isChecked = p.schedOn
+            setOnCheckedChangeListener { _, v -> p.schedOn = v; fillSched() }
+        })
+        schedBox = Ui.vbox(this)
+        card.addView(schedBox)
+        root.addView(card)
+        fillSched()
+    }
+
+    private fun fillSched() {
+        schedBox.removeAllViews()
+        if (!p.schedOn) return
+        schedBox.addView(Ui.button(this, s(R.string.sched_start, Ui.clock(p.schedStart))) {
+            pickClock(p.schedStart) { p.schedStart = it; fillSched() }
+        })
+        schedBox.addView(CheckBox(this).apply {
+            text = s(R.string.sched_end_check); isChecked = p.schedEnd >= 0
+            setOnCheckedChangeListener { _, v -> p.schedEnd = if (v) (p.schedStart + 8 * 60) % 1440 else -1; fillSched() }
+        })
+        if (p.schedEnd >= 0) schedBox.addView(Ui.button(this, s(R.string.sched_end, Ui.clock(p.schedEnd))) {
+            pickClock(p.schedEnd) { p.schedEnd = it; fillSched() }
+        })
+        schedBox.addView(Ui.text(this, s(R.string.sched_days), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
+        val days = Ui.hbox(this)
+        val names = s(R.string.sched_day_names).split(',')
+        for (i in 0 until 7) {
+            val on = (p.schedDays shr i) and 1 != 0
+            days.addView(Ui.text(this, names.getOrElse(i) { "?" }, 14f, bold = on).apply {
+                gravity = Gravity.CENTER
+                setPadding(0, dp(10), 0, dp(10))
+                background = GradientDrawable().apply {
+                    cornerRadius = dp(10).toFloat()
+                    if (on) { setColor(0x331F6FEB); setStroke(dp(2), 0xFF1F6FEB.toInt()) } else setStroke(dp(1), 0x55808080)
+                }
+                setOnClickListener {
+                    val next = p.schedDays xor (1 shl i)
+                    if (next != 0) { p.schedDays = next; fillSched() } // at least one day stays selected
+                }
+            }, Ui.lp(0, weight = 1f).apply { setMargins(dp(2), 0, dp(2), 0) })
+        }
+        schedBox.addView(days)
+        schedBox.addView(Ui.text(this, s(R.string.sched_hint), 11f, secondary = true).apply { setPadding(0, dp(6), 0, 0) })
+    }
+
+    private fun fillMode() {
+        modeHolder.removeAllViews()
+        modeHolder.addView(Ui.tabBar(this, listOf(s(R.string.mode_set), s(R.string.mode_detail)), if (modeSet) 0 else 1, { i ->
+            modeSet = i == 0
+            try { getSharedPreferences("ui", MODE_PRIVATE).edit().putBoolean("editModeSet", modeSet).apply() } catch (e: Exception) { }
+            fillMode(); fillChoice()
+        }))
+    }
+
+    private fun fillChoice() {
+        choiceBox.removeAllViews()
+        if (modeSet) {
+            choiceBox.addView(Ui.text(this, s(R.string.mode_set_hint), 12f, secondary = true).apply { setPadding(0, dp(4), 0, dp(4)) })
+            val labels = Patterns.ALL.indices.map { i ->
+                val (r, d) = Patterns.ALL[i]
+                s(Patterns.NAMES[i]) + "\n" + Describe.chips(p.copy(ringer = r, dnd = d))
+            }
+            choiceBox.addView(radios(labels, Patterns.indexOf(p)) { i ->
+                p.ringer = Patterns.ALL[i].first; p.dnd = Patterns.ALL[i].second; refreshBehavior()
+            })
+            choiceBox.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true))
+        } else {
+            choiceBox.addView(Ui.text(this, s(R.string.ringer_label) + " (" + s(R.string.ringer_hint) + ")", 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
+            choiceBox.addView(radios(listOf(Ringer.NORMAL, Ringer.VIBRATE, Ringer.MUTE).map { Describe.ringer(this, it) }, p.ringer) {
+                p.ringer = it; refreshBehavior()
+            })
+            choiceBox.addView(Ui.text(this, s(R.string.dnd_label) + " (" + s(R.string.dnd_hint) + ")", 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
+            choiceBox.addView(radios(listOf(Dnd.OFF, Dnd.PRIORITY, Dnd.ALARMS, Dnd.NONE).map { Describe.dnd(this, it) }, p.dnd) {
+                p.dnd = it; refreshBehavior()
+            })
+        }
+    }
+
+    /** "What makes a sound with this setting" - recomputed on every change. */
+    private fun updateMatrix() {
+        effectText.text = s(R.string.matrix_title) + "\n" + Describe.matrixLines(this, p)
+    }
+
     private fun refreshBehavior() {
         detailBox.visibility = if (p.dnd == Dnd.PRIORITY) View.VISIBLE else View.GONE
         forcedNote.visibility = if (p.dnd == Dnd.ALARMS || p.dnd == Dnd.NONE) View.VISIBLE else View.GONE
         callsBtn.text = s(R.string.allow_calls) + ": " + Describe.senders(this, p.calls)
         msgBtn.text = s(R.string.allow_messages) + ": " + Describe.senders(this, p.messages)
         btCheck.visibility = if (p.media) View.GONE else View.VISIBLE
-        effectText.text = Describe.detail(this, p)
+        updateMatrix()
         updatePreview()
     }
 
@@ -252,6 +363,7 @@ class ProfileEditActivity : Activity() {
 
     private fun buildLook(root: LinearLayout) {
         val card = Ui.card(this)
+        lookCard = card
         card.addView(Ui.text(this, s(R.string.look_title), 16f, bold = true))
 
         card.addView(Ui.text(this, s(R.string.icon_flat_pick), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
@@ -345,22 +457,61 @@ class ProfileEditActivity : Activity() {
         fillIcons()
         removeImg.visibility = if (p.imageFile != null) View.VISIBLE else View.GONE
         colorsBox.removeAllViews()
-        colorsBox.addView(colorRow(s(R.string.color_bg_off), { p.bgOff }, { p.bgOff = it }))
-        colorsBox.addView(colorRow(s(R.string.color_bg_on), { p.bgOn }, { p.bgOn = it }))
-        colorsBox.addView(colorRow(s(R.string.color_fg_off), { p.fgOff }, { p.fgOff = it }))
-        colorsBox.addView(colorRow(s(R.string.color_fg_on), { p.fgOn }, { p.fgOn = it }))
+        colorsBox.addView(colorRow(s(R.string.color_bg_off), true, { p.bgOff }, { p.bgOff = it }))
+        colorsBox.addView(colorRow(s(R.string.color_bg_on), true, { p.bgOn }, { p.bgOn = it }))
+        colorsBox.addView(colorRow(s(R.string.color_fg_off), false, { p.fgOff }, { p.fgOff = it }))
+        colorsBox.addView(colorRow(s(R.string.color_fg_on), false, { p.fgOn }, { p.fgOn = it }))
         updatePreview()
     }
 
-    private fun colorRow(label: String, get: () -> Int?, set: (Int?) -> Unit): View {
+    private fun colorRow(label: String, allowNone: Boolean, get: () -> Int?, set: (Int?) -> Unit): View {
         val col = Ui.vbox(this).apply { setPadding(0, dp(6), 0, 0) }
         col.addView(Ui.text(this, label, 12f, secondary = true))
         val row = Ui.hbox(this)
         val cur = get()
+        val real = cur != null && cur != ColorMark.TRANSPARENT
         row.addView(swatch(null, cur == null) { set(null); refreshLook() })
-        for (c in PALETTE) row.addView(swatch(c, cur != null && (cur or 0xFF000000.toInt()) == c) { set(c); refreshLook() })
+        // background only: "no background" (the button stays tappable, just nothing is painted behind the icon)
+        if (allowNone) row.addView(noneSwatch(cur == ColorMark.TRANSPARENT) { set(ColorMark.TRANSPARENT); refreshLook() })
+        for (c in PALETTE) row.addView(swatch(c, real && (cur!! or 0xFF000000.toInt()) == c) { set(c); refreshLook() })
+        // the rainbow circle: any colour
+        val custom = real && PALETTE.none { (cur!! or 0xFF000000.toInt()) == it }
+        row.addView(rainbowSwatch(custom) {
+            ColorPicker.show(this, if (real) cur!! else 0xFF1F6FEB.toInt()) { c -> set(c); refreshLook() }
+        })
         col.addView(HorizontalScrollView(this).apply { addView(row); isHorizontalScrollBarEnabled = false })
         return col
+    }
+
+    private fun noneSwatch(selected: Boolean, onClick: () -> Unit): View {
+        val size = dp(34)
+        val v = Ui.text(this, s(R.string.color_transparent), 11f).apply {
+            gravity = Gravity.CENTER
+            background = GradientDrawable().apply {
+                cornerRadius = size / 2f
+                setStroke(dp(if (selected) 3 else 1), if (selected) 0xFF1F6FEB.toInt() else 0xFF808080.toInt(), dp(4).toFloat(), dp(3).toFloat())
+            }
+        }
+        v.layoutParams = LinearLayout.LayoutParams(dp(48), size).apply { setMargins(dp(3), dp(3), dp(3), dp(3)) }
+        v.contentDescription = s(R.string.color_transparent)
+        v.setOnClickListener { onClick() }
+        return v
+    }
+
+    private fun rainbowSwatch(selected: Boolean, onClick: () -> Unit): View {
+        val size = dp(34)
+        val v = View(this).apply {
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                gradientType = GradientDrawable.SWEEP_GRADIENT
+                colors = intArrayOf(0xFFFF0000.toInt(), 0xFFFFFF00.toInt(), 0xFF00FF00.toInt(), 0xFF00FFFF.toInt(), 0xFF0000FF.toInt(), 0xFFFF00FF.toInt(), 0xFFFF0000.toInt())
+                setStroke(dp(if (selected) 3 else 1), if (selected) 0xFF1F6FEB.toInt() else 0x55808080)
+            }
+        }
+        v.layoutParams = LinearLayout.LayoutParams(size, size).apply { setMargins(dp(3), dp(3), dp(3), dp(3)) }
+        v.contentDescription = s(R.string.color_custom)
+        v.setOnClickListener { onClick() }
+        return v
     }
 
     private fun swatch(color: Int?, selected: Boolean, onClick: () -> Unit): View {
@@ -435,6 +586,11 @@ class ProfileEditActivity : Activity() {
         row.addView(Ui.button(this, s(R.string.save)) { save() }, Ui.lp(0, weight = 1f))
         root.addView(row)
         if (!isNew) {
+            root.addView(Ui.button(this, s(R.string.menu_copy)) {
+                ProfileOps.copy(this, p)
+                getSharedPreferences("ui", MODE_PRIVATE).edit().putInt("tab", 0).apply() // the copy lives in the left tab
+                finish()
+            })
             root.addView(Ui.button(this, s(R.string.delete)) {
                 AlertDialog.Builder(this)
                     .setMessage(s(R.string.delete_confirm, p.name))
@@ -460,15 +616,14 @@ class ProfileEditActivity : Activity() {
             if (!r.ok || r.message != null) Ui.toast(this, r.message ?: "", true)
         }
         Widgets.updateAll(this)
+        Schedules.reschedule(this)
         finish()
     }
 
     private fun delete() {
-        if (Store.state(this).activeId == p.id) Engine.release(this, Reason.USER)
         saved = true
         created.forEach { Store.imageFile(this, it).delete() }
-        Store.delete(this, p.id)
-        Widgets.updateAll(this)
+        ProfileOps.delete(this, p)
         finish()
     }
 }

@@ -36,6 +36,10 @@ object Store {
     fun releaseFailures(ctx: Context): Int = sp(ctx).getInt("relFail", 0)
     fun setReleaseFailures(ctx: Context, n: Int) { sp(ctx).edit().putInt("relFail", n).commit() }
 
+    /** Diagnostics: how long the last widget tap took inside the app (ms), see TapActivity. */
+    fun lastTapMs(ctx: Context): Long = sp(ctx).getLong("tapMs", -1L)
+    fun setLastTapMs(ctx: Context, ms: Long) { sp(ctx).edit().putLong("tapMs", ms).apply() }
+
     fun lastError(ctx: Context): String? = sp(ctx).getString("lastError", null)
     fun setLastError(ctx: Context, msg: String?) {
         sp(ctx).edit().apply { if (msg == null) remove("lastError") else putString("lastError", msg) }.commit()
@@ -61,9 +65,9 @@ object Store {
         val s = sp(ctx).getString("profiles", null) ?: return seed(ctx)
         return try {
             val arr = JSONArray(s)
-            migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
+            migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
                 try { Profile.fromJson(arr.getJSONObject(i)) } catch (e: Exception) { null }
-            })
+            }))
         } catch (e: Exception) { emptyList() }
     }
 
@@ -131,6 +135,23 @@ object Store {
         ctx.createConfigurationContext(c).getString(id)
     }.toSet()
 
+    /** The 8 behaviours that really differ, ready-made, for the right tab. */
+    private fun patternPresets(ctx: Context): List<Profile> {
+        val c = Loc.wrap(ctx)
+        return Patterns.ALL.mapIndexed { i, (ringer, dnd) ->
+            Profile(newId(), c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = 1)
+        }
+    }
+
+    /** One time: existing installs get the ready-made patterns in the right tab (mine stays untouched). */
+    private fun migratePresets(ctx: Context, list: List<Profile>): List<Profile> {
+        if (sp(ctx).getBoolean("presetMig2", false)) return list
+        val out = list + patternPresets(ctx)
+        save(ctx, out)
+        sp(ctx).edit().putBoolean("presetMig2", true).commit()
+        return out
+    }
+
     private fun migrateIcons(ctx: Context, list: List<Profile>): List<Profile> {
         if (sp(ctx).getBoolean("iconMig1", false)) return list
         val map = listOf(
@@ -192,9 +213,10 @@ object Store {
             Profile(newId(), c.getString(R.string.preset_dnd), Ringer.NORMAL, Dnd.PRIORITY, emoji = "🌙", iconKey = "moon"),
             Profile(newId(), c.getString(R.string.preset_normal), Ringer.NORMAL, Dnd.OFF, emoji = "🔔", iconKey = "bell"),
         )
-        save(ctx, list)
-        sp(ctx).edit().putBoolean("iconMig1", true).commit()
-        return list
+        val all = list + patternPresets(ctx)
+        save(ctx, all)
+        sp(ctx).edit().putBoolean("iconMig1", true).putBoolean("presetMig2", true).commit()
+        return all
     }
 
     fun systemLocaleTag(): String = Locale.getDefault().toLanguageTag()

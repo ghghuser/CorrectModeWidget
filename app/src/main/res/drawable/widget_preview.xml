@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the widget picker shows. Default = the app icon. icon/widget_preview.png (optional, see icon/README.md)
+     is copied to drawable-nodpi/widget_preview.png by the build and wins over this file. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_launcher"
+    android:inset="0dp" />

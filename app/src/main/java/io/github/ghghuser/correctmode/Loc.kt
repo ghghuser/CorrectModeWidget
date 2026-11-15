@@ -52,4 +52,57 @@ object Describe {
         val tail = if (allowed.isEmpty()) Loc.str(ctx, R.string.allow_nothing) else allowed.joinToString(", ")
         return summary(ctx, p) + "\n" + Loc.str(ctx, R.string.allowed_prefix) + " " + tail
     }
+
+    // ---- "what makes a sound?" at a glance ------------------------------------------------
+
+    enum class Cell(val mark: String, val textRes: Int) {
+        ON("✅", R.string.val_on), VIB("📳", R.string.val_vib), NONE("✖", R.string.val_none),
+        BT("🎧", R.string.val_bt), UNKNOWN("❓", R.string.val_unknown),
+    }
+
+    class Row(val emoji: String, val labelRes: Int, val cell: Cell)
+
+    /**
+     * Which of the usual sources can make a sound / vibrate while the profile is ON.
+     * Calls and messages follow the ringer unless DND blocks them; other notifications are blocked by every
+     * DND mode; media / alarms / touch sounds are decided by the DND mode and its "allow" ticks.
+     * "Alarms only" and media: not verified on a device, so it is shown as "check".
+     */
+    fun matrix(p: Profile): List<Row> {
+        val byRinger = when (p.ringer) { Ringer.NORMAL -> Cell.ON; Ringer.VIBRATE -> Cell.VIB; else -> Cell.NONE }
+        val off = p.dnd == Dnd.OFF
+        val pri = p.dnd == Dnd.PRIORITY
+        val calls = if (off || (pri && p.calls > 0)) byRinger else Cell.NONE
+        val msgs = if (off || (pri && p.messages > 0)) byRinger else Cell.NONE
+        val notif = if (off) byRinger else Cell.NONE
+        val media = when {
+            off -> Cell.ON
+            pri -> if (p.media) Cell.ON else if (p.mediaOnBt) Cell.BT else Cell.NONE
+            p.dnd == Dnd.ALARMS -> Cell.UNKNOWN
+            else -> Cell.NONE
+        }
+        val alarm = when {
+            off || p.dnd == Dnd.ALARMS -> Cell.ON
+            pri -> if (p.alarms) Cell.ON else Cell.NONE
+            else -> Cell.NONE
+        }
+        val system = when {
+            off -> if (p.ringer == Ringer.NORMAL) Cell.ON else Cell.NONE
+            pri -> if (p.system) Cell.ON else Cell.NONE
+            else -> Cell.NONE
+        }
+        return listOf(
+            Row("📞", R.string.label_calls, calls), Row("💬", R.string.label_messages, msgs),
+            Row("📣", R.string.label_notif, notif), Row("🎵", R.string.label_media, media),
+            Row("⏰", R.string.label_alarm, alarm), Row("🔧", R.string.label_system, system),
+        )
+    }
+
+    /** One compact line for the profile card, e.g. "📞📳 💬📳 📣✖ 🎵✖ ⏰✖ 🔧✖". */
+    fun chips(p: Profile): String = matrix(p).joinToString("  ") { it.emoji + it.cell.mark }
+
+    /** Full lines for the editor: "📞 Phone calls: 📳 Vibrate only". */
+    fun matrixLines(ctx: Context, p: Profile): String = matrix(p).joinToString("\n") {
+        it.emoji + " " + Loc.str(ctx, it.labelRes) + ": " + it.cell.mark + " " + Loc.str(ctx, it.cell.textRes)
+    }
 }

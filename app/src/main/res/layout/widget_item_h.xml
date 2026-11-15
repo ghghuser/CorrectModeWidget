@@ -32,6 +32,7 @@
             android:autoSizeStepGranularity="1sp"
             android:autoSizeTextType="uniform"
             android:gravity="center"
+            android:textAlignment="center"
             android:includeFontPadding="false"
             android:maxLines="1"
             android:text="🤫"

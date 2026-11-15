@@ -26,7 +26,7 @@ object Widgets {
     private val FG_ON = 0xFFFFFFFF.toInt() to 0xFF0B2A5B.toInt()
 
     private fun pair(custom: Int?, def: Pair<Int, Int>): Pair<Int, Int> =
-        if (custom != null) (custom or 0xFF000000.toInt()).let { it to it } else def
+        if (custom != null && custom != ColorMark.TRANSPARENT) (custom or 0xFF000000.toInt()).let { it to it } else def
 
     fun updateAll(ctx: Context) {
         val app = ctx.applicationContext
@@ -77,6 +77,8 @@ object Widgets {
         val dp = ctx.resources.displayMetrics.density
         val bg = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val fg = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
+        // "no background": the button area stays tappable, only the coloured shape is not drawn
+        rv.setViewVisibility(R.id.item_bg, if ((if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
         rv.setImageViewResource(R.id.item_bg, shapeRes(p.shape))
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
 
@@ -99,7 +101,7 @@ object Widgets {
         rv.setTextViewText(R.id.item_label, p.name)
         rv.setColorInt(R.id.item_label, "setTextColor", fg.first, fg.second)
 
-        val padDp = when (p.iconSize) { IconSize.SMALL -> 20; IconSize.LARGE -> 2; else -> 10 }
+        val padDp = when (p.iconSize) { IconSize.SMALL -> 20; IconSize.LARGE -> 6; else -> 10 }
         val pad = (padDp * dp).roundToInt()
         rv.setViewPadding(R.id.item_content, pad, pad, pad, pad)
 

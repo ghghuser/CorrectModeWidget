@@ -196,6 +196,8 @@ class SettingsActivity : Activity() {
         val card = Ui.card(this)
         card.addView(Ui.text(this, s(R.string.diag_title), 16f, bold = true))
         card.addView(Ui.text(this, s(R.string.diag_version, BuildConfig.VERSION_NAME, BuildConfig.BUILD_NUMBER), 13f))
+        val tapMs = Store.lastTapMs(this)
+        if (tapMs >= 0) card.addView(Ui.text(this, s(R.string.diag_tap_ms, tapMs), 13f, secondary = true))
         val err = Store.lastError(this)
         card.addView(Ui.text(this, if (err == null) s(R.string.diag_no_error) else s(R.string.diag_last_error) + "\n" + err, 13f))
         if (err != null) card.addView(Ui.button(this, s(R.string.diag_clear)) { Store.setLastError(this, null); rebuild() })

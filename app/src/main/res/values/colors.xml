@@ -6,4 +6,6 @@
     <!-- faint blue, kept light so text stays easy to read -->
     <color name="bg_top">#E2EEFF</color>
     <color name="bg_bottom">#F8FAFF</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="card_stroke">#AEC1DD</color>
 </resources>
