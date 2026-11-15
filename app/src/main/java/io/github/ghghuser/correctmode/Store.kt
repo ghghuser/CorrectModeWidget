@@ -65,9 +65,9 @@ object Store {
         val s = sp(ctx).getString("profiles", null) ?: return seed(ctx)
         return try {
             val arr = JSONArray(s)
-            migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
+            migratePresetIndex(ctx, migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
                 try { Profile.fromJson(arr.getJSONObject(i)) } catch (e: Exception) { null }
-            }))
+            })))
         } catch (e: Exception) { emptyList() }
     }
 
@@ -139,8 +139,31 @@ object Store {
     private fun patternPresets(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
         return Patterns.ALL.mapIndexed { i, (ringer, dnd) ->
-            Profile(newId(), c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = 1)
+            Profile(newId(), c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = 1, preset = i)
         }
+    }
+
+    /** The factory version of pattern [i], keeping [id] (used by "reset" and by "pick from the ready-made patterns"). */
+    fun freshPreset(ctx: Context, i: Int, id: String, tab: Int, preset: Int): Profile {
+        val c = Loc.wrap(ctx)
+        val (ringer, dnd) = Patterns.ALL[i]
+        return Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
+    }
+
+    /** One time: presets made by an earlier version get their pattern number, so they can be reset. */
+    private fun migratePresetIndex(ctx: Context, list: List<Profile>): List<Profile> {
+        if (sp(ctx).getBoolean("presetMig3", false)) return list
+        val taken = HashSet<Int>()
+        var changed = false
+        for (p in list) {
+            if (p.tab != 1 || p.preset >= 0) continue
+            val i = Patterns.ALL.indices.firstOrNull { it !in taken && p.iconKey == Patterns.ICONS[it] &&
+                Patterns.ALL[it].second == p.dnd && (p.dnd >= Dnd.ALARMS || Patterns.ALL[it].first == p.ringer) } ?: continue
+            p.preset = i; taken.add(i); changed = true
+        }
+        if (changed) save(ctx, list)
+        sp(ctx).edit().putBoolean("presetMig3", true).commit()
+        return list
     }
 
     /** One time: existing installs get the ready-made patterns in the right tab (mine stays untouched). */
@@ -215,7 +238,7 @@ object Store {
         )
         val all = list + patternPresets(ctx)
         save(ctx, all)
-        sp(ctx).edit().putBoolean("iconMig1", true).putBoolean("presetMig2", true).commit()
+        sp(ctx).edit().putBoolean("iconMig1", true).putBoolean("presetMig2", true).putBoolean("presetMig3", true).commit()
         return all
     }
 

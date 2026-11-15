@@ -133,7 +133,7 @@ class MainActivity : Activity() {
                 rebuild()
             }
         })
-        content.addView(Ui.text(this, s(R.string.tab_hint), 11f, secondary = true))
+        content.addView(Ui.text(this, s(if (tab == 1) R.string.tab_hint_presets else R.string.tab_hint), 11f, secondary = true))
         content.addView(Ui.text(this, s(R.string.main_hint), 11f, secondary = true))
         content.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(4), 0, dp(2)) })
 
@@ -144,7 +144,7 @@ class MainActivity : Activity() {
         content.addView(Ui.text(this, s(R.string.widget_howto), 12f, secondary = true))
     }
 
-    /** Icon = turn on / off. Text area = edit (long press: menu). Right column = move up / down / to the other tab. */
+    /** Icon = turn on / off. Text area = edit (long press: menu). Right column = move up / down (inside the tab). */
     private fun profileCard(p: Profile, active: Boolean): View {
         val card = Ui.card(this, active)
         val row = Ui.hbox(this)
@@ -165,7 +165,6 @@ class MainActivity : Activity() {
         col.setOnLongClickListener { showMenu(p); true }
         row.addView(col, Ui.lp(0, weight = 1f))
 
-        // arrows: all the same size; the tab move is set apart so it is not hit by mistake
         val arrows = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL }
         fun arrow(symbol: String, desc: String, topGap: Int, onClick: () -> Unit) {
             arrows.addView(Ui.button(this, symbol, onClick).apply {
@@ -174,8 +173,6 @@ class MainActivity : Activity() {
         }
         arrow("▲", s(R.string.move_up), 0) { Store.move(this, p.id, -1); Widgets.updateAll(this); rebuild() }
         arrow("▼", s(R.string.move_down), 4) { Store.move(this, p.id, +1); Widgets.updateAll(this); rebuild() }
-        if (tab == 0) arrow("⇛", s(R.string.move_right), 14) { moveTo(p, 1) }
-        else arrow("⇚", s(R.string.move_left), 14) { moveTo(p, 0) }
         row.addView(arrows)
         card.addView(row)
         return card
@@ -201,17 +198,24 @@ class MainActivity : Activity() {
     }
 
     private fun chooseHowToAdd() {
-        val items = arrayOf(s(R.string.add_wizard), s(R.string.add_manual))
+        // a new profile always goes to the left tab (your own)
+        val items = arrayOf(s(R.string.add_wizard), s(R.string.add_manual), s(R.string.add_pattern))
         AlertDialog.Builder(this).setTitle(s(R.string.add_choose_title)).setItems(items) { _, which ->
-            val cls = if (which == 0) WizardActivity::class.java else ProfileEditActivity::class.java
-            startActivity(Intent(this, cls).putExtra("tab", tab))
+            tab = 0
+            try { getSharedPreferences("ui", MODE_PRIVATE).edit().putInt("tab", 0).apply() } catch (e: Exception) { }
+            when (which) {
+                0 -> startActivity(Intent(this, WizardActivity::class.java))
+                1 -> startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("tab", 0))
+                else -> choosePattern()
+            }
         }.show()
     }
 
-    private fun moveTo(p: Profile, toTab: Int) {
-        Store.setTab(this, p.id, toTab)
-        Widgets.updateAll(this)
-        Ui.toast(this, s(R.string.moved_to, Store.tabName(this, toTab)))
-        rebuild()
+    private fun choosePattern() {
+        val names = Patterns.NAMES.map { s(it) }.toTypedArray()
+        AlertDialog.Builder(this).setTitle(s(R.string.add_pattern_title)).setItems(names) { _, i ->
+            startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("pattern", i))
+        }.setNegativeButton(android.R.string.cancel, null).show()
     }
+
 }

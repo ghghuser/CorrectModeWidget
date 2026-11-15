@@ -343,6 +343,8 @@ object Engine {
         if (p.media || (p.mediaOnBt && btConnected)) c = c or Policy.PRIORITY_CATEGORY_MEDIA
         if (p.alarms) c = c or Policy.PRIORITY_CATEGORY_ALARMS
         if (p.system) c = c or Policy.PRIORITY_CATEGORY_SYSTEM
+        if (p.reminders) c = c or Policy.PRIORITY_CATEGORY_REMINDERS
+        if (p.events) c = c or Policy.PRIORITY_CATEGORY_EVENTS
         return c
     }
 
@@ -375,8 +377,9 @@ object Engine {
         if (extra and Policy.PRIORITY_CATEGORY_MEDIA != 0) names.add(Loc.str(ctx, R.string.allow_media))
         if (extra and Policy.PRIORITY_CATEGORY_ALARMS != 0) names.add(Loc.str(ctx, R.string.allow_alarms))
         if (extra and Policy.PRIORITY_CATEGORY_SYSTEM != 0) names.add(Loc.str(ctx, R.string.allow_system))
-        val other = Policy.PRIORITY_CATEGORY_REMINDERS or Policy.PRIORITY_CATEGORY_EVENTS or
-            Policy.PRIORITY_CATEGORY_REPEAT_CALLERS or Policy.PRIORITY_CATEGORY_CONVERSATIONS
+        if (extra and Policy.PRIORITY_CATEGORY_REMINDERS != 0) names.add(Loc.str(ctx, R.string.allow_reminders))
+        if (extra and Policy.PRIORITY_CATEGORY_EVENTS != 0) names.add(Loc.str(ctx, R.string.allow_events))
+        val other = Policy.PRIORITY_CATEGORY_REPEAT_CALLERS or Policy.PRIORITY_CATEGORY_CONVERSATIONS
         if (extra and other != 0) names.add(Loc.str(ctx, R.string.allow_other))
         return if (names.isEmpty()) null else Loc.str(ctx, R.string.err_verify_policy, names.joinToString(", "))
     }

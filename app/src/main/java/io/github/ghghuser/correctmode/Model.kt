@@ -45,7 +45,7 @@ object Patterns {
     val ALL: List<Pair<Int, Int>> = listOf(
         Ringer.NORMAL to Dnd.OFF, Ringer.VIBRATE to Dnd.OFF, Ringer.MUTE to Dnd.OFF,
         Ringer.NORMAL to Dnd.PRIORITY, Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.PRIORITY,
-        Ringer.VIBRATE to Dnd.ALARMS, Ringer.VIBRATE to Dnd.NONE,
+        Ringer.VIBRATE to Dnd.ALARMS, Ringer.MUTE to Dnd.NONE,
     )
     val NAMES = listOf(
         R.string.pat_1, R.string.pat_2, R.string.pat_3, R.string.pat_4,
@@ -85,6 +85,10 @@ data class Profile(
     var media: Boolean = false,
     var alarms: Boolean = false,
     var system: Boolean = false,
+    var reminders: Boolean = false,
+    var events: Boolean = false,
+    /** index in Patterns for the ready-made profiles of the right tab (they can be reset); -1 = a normal profile */
+    var preset: Int = -1,
     var mediaOnBt: Boolean = true,
     /** Dur.ASK, Dur.NONE or minutes */
     var duration: Int = Dur.ASK,
@@ -120,7 +124,7 @@ data class Profile(
         put("id", id); put("name", name)
         put("ringer", ringer); put("dnd", dnd)
         put("calls", calls); put("messages", messages)
-        put("media", media); put("alarms", alarms); put("system", system)
+        put("media", media); put("alarms", alarms); put("system", system); put("rem", reminders); put("evt", events)
         put("mediaOnBt", mediaOnBt); put("duration", duration)
         put("emoji", emoji)
         if (imageFile != null) put("imageFile", imageFile)
@@ -128,6 +132,7 @@ data class Profile(
         fgOn?.let { put("fgOn", it) }; fgOff?.let { put("fgOff", it) }
         put("shape", shape); put("iconSize", iconSize); put("showLabel", showLabel)
         put("tab", tab)
+        if (preset >= 0) put("pre", preset)
         iconKey?.let { put("icon", it) }
         put("vm", volMode); put("vf", JSONArray(volFixed))
         put("vib", tapVibe)
@@ -145,6 +150,9 @@ data class Profile(
             media = o.optBoolean("media", false),
             alarms = o.optBoolean("alarms", false),
             system = o.optBoolean("system", false),
+            reminders = o.optBoolean("rem", false),
+            events = o.optBoolean("evt", false),
+            preset = o.optInt("pre", -1).coerceIn(-1, Patterns.ALL.size - 1),
             mediaOnBt = o.optBoolean("mediaOnBt", true),
             duration = o.optInt("duration", Dur.ASK),
             emoji = o.optString("emoji", "🔕"),

@@ -37,6 +37,7 @@
 
         <activity
             android:name=".WizardActivity"
+            android:theme="@style/WizardTheme"
             android:exported="false" />
 
         <!-- configChanges: rotating the screen must not throw away what is being edited (uiMode is left out

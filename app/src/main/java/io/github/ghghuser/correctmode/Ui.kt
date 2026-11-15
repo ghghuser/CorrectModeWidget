@@ -121,6 +121,17 @@ object Ui {
             if (secondary) alpha = if (ctx.isNight()) 0.82f else 0.75f
         }
 
+    /**
+     * "Apps that may interrupt" is a setting of the system, shared by all profiles (this app cannot change it).
+     * The target screen is not verified on every device, so there are fallbacks.
+     */
+    fun openPrioritySettings(a: Activity) {
+        for (action in listOf("android.settings.ZEN_MODE_PRIORITY_SETTINGS", android.provider.Settings.ACTION_SOUND_SETTINGS)) {
+            try { a.startActivity(Intent(action)); return } catch (e: Exception) { /* try the next one */ }
+        }
+        toast(a, a.getString(R.string.apps_open_fail), true)
+    }
+
     fun clock(minutes: Int): String = "%02d:%02d".format(minutes / 60, minutes % 60)
 
     /** "⏰ 22:00–07:00 Mon Tue" or null when the profile has no timer. */

@@ -10,6 +10,16 @@
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 
+    <!-- The profile wizard: a card floating over the main screen (see WizardActivity). -->
+    <style name="WizardTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowBackground">@drawable/wizard_bg</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+
     <!-- Invisible host for the duration dialog / widget tap (own task, never stays on screen). -->
     <style name="TapTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="android:windowIsTranslucent">true</item>

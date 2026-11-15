@@ -49,6 +49,8 @@ object Describe {
         else if (p.mediaOnBt) allowed.add(Loc.str(ctx, R.string.allow_media_bt_short))
         if (p.alarms) allowed.add(Loc.str(ctx, R.string.allow_alarms))
         if (p.system) allowed.add(Loc.str(ctx, R.string.allow_system))
+        if (p.reminders) allowed.add(Loc.str(ctx, R.string.allow_reminders))
+        if (p.events) allowed.add(Loc.str(ctx, R.string.allow_events))
         val tail = if (allowed.isEmpty()) Loc.str(ctx, R.string.allow_nothing) else allowed.joinToString(", ")
         return summary(ctx, p) + "\n" + Loc.str(ctx, R.string.allowed_prefix) + " " + tail
     }

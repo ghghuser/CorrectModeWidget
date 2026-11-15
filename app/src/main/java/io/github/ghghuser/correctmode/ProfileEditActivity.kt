@@ -75,7 +75,9 @@ class ProfileEditActivity : Activity() {
         super.onCreate(savedInstanceState)
         val ex = Store.profile(this, intent?.getStringExtra("id"))
         isNew = ex == null
-        p = ex?.copy() ?: Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
+        val fromPattern = intent?.getIntExtra("pattern", -1) ?: -1
+        p = ex?.copy() ?: if (fromPattern in Patterns.ALL.indices) Store.freshPreset(this, fromPattern, Store.newId(), 0, -1)
+        else Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
         origImage = ex?.imageFile
         title = s(if (isNew) R.string.profile_new_title else R.string.profile_edit_title)
 
@@ -196,6 +198,17 @@ class ProfileEditActivity : Activity() {
             text = s(R.string.allow_system); isChecked = p.system
             setOnCheckedChangeListener { _, v -> p.system = v; refreshBehavior() }
         })
+        detailBox.addView(CheckBox(this).apply {
+            text = s(R.string.allow_reminders); isChecked = p.reminders
+            setOnCheckedChangeListener { _, v -> p.reminders = v; refreshBehavior() }
+        })
+        detailBox.addView(CheckBox(this).apply {
+            text = s(R.string.allow_events); isChecked = p.events
+            setOnCheckedChangeListener { _, v -> p.events = v; refreshBehavior() }
+        })
+        // apps that may interrupt: a system setting shared by all profiles, so it is a link, not a checkbox
+        detailBox.addView(Ui.button(this, s(R.string.apps_open_btn)) { Ui.openPrioritySettings(this) })
+        detailBox.addView(Ui.text(this, s(R.string.wiz_apps_note), 12f, secondary = true))
         card.addView(detailBox)
 
         effectText = Ui.text(this, "", 13f).apply { setPadding(0, dp(8), 0, dp(4)) }
@@ -585,13 +598,27 @@ class ProfileEditActivity : Activity() {
         row.addView(Ui.button(this, getString(android.R.string.cancel)) { finish() }, Ui.lp(0, weight = 1f))
         row.addView(Ui.button(this, s(R.string.save)) { save() }, Ui.lp(0, weight = 1f))
         root.addView(row)
+        if (!isNew && p.preset >= 0) {
+            root.addView(Ui.text(this, s(R.string.reset_hint), 12f, secondary = true).apply { setPadding(0, dp(12), 0, 0) })
+            root.addView(Ui.button(this, s(R.string.reset_preset)) {
+                AlertDialog.Builder(this)
+                    .setMessage(s(R.string.reset_confirm, p.name))
+                    .setPositiveButton(s(R.string.reset_preset)) { _, _ ->
+                        saved = true
+                        ProfileOps.resetPreset(this, p)
+                        finish()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            })
+        }
         if (!isNew) {
             root.addView(Ui.button(this, s(R.string.menu_copy)) {
                 ProfileOps.copy(this, p)
                 getSharedPreferences("ui", MODE_PRIVATE).edit().putInt("tab", 0).apply() // the copy lives in the left tab
                 finish()
             })
-            root.addView(Ui.button(this, s(R.string.delete)) {
+            if (p.preset < 0) root.addView(Ui.button(this, s(R.string.delete)) {
                 AlertDialog.Builder(this)
                     .setMessage(s(R.string.delete_confirm, p.name))
                     .setPositiveButton(s(R.string.delete)) { _, _ -> delete() }

@@ -11,6 +11,16 @@ object ProfileOps {
         Schedules.reschedule(ctx)
     }
 
+    /** Back to the factory settings of a ready-made pattern (same id, so widgets keep pointing at it). */
+    fun resetPreset(ctx: Context, p: Profile) {
+        if (p.preset < 0) return
+        if (Store.state(ctx).activeId == p.id) Engine.release(ctx, Reason.USER)
+        p.imageFile?.let { Store.imageFile(ctx, it).delete() }
+        Store.upsert(ctx, Store.freshPreset(ctx, p.preset, p.id, p.tab, p.preset))
+        Widgets.updateAll(ctx)
+        Schedules.reschedule(ctx)
+    }
+
     /**
      * A copy goes to the LEFT tab (the one for your own profiles), also with its own copy of the picture.
      * The copy's timer is switched off, so two profiles never start at the same time by accident.
@@ -19,7 +29,7 @@ object ProfileOps {
         val c = p.copy(
             id = Store.newId(),
             name = (p.name + " " + Loc.str(ctx, R.string.copy_suffix)).take(30),
-            tab = 0, schedOn = false, imageFile = null,
+            tab = 0, preset = -1, schedOn = false, imageFile = null,
         )
         p.imageFile?.let { old ->
             val src = Store.imageFile(ctx, old)
