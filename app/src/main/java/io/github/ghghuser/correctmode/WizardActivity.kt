@@ -60,7 +60,7 @@ class WizardActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
         p.duration = Dur.ASK
-        p.media = false; p.mediaOnBt = false; p.alarms = false; p.system = false; p.reminders = false; p.events = false
+        p.media = false; p.mediaOnBt = true; p.alarms = false; p.system = false; p.reminders = false; p.events = false
         p.calls = 1; p.messages = 1
 
         val root = Ui.vbox(this).apply { setPadding(dp(28), dp(24), dp(28), dp(20)) }
@@ -135,12 +135,12 @@ class WizardActivity : Activity() {
         option(s(R.string.wiz_a_mute), null) { branch = BRANCH_MUTE; go(SOUNDS) }
         option(s(R.string.wiz_a_all), s(R.string.wiz_a_all_sub)) {
             branch = BRANCH_ALL
-            p.ringer = Ringer.MUTE; p.dnd = Dnd.NONE
+            p.ringer = Ringer.MUTE; p.dnd = Dnd.NONE; p.mediaOnBt = false // no sound at all, earphones included
             go(AUTO)
         }
         option(s(R.string.wiz_a_none), s(R.string.wiz_a_none_sub)) {
             branch = BRANCH_NORMAL
-            p.ringer = Ringer.NORMAL; p.dnd = Dnd.OFF
+            p.ringer = Ringer.NORMAL; p.dnd = Dnd.OFF; p.mediaOnBt = false
             go(AUTO)
         }
         body.addView(small(s(R.string.wiz_foot1), 10), Ui.lp())
