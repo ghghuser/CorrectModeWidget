@@ -485,8 +485,17 @@ object Engine {
             nm.notificationPolicy = Policy(s.categories, s.callSenders, s.messageSenders, s.effects, s.convSenders)
             if (s.filter in 1..4) nm.setInterruptionFilter(s.filter)
         }
-        if (ringerFree(nm.currentInterruptionFilter) && am.ringerMode != s.ringer) am.ringerMode = s.ringer
+        if (ringerRestorable(nm.currentInterruptionFilter, s) && am.ringerMode != s.ringer) am.ringerMode = s.ringer
     }
+
+    /**
+     * Android itself turns a DND ("alarms only") on when the ringer is set to silent, and turns it off again when the
+     * ringer leaves silent. That DND is not our rule, so it is still on right after "our rule off". If the phone had
+     * no strict DND before, the ringer is restored anyway: that is what clears it (and not restoring would leave
+     * the phone silent after a Mute profile).
+     */
+    private fun ringerRestorable(filterNow: Int, s: Snapshot): Boolean =
+        ringerFree(filterNow) || ringerFree(s.filter) || s.filter == NotificationManager.INTERRUPTION_FILTER_UNKNOWN
 
     /** With "alarms only" / "block all" Android forces the ringer itself, so it is left alone there. */
     private fun ringerFree(filter: Int): Boolean =
@@ -496,7 +505,7 @@ object Engine {
         val nm = nm(ctx)
         val f = nm.currentInterruptionFilter
         if (!IMPLICIT_RULE && s.filter in 1..4 && f != s.filter) return "DND $f != ${s.filter}"
-        if (ringerFree(f) && am(ctx).ringerMode != s.ringer) return "ringer ${am(ctx).ringerMode} != ${s.ringer}"
+        if (ringerRestorable(f, s) && am(ctx).ringerMode != s.ringer) return "ringer ${am(ctx).ringerMode} != ${s.ringer}"
         return null
     }
 
