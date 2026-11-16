@@ -84,7 +84,8 @@ object Engine {
                 Notifier.showActive(app, p, st)
                 Widgets.updateAll(app)
                 // "DND: off" cannot switch off a DND that the user / another mode turned on (Android 15+).
-                Result(true, if (p.dnd == Dnd.OFF) dndRemainsWarning(app, 0) else null)
+                // (not for Mute: Android itself turns a DND on when the ringer is muted, and the phone is silent anyway)
+                Result(true, if (p.dnd == Dnd.OFF && p.ringer != Ringer.MUTE) dndRemainsWarning(app, 0) else null)
             }
         } catch (e: Exception) {
             Log.e(TAG, "activate", e)
@@ -410,6 +411,18 @@ object Engine {
             Dnd.PRIORITY -> {
                 nm.notificationPolicy = buildPolicy(p, bt, nm.notificationPolicy)
                 nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+            }
+            Dnd.NONE -> {
+                // Android 15+: the FIRST call of an app that has no DND rule yet does not give "block everything"
+                // (seen on a device: it only worked after a priority profile had been on). So our own rule is
+                // created first, with a policy that allows nothing, and only then switched to "block everything".
+                if (IMPLICIT_RULE) {
+                    nm.notificationPolicy = Policy(0, Policy.PRIORITY_SENDERS_ANY, Policy.PRIORITY_SENDERS_ANY,
+                        nm.notificationPolicy.suppressedVisualEffects, Policy.CONVERSATION_SENDERS_NONE)
+                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                    sleep(150L)
+                }
+                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
             }
             else -> nm.setInterruptionFilter(filterOf(p.dnd))
         }

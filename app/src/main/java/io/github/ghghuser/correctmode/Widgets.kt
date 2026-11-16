@@ -73,13 +73,18 @@ object Widgets {
     }
 
     /** Shared by the real widgets and the preview in the editor. */
-    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false) {
+    /**
+     * [joinShape]: set for the buttons of a switch widget. The widget is one set, so the backgrounds touch
+     * (no gap) and only the two outer ends are rounded.
+     */
+    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false, joinShape: Int? = null) {
         val dp = ctx.resources.displayMetrics.density
         val bg = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val fg = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
         // "no background": the button area stays tappable, only the coloured shape is not drawn
         rv.setViewVisibility(R.id.item_bg, if ((if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
-        rv.setImageViewResource(R.id.item_bg, shapeRes(p.shape))
+        rv.setImageViewResource(R.id.item_bg, joinShape ?: shapeRes(p.shape))
+        if (joinShape != null) rv.setViewPadding(R.id.item_root, 0, 0, 0, 0)
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
 
         val bmp = p.imageFile?.let { BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
@@ -142,10 +147,16 @@ object Widgets {
         // A RemoteViews update is applied on top of the view that is already on screen: without this the
         // buttons are appended again on every update (they multiplied until the launcher redrew).
         rv.removeAllViews(R.id.switch_container)
-        for (p in list) {
+        for ((i, p) in list.withIndex()) {
             val item = RemoteViews(ctx.packageName, if (vertical) R.layout.widget_item_v else R.layout.widget_item_h)
+            val join = when {
+                list.size == 1 -> null
+                i == 0 -> if (vertical) R.drawable.shape_join_v_start else R.drawable.shape_join_h_start
+                i == list.size - 1 -> if (vertical) R.drawable.shape_join_v_end else R.drawable.shape_join_h_end
+                else -> R.drawable.shape_join_h_mid
+            }
             // while one of this widget's profiles is on, all the others are greyed out
-            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id)
+            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id, joinShape = join)
             rv.addView(R.id.switch_container, item)
         }
         return rv

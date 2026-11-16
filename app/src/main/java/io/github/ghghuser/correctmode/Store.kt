@@ -231,10 +231,6 @@ object Store {
         val c = Loc.wrap(ctx)
         val list = listOf(
             Profile(newId(), c.getString(R.string.preset_vib_dnd), Ringer.VIBRATE, Dnd.PRIORITY, emoji = "🤫", iconKey = "bell_off"),
-            Profile(newId(), c.getString(R.string.preset_vib), Ringer.VIBRATE, Dnd.OFF, emoji = "📳", iconKey = "vibrate"),
-            Profile(newId(), c.getString(R.string.preset_mute), Ringer.MUTE, Dnd.OFF, emoji = "🔕", iconKey = "volume_off"),
-            Profile(newId(), c.getString(R.string.preset_dnd), Ringer.NORMAL, Dnd.PRIORITY, emoji = "🌙", iconKey = "moon"),
-            Profile(newId(), c.getString(R.string.preset_normal), Ringer.NORMAL, Dnd.OFF, emoji = "🔔", iconKey = "bell"),
         )
         val all = list + patternPresets(ctx)
         save(ctx, all)

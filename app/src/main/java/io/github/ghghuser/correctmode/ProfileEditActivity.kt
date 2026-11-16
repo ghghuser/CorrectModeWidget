@@ -91,7 +91,14 @@ class ProfileEditActivity : Activity() {
         // the check mark at the top right saves (the "Save" button at the bottom does the same)
         val check = Ui.headerButton(this, "✓", s(R.string.save)) { save() }
         val screen = Ui.screen(this, title.toString(), true, root, listOf(check))
-        scroll = (screen as LinearLayout).getChildAt(1) as ScrollView
+        // the preview stays in view while the colours / icon are being set: it is not part of the scrolling body
+        val bar = Ui.vbox(this).apply {
+            setPadding(dp(16), dp(2), dp(16), dp(2))
+            addView(previewBox, Ui.lp())
+            addView(Ui.text(this@ProfileEditActivity, s(R.string.preview_hint), 11f, secondary = true).apply { gravity = Gravity.CENTER }, Ui.lp())
+        }
+        (screen as LinearLayout).addView(bar, 1, Ui.lp())
+        scroll = screen.getChildAt(2) as ScrollView
         setContentView(screen)
         refreshBehavior()
         refreshLook()
@@ -129,7 +136,7 @@ class ProfileEditActivity : Activity() {
         previewBox.removeAllViews()
         for (on in listOf(false, true)) {
             val col = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(dp(6), 0, dp(6), 0) }
-            col.addView(Widgets.preview(this, p, on, 72))
+            col.addView(Widgets.preview(this, p, on, 56))
             col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true))
             // tap the preview: jump to the look settings
             col.setOnClickListener { scroll.post { scroll.smoothScrollTo(0, lookCard.top) } }
@@ -140,9 +147,7 @@ class ProfileEditActivity : Activity() {
     // ---- name + preview -------------------------------------------------------------------
 
     private fun buildNameAndPreview(root: LinearLayout) {
-        previewBox = Ui.hbox(this)
-        root.addView(previewBox)
-        root.addView(Ui.text(this, s(R.string.preview_hint), 11f, secondary = true))
+        previewBox = Ui.hbox(this).apply { gravity = Gravity.CENTER }
         root.addView(Ui.text(this, s(R.string.name), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
         root.addView(EditText(this).apply {
             setText(p.name)
@@ -337,13 +342,28 @@ class ProfileEditActivity : Activity() {
         choiceBox.removeAllViews()
         if (modeSet) {
             choiceBox.addView(Ui.text(this, s(R.string.mode_set_hint), 12f, secondary = true).apply { setPadding(0, dp(4), 0, dp(4)) })
-            val labels = Patterns.ALL.indices.map { i ->
+            // every row: the name, then the six "what sounds" marks, each in a cell of equal width, so they line up
+            val radiosList = ArrayList<RadioButton>()
+            val current = Patterns.indexOf(p)
+            Patterns.ALL.indices.forEach { i ->
                 val (r, d) = Patterns.ALL[i]
-                s(Patterns.NAMES[i]) + "\n" + Describe.chips(p.copy(ringer = r, dnd = d))
+                val row = Ui.vbox(this).apply { setPadding(0, dp(4), 0, dp(6)) }
+                val rb = RadioButton(this).apply {
+                    text = s(Patterns.NAMES[i]); isChecked = i == current
+                    setOnClickListener {
+                        radiosList.forEach { it.isChecked = it === this }
+                        p.ringer = Patterns.ALL[i].first; p.dnd = Patterns.ALL[i].second; refreshBehavior()
+                    }
+                }
+                radiosList.add(rb)
+                row.addView(rb)
+                val cells = Ui.hbox(this).apply { setPadding(dp(32), 0, 0, 0) }
+                Describe.matrix(p.copy(ringer = r, dnd = d)).forEach { r2 ->
+                    cells.addView(Ui.text(this, r2.emoji + r2.cell.mark, 15f).apply { gravity = Gravity.CENTER }, Ui.lp(0, weight = 1f))
+                }
+                row.addView(cells)
+                choiceBox.addView(row)
             }
-            choiceBox.addView(radios(labels, Patterns.indexOf(p)) { i ->
-                p.ringer = Patterns.ALL[i].first; p.dnd = Patterns.ALL[i].second; refreshBehavior()
-            })
             choiceBox.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true))
         } else {
             choiceBox.addView(Ui.text(this, s(R.string.ringer_label) + " (" + s(R.string.ringer_hint) + ")", 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })

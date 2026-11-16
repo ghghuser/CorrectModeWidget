@@ -58,7 +58,7 @@ class WizardActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
+        window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT) // fixed size
         p.duration = Dur.ASK
         p.media = false; p.mediaOnBt = true; p.alarms = false; p.system = false; p.reminders = false; p.events = false
         p.calls = 1; p.messages = 1
