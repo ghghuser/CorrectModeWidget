@@ -420,9 +420,13 @@ object Engine {
                     nm.notificationPolicy = Policy(0, Policy.PRIORITY_SENDERS_ANY, Policy.PRIORITY_SENDERS_ANY,
                         nm.notificationPolicy.suppressedVisualEffects, Policy.CONVERSATION_SENDERS_NONE)
                     nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-                    sleep(150L)
+                    waitForFilter(nm, 1, 1000L) // the rule is created asynchronously: wait until it shows, not a fixed time
                 }
-                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+                // The change is applied asynchronously and sometimes needs a second try (it failed now and then).
+                for (k in 0 until 3) {
+                    nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
+                    if (waitForFilter(nm, 3, 800L)) break
+                }
             }
             else -> nm.setInterruptionFilter(filterOf(p.dnd))
         }
@@ -432,11 +436,31 @@ object Engine {
         }
     }
 
+    /** Polls (every 50 ms, at most [maxMs]) until the DND is at least as strict as [minStrictness]. */
+    private fun waitForFilter(nm: NotificationManager, minStrictness: Int, maxMs: Long): Boolean {
+        val end = System.currentTimeMillis() + maxMs
+        while (true) {
+            if (strictness(nm.currentInterruptionFilter) >= minStrictness) return true
+            if (System.currentTimeMillis() >= end) return false
+            sleep(50L)
+        }
+    }
+
+    /**
+     * "Priority only" that allows nothing is as silent as "block all" (alarms are not allowed either), so it counts
+     * when Android does not report the block-all filter itself.
+     */
+    private fun blockAllEquivalent(ctx: Context): Boolean {
+        val n = nm(ctx)
+        return IMPLICIT_RULE && n.currentInterruptionFilter == NotificationManager.INTERRUPTION_FILTER_PRIORITY &&
+            (n.notificationPolicy.priorityCategories and ALL_CATEGORIES) == 0
+    }
+
     /** null = device is at least as quiet as the profile asks. */
     private fun verify(ctx: Context, p: Profile, bt: Boolean = false, checkPolicy: Boolean = false): String? {
         val f = nm(ctx).currentInterruptionFilter
         val wanted = filterOf(p.dnd)
-        if (strictness(f) < strictness(wanted)) {
+        if (strictness(f) < strictness(wanted) && !(p.dnd == Dnd.NONE && blockAllEquivalent(ctx))) {
             return Loc.str(ctx, R.string.err_verify_dnd, Describe.dnd(ctx, p.dnd))
         }
         if (p.dnd == Dnd.OFF || p.dnd == Dnd.PRIORITY) {

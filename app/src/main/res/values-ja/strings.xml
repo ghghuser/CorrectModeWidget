@@ -321,4 +321,10 @@
     <string name="wiz_foot2_mute">※ミュートでは、振動はありません。</string>
     <string name="wiz_alarm_note">チェックしないと、バイブやミュートでもアラームは鳴ります。</string>
     <string name="wiz_media_note">チェックしないと、バイブやミュートでも動画や音楽は鳴ります。</string>
+    <string name="wl_title">ウィジェット全体の背景(切り替えウィジェット)</string>
+    <string name="wl_color">背景の色を選ぶ</string>
+    <string name="wl_alpha">不透明度 %1$d%%</string>
+    <string name="wl_alpha_hint">0%にすると背景なしになります。</string>
+    <string name="wl_items">ボタンごとの背景も重ねて表示する</string>
+    <string name="wl_items_hint">オフにすると、アイコンだけが並びます。オンとオフは、アイコンの色で見分けます。</string>
 </resources>

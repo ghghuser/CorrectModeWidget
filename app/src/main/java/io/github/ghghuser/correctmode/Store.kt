@@ -222,7 +222,26 @@ object Store {
     fun removeWidgets(ctx: Context, ids: IntArray) {
         val w = widgets(ctx)
         ids.forEach { w.remove(it.toString()) }
-        sp(ctx).edit().putString("widgets", w.toString()).commit()
+        val l = looks(ctx)
+        ids.forEach { l.remove(it.toString()) }
+        sp(ctx).edit().putString("widgets", w.toString()).putString("wlook", l.toString()).commit()
+    }
+
+    /** Whole-widget background of a switch widget. alpha 0 = none. [items]: the buttons keep their own backgrounds on top. */
+    class WidgetLook(val color: Int = 0x1F2933, val alpha: Int = 0, val items: Boolean = true)
+
+    private fun looks(ctx: Context): JSONObject =
+        try { JSONObject(sp(ctx).getString("wlook", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
+
+    fun widgetLook(ctx: Context, widgetId: Int): WidgetLook {
+        val o = looks(ctx).optJSONObject(widgetId.toString()) ?: return WidgetLook()
+        return WidgetLook(o.optInt("c", 0x1F2933) and 0xFFFFFF, o.optInt("a", 0).coerceIn(0, 100), o.optBoolean("i", true))
+    }
+
+    fun setWidgetLook(ctx: Context, widgetId: Int, look: WidgetLook) {
+        val l = looks(ctx)
+        l.put(widgetId.toString(), JSONObject().put("c", look.color and 0xFFFFFF).put("a", look.alpha.coerceIn(0, 100)).put("i", look.items))
+        sp(ctx).edit().putString("wlook", l.toString()).commit()
     }
 
     // ---- first start ----------------------------------------------------------------------

@@ -77,12 +77,12 @@ object Widgets {
      * [joinShape]: set for the buttons of a switch widget. The widget is one set, so the backgrounds touch
      * (no gap) and only the two outer ends are rounded.
      */
-    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false, joinShape: Int? = null) {
+    fun bindItem(ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false, joinShape: Int? = null, noBg: Boolean = false) {
         val dp = ctx.resources.displayMetrics.density
         val bg = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val fg = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
         // "no background": the button area stays tappable, only the coloured shape is not drawn
-        rv.setViewVisibility(R.id.item_bg, if ((if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
+        rv.setViewVisibility(R.id.item_bg, if (noBg || (if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
         rv.setImageViewResource(R.id.item_bg, joinShape ?: shapeRes(p.shape))
         if (joinShape != null) rv.setViewPadding(R.id.item_root, 0, 0, 0, 0)
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
@@ -147,6 +147,19 @@ object Widgets {
         // A RemoteViews update is applied on top of the view that is already on screen: without this the
         // buttons are appended again on every update (they multiplied until the launcher redrew).
         rv.removeAllViews(R.id.switch_container)
+        // one background behind the whole set (colour + opacity); 0% = none. Set every time: an update is applied on top of the old view.
+        val look = Store.widgetLook(ctx, id)
+        if (look.alpha > 0) {
+            val c = look.color or 0xFF000000.toInt()
+            rv.setViewVisibility(R.id.switch_bg, View.VISIBLE)
+            rv.setColorInt(R.id.switch_bg, "setColorFilter", c, c)
+            rv.setInt(R.id.switch_bg, "setImageAlpha", (look.alpha * 255 / 100).coerceIn(0, 255))
+            val pad = (4 * ctx.resources.displayMetrics.density).roundToInt()
+            rv.setViewPadding(R.id.switch_container, pad, pad, pad, pad)
+        } else {
+            rv.setViewVisibility(R.id.switch_bg, View.GONE)
+            rv.setViewPadding(R.id.switch_container, 0, 0, 0, 0)
+        }
         for ((i, p) in list.withIndex()) {
             val item = RemoteViews(ctx.packageName, if (vertical) R.layout.widget_item_v else R.layout.widget_item_h)
             val join = when {
@@ -156,7 +169,7 @@ object Widgets {
                 else -> R.drawable.shape_join_h_mid
             }
             // while one of this widget's profiles is on, all the others are greyed out
-            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id, joinShape = join)
+            bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id, joinShape = join, noBg = !look.items)
             rv.addView(R.id.switch_container, item)
         }
         return rv

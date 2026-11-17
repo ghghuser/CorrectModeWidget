@@ -66,6 +66,46 @@ class WidgetConfigActivity : Activity() {
         root.addView(tabHolder)
         root.addView(list)
 
+        // switch widget only: one background behind the whole set
+        var look = Store.widgetLook(this, widgetId)
+        if (isSwitch) {
+            root.addView(Ui.text(this, getString(R.string.wl_title), 14f, bold = true).apply { setPadding(0, dp(12), 0, 0) })
+            val strip = android.view.View(this)
+            val alphaText = Ui.text(this, "", 12f, secondary = true)
+            fun refreshLook() {
+                alphaText.text = getString(R.string.wl_alpha, look.alpha)
+                strip.background = android.graphics.drawable.GradientDrawable().apply {
+                    cornerRadius = dp(12).toFloat()
+                    setColor((look.color or 0xFF000000.toInt()))
+                    alpha = (look.alpha * 255 / 100)
+                    setStroke(dp(1), 0x66808080)
+                }
+            }
+            root.addView(strip, Ui.lp(h = dp(40)))
+            root.addView(Ui.button(this, getString(R.string.wl_color)) {
+                ColorPicker.show(this, look.color or 0xFF000000.toInt()) { c ->
+                    look = Store.WidgetLook(c and 0xFFFFFF, if (look.alpha == 0) 100 else look.alpha, look.items); refreshLook()
+                }
+            })
+            root.addView(alphaText)
+            root.addView(android.widget.SeekBar(this).apply {
+                max = 100; progress = look.alpha
+                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
+                        look = Store.WidgetLook(look.color, v, look.items); refreshLook()
+                    }
+                    override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
+                    override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
+                })
+            })
+            root.addView(Ui.text(this, getString(R.string.wl_alpha_hint), 11f, secondary = true))
+            root.addView(CheckBox(this).apply {
+                text = getString(R.string.wl_items); isChecked = look.items
+                setOnCheckedChangeListener { _, v -> look = Store.WidgetLook(look.color, look.alpha, v) }
+            })
+            root.addView(Ui.text(this, getString(R.string.wl_items_hint), 11f, secondary = true))
+            refreshLook()
+        }
         root.addView(Ui.button(this, Loc.str(this, R.string.widget_open_app)) {
             startActivity(Intent(this, MainActivity::class.java))
         })
@@ -78,6 +118,7 @@ class WidgetConfigActivity : Activity() {
                     Ui.toast(this, Loc.str(this, R.string.widget_pick_none))
                 } else {
                     Store.setWidgetProfiles(this, widgetId, chosen)
+                    if (isSwitch) Store.setWidgetLook(this, widgetId, look)
                     Widgets.update(applicationContext, mgr, widgetId)
                     finish()
                 }
