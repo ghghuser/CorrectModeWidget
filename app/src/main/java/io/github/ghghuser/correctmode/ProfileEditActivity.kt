@@ -490,10 +490,11 @@ class ProfileEditActivity : Activity() {
         fillIcons()
         removeImg.visibility = if (p.imageFile != null) View.VISIBLE else View.GONE
         colorsBox.removeAllViews()
-        colorsBox.addView(colorRow(s(R.string.color_bg_off), true, { p.bgOff }, { p.bgOff = it }))
-        colorsBox.addView(colorRow(s(R.string.color_bg_on), true, { p.bgOn }, { p.bgOn = it }))
+        // order: icon/text (off), background (off), icon/text (on), background (on)
         colorsBox.addView(colorRow(s(R.string.color_fg_off), false, { p.fgOff }, { p.fgOff = it }))
+        colorsBox.addView(colorRow(s(R.string.color_bg_off), true, { p.bgOff }, { p.bgOff = it }))
         colorsBox.addView(colorRow(s(R.string.color_fg_on), false, { p.fgOn }, { p.fgOn = it }))
+        colorsBox.addView(colorRow(s(R.string.color_bg_on), true, { p.bgOn }, { p.bgOn = it }))
         updatePreview()
     }
 
