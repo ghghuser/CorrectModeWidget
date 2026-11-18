@@ -92,7 +92,11 @@ object Schedules {
             val pick = due.maxByOrNull { it.second }
             if (pick != null) {
                 val (p, _, end) = pick
-                if (Store.state(app).activeId != p.id) {
+                val active = Store.state(app).activeId?.let { Store.profile(app, it) }
+                if (active != null && active.id != p.id && Engine.wouldBeLouder(p, active)) {
+                    // never louder by itself: the profile that is on is quieter than the timer wants
+                    Notifier.info(app, Loc.str(app, R.string.sched_skipped, p.name, active.name))
+                } else if (active?.id != p.id) {
                     val expires = end ?: if (p.duration > 0) now + p.duration * 60_000L else 0L
                     val r = Engine.activate(app, p, expires)
                     if (!r.ok) Notifier.info(app, r.message ?: Loc.str(app, R.string.err_apply_failed, ""))

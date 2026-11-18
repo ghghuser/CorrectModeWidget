@@ -13,7 +13,7 @@ class ExpireReceiver : BroadcastReceiver() {
         // EXPIRE = auto release; RECHECK = a short "look at the real state again" alarm. Both end in reconcile,
         // which re-reads the device, so a forged or early call can never do more than that.
         when (intent.action) {
-            Scheduler.ACTION_EXPIRE, Scheduler.ACTION_RECHECK -> Engine.reconcile(context)
+            Scheduler.ACTION_EXPIRE, Scheduler.ACTION_RECHECK, Scheduler.ACTION_WATCH -> Engine.reconcile(context)
             Schedules.ACTION -> Schedules.runDue(context) // timer that turns a profile on
         }
     }

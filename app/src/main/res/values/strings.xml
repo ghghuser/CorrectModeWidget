@@ -327,4 +327,6 @@
     <string name="wl_alpha_hint">0% means no background.</string>
     <string name="wl_items">Also show each button own background on top</string>
     <string name="wl_items_hint">When off, only the icons are shown. On and off are told apart by the icon colour.</string>
+    <string name="sched_skipped">%1$s was not switched on at its scheduled time: it allows more sound than %2$s, which is on.</string>
+    <string name="err_apply_restore_failed">Could not turn it on (%1$s), and restoring the previous settings failed too (%2$s). Please check the sound settings of the phone.</string>
 </resources>
