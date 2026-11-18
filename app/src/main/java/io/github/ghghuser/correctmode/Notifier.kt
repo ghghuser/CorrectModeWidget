@@ -58,7 +58,9 @@ object Scheduler {
         try {
             ctx.getSystemService(AlarmManager::class.java)
                 .setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + WATCH_MS, watchPi(ctx))
-        } catch (e: Exception) { /* best effort */ }
+        } catch (e: Exception) {
+            Store.setLastError(ctx, Loc.str(ctx, R.string.err_schedule, e.javaClass.simpleName + ": " + (e.message ?: "")))
+        }
     }
 
     const val ACTION_RECHECK = "io.github.ghghuser.correctmode.RECHECK"

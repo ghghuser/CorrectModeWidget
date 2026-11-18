@@ -327,5 +327,6 @@
     <string name="wl_alpha_hint">0%にすると背景なしになります。</string>
     <string name="wl_items">ボタンごとの背景も重ねて表示する</string>
     <string name="wl_items_hint">オフにすると、アイコンだけが並びます。オンとオフは、アイコンの色で見分けます。</string>
-    <string name="sched_skipped">「%1$s」の予定時刻になりましたが、いま「%2$s」がオンで、それより音が出るため、切り替えませんでした。</string>
+    <string name="sched_skipped">「%1$s」は、いまオンの「%2$s」より音が出る設定のため、予定の時刻でも切り替えませんでした。</string>
+    <string name="err_apply_restore_failed">オンにできませんでした(%1$s)。さらに、元の設定への復元にも失敗しました(%2$s)。端末の音の設定を確認してください。</string>
 </resources>

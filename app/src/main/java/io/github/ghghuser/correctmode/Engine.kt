@@ -277,7 +277,7 @@ object Engine {
     private fun failAndRollBack(
         app: Context, prev: State, snap: Snapshot, bt: Boolean, problem: String, previousContent: Profile? = null,
     ): String {
-        val msg = Loc.str(app, R.string.err_apply_failed, problem)
+        var msg = Loc.str(app, R.string.err_apply_failed, problem)
         Log.w(TAG, "activate failed: $problem")
         val prevProfile = previousContent ?: Store.profile(app, prev.activeId)
         var backToPrevious = false
@@ -290,7 +290,9 @@ object Engine {
             Scheduler.scheduleWatch(app)
             Notifier.showActive(app, prevProfile, Store.state(app))
         } else {
-            try { restoreSnapshot(app, snap) } catch (e: Exception) { Log.w(TAG, "rollback", e) }
+            val restoreProblem = try { restoreSnapshot(app, snap) } catch (e: Exception) { Log.w(TAG, "rollback", e); describe(e) }
+            // do not claim "restored" when it was not
+            if (restoreProblem != null) msg = Loc.str(app, R.string.err_apply_restore_failed, problem, restoreProblem)
             Store.clearState(app)
             Scheduler.cancel(app)
             Notifier.cancelActive(app)
