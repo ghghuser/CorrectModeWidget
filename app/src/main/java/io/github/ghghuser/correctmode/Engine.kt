@@ -136,6 +136,7 @@ object Engine {
             Store.setReleaseFailures(app, tries)
             Store.saveState(app, st.copy(expiresAt = retryAt))
             if (retryAt > 0) scheduleSafely(app, retryAt)
+            Scheduler.scheduleWatch(app) // release() cancelled every alarm, but the profile stays on
             val msg = Loc.str(app, R.string.err_restore_failed, problem)
             Store.setLastError(app, msg)
             Notifier.info(app, msg)
@@ -286,6 +287,7 @@ object Engine {
         if (backToPrevious && prevProfile != null) {
             Store.saveState(app, prev.copy(btMedia = bt))
             scheduleSafely(app, prev.expiresAt)
+            Scheduler.scheduleWatch(app)
             Notifier.showActive(app, prevProfile, Store.state(app))
         } else {
             try { restoreSnapshot(app, snap) } catch (e: Exception) { Log.w(TAG, "rollback", e) }
@@ -331,9 +333,31 @@ object Engine {
 
     /** Higher = quieter. Unknown counts as "not restricting". */
     /** How quiet a profile is (ringer + DND), only used to compare two profiles. */
-    fun quietRank(p: Profile): Int =
+    private fun quietRank(p: Profile): Int =
         (when (p.dnd) { Dnd.NONE -> 3; Dnd.ALARMS -> 2; Dnd.PRIORITY -> 1; else -> 0 }) * 3 +
             (when (p.ringer) { Ringer.MUTE -> 2; Ringer.VIBRATE -> 1; else -> 0 })
+
+    /** Calls / messages: 0 none, 1 anyone, 2 contacts, 3 starred -> how many people may get through. */
+    private fun senderLevel(s: Int): Int = when (s) { 0 -> 0; 3 -> 1; 2 -> 2; else -> 3 }
+
+    /**
+     * Would turning [next] on make the phone louder in ANY way than [now]? Ringer / DND class, and (for two
+     * "priority only" profiles) every sound or caller that [next] lets through and [now] does not.
+     */
+    fun wouldBeLouder(next: Profile, now: Profile): Boolean {
+        if (quietRank(next) < quietRank(now)) return true
+        if (next.dnd == Dnd.PRIORITY && now.dnd == Dnd.PRIORITY) {
+            if (next.alarms && !now.alarms) return true
+            if (next.media && !now.media) return true
+            if (next.mediaOnBt && !now.mediaOnBt && !now.media) return true
+            if (next.system && !now.system) return true
+            if (next.reminders && !now.reminders) return true
+            if (next.events && !now.events) return true
+            if (senderLevel(next.calls) > senderLevel(now.calls)) return true
+            if (senderLevel(next.messages) > senderLevel(now.messages)) return true
+        }
+        return false
+    }
 
     private fun strictness(f: Int): Int = when (f) {
         NotificationManager.INTERRUPTION_FILTER_PRIORITY -> 1

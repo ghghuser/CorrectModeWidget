@@ -93,7 +93,7 @@ object Schedules {
             if (pick != null) {
                 val (p, _, end) = pick
                 val active = Store.state(app).activeId?.let { Store.profile(app, it) }
-                if (active != null && active.id != p.id && Engine.quietRank(p) < Engine.quietRank(active)) {
+                if (active != null && active.id != p.id && Engine.wouldBeLouder(p, active)) {
                     // never louder by itself: the profile that is on is quieter than the timer wants
                     Notifier.info(app, Loc.str(app, R.string.sched_skipped, p.name, active.name))
                 } else if (active?.id != p.id) {

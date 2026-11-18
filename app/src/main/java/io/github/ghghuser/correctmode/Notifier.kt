@@ -24,7 +24,8 @@ object Scheduler {
     fun canExact(ctx: Context): Boolean = ctx.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
 
     fun schedule(ctx: Context, at: Long) {
-        if (at <= 0) { cancel(ctx); return }
+        // "no expiry" only removes the expiry alarm: the recheck / watch alarms belong to a profile that stays on
+        if (at <= 0) { ctx.getSystemService(AlarmManager::class.java).cancel(pi(ctx)); return }
         val am = ctx.getSystemService(AlarmManager::class.java)
         try {
             if (am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi(ctx))
