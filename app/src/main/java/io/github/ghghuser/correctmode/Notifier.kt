@@ -37,6 +37,27 @@ object Scheduler {
     fun cancel(ctx: Context) {
         ctx.getSystemService(AlarmManager::class.java).cancel(pi(ctx))
         ctx.getSystemService(AlarmManager::class.java).cancel(recheckPi(ctx))
+        ctx.getSystemService(AlarmManager::class.java).cancel(watchPi(ctx))
+    }
+
+    const val ACTION_WATCH = "io.github.ghghuser.correctmode.WATCH"
+    private const val WATCH_MS = 15 * 60_000L
+
+    private fun watchPi(ctx: Context): PendingIntent = PendingIntent.getBroadcast(
+        ctx, 8,
+        Intent(ctx, ExpireReceiver::class.java).setAction(ACTION_WATCH),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    /**
+     * While a profile is on, look at the real state now and then (inexact, cheap). Without this a volume key or
+     * another app that made the phone louder is only noticed at the next tap, so the widget would claim "on".
+     */
+    fun scheduleWatch(ctx: Context) {
+        try {
+            ctx.getSystemService(AlarmManager::class.java)
+                .setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + WATCH_MS, watchPi(ctx))
+        } catch (e: Exception) { /* best effort */ }
     }
 
     const val ACTION_RECHECK = "io.github.ghghuser.correctmode.RECHECK"

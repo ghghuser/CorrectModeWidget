@@ -79,6 +79,7 @@ object Engine {
                 Store.setLastError(app, null)
                 Store.setReleaseFailures(app, 0)
                 scheduleSafely(app, expiresAt)
+                Scheduler.scheduleWatch(app)
                 // The audio system can still list a just-removed earphone: look again shortly after.
                 if (bt) Scheduler.scheduleRecheck(app, 10_000L)
                 Notifier.showActive(app, p, st)
@@ -129,7 +130,9 @@ object Engine {
             // Stay "on" (that is the truth, and the saved original state is kept) so a retry is possible.
             // Auto release: try again in a minute (bounded by MAX_RELEASE_TRIES, so it cannot loop).
             // A release by hand is not retried automatically: the user is looking at the screen.
-            val retryAt = if (reason == Reason.EXPIRED) System.currentTimeMillis() + 60_000L else 0L
+            val now = System.currentTimeMillis()
+            // a release by hand keeps the auto release that was set (it would otherwise be lost and the profile stay on)
+            val retryAt = if (reason == Reason.EXPIRED) now + 60_000L else if (st.expiresAt > now) st.expiresAt else 0L
             Store.setReleaseFailures(app, tries)
             Store.saveState(app, st.copy(expiresAt = retryAt))
             if (retryAt > 0) scheduleSafely(app, retryAt)
@@ -186,6 +189,7 @@ object Engine {
             return
         }
         if (st.expiresAt > 0) Scheduler.schedule(app, st.expiresAt)
+        Scheduler.scheduleWatch(app)
         onBtChanged(app)
         reapplyPolicyIfWidened(app, p, Store.state(app).btMedia)
         Notifier.showActive(app, p, Store.state(app))
@@ -288,6 +292,8 @@ object Engine {
             Store.clearState(app)
             Scheduler.cancel(app)
             Notifier.cancelActive(app)
+            // a quiet profile was on and now none is: the user must see this even if the screen is off
+            if (prev.activeId != null) Notifier.info(app, msg)
         }
         Store.setLastError(app, msg)
         Widgets.updateAll(app)
@@ -324,6 +330,11 @@ object Engine {
     }
 
     /** Higher = quieter. Unknown counts as "not restricting". */
+    /** How quiet a profile is (ringer + DND), only used to compare two profiles. */
+    fun quietRank(p: Profile): Int =
+        (when (p.dnd) { Dnd.NONE -> 3; Dnd.ALARMS -> 2; Dnd.PRIORITY -> 1; else -> 0 }) * 3 +
+            (when (p.ringer) { Ringer.MUTE -> 2; Ringer.VIBRATE -> 1; else -> 0 })
+
     private fun strictness(f: Int): Int = when (f) {
         NotificationManager.INTERRUPTION_FILTER_PRIORITY -> 1
         NotificationManager.INTERRUPTION_FILTER_ALARMS -> 2
@@ -420,12 +431,12 @@ object Engine {
                     nm.notificationPolicy = Policy(0, Policy.PRIORITY_SENDERS_ANY, Policy.PRIORITY_SENDERS_ANY,
                         nm.notificationPolicy.suppressedVisualEffects, Policy.CONVERSATION_SENDERS_NONE)
                     nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
-                    waitForFilter(nm, 1, 1000L) // the rule is created asynchronously: wait until it shows, not a fixed time
+                    waitForFilter(nm, 1, 800L) // the rule is created asynchronously: wait until it shows, not a fixed time
                 }
                 // The change is applied asynchronously and sometimes needs a second try (it failed now and then).
-                for (k in 0 until 3) {
+                for (k in 0 until 2) {
                     nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_NONE)
-                    if (waitForFilter(nm, 3, 800L)) break
+                    if (waitForFilter(nm, 3, 700L)) break
                 }
             }
             else -> nm.setInterruptionFilter(filterOf(p.dnd))
