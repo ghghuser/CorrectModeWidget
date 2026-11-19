@@ -204,7 +204,7 @@ class SettingsActivity : Activity() {
         if (tapMs >= 0) card.addView(Ui.text(this, s(R.string.diag_tap_ms, tapMs), 13f, secondary = true))
         val err = Store.lastError(this)
         card.addView(Ui.text(this, if (err == null) s(R.string.diag_no_error) else s(R.string.diag_last_error) + "\n" + err, 13f))
-        if (err != null) card.addView(Ui.button(this, s(R.string.diag_clear)) { Store.setLastError(this, null); rebuild() })
+        if (err != null) card.addView(Ui.button(this, s(R.string.diag_clear)) { Store.setLastError(this, null); Widgets.updateAll(this); rebuild() })
         content.addView(card)
     }
 }

@@ -205,11 +205,11 @@
     <string name="pat_1">通常(音あり)</string>
     <string name="pat_2">バイブ</string>
     <string name="pat_3">ミュート</string>
-    <string name="pat_4">音あり + DND優先のみ</string>
-    <string name="pat_5">バイブ + DND優先のみ</string>
-    <string name="pat_6">ミュート + DND優先のみ</string>
-    <string name="pat_7">DND アラームのみ</string>
-    <string name="pat_8">DND すべてブロック</string>
+    <string name="pat_4">音あり + DND優先のみ（BT音声）</string>
+    <string name="pat_5">バイブ + DND優先のみ（BT音声）</string>
+    <string name="pat_6">ミュート + DND優先のみ（BT音声）</string>
+    <string name="pat_7">アラームのみ (DND)</string>
+    <string name="pat_8">すべてブロック（DND）</string>
     <string name="mode_set">組み合わせから選ぶ</string>
     <string name="mode_detail">個別に選ぶ</string>
     <string name="mode_set_hint">音の出方を1つ選ぶだけです。選ぶと、下に「この設定で鳴るもの」が出ます。</string>
@@ -353,4 +353,6 @@
     <string name="lic_title">ライセンス</string>
     <string name="lic_text">商用利用禁止・再配布禁止です。個人の非商用利用のみ可能です。詳細はリポジトリのLICENSEを参照してください。</string>
     <string name="time_changed">別のプロファイルに切り替わったため、変更しませんでした</string>
+    <string name="opt_release_all">解除したら「すべて解除」の状態にする(通常の着信音・DNDオフ)</string>
+    <string name="opt_release_all_hint">オフのときは、オンにする前の状態に戻します。端末側で元からDNDをオンにしていた場合、そのDNDはアプリでは消せません。</string>
 </resources>

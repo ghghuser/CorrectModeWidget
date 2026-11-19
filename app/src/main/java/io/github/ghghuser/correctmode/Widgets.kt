@@ -100,8 +100,13 @@ object Widgets {
         val dp = ctx.resources.displayMetrics.density
         val bg0 = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val a = if (active) p.bgOnA else p.bgOffA
-        val bg = withAlpha(bg0.first, a) to withAlpha(bg0.second, a)
-        val fg = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
+        // greyed while the app is busy with the last tap, or (switch widget) while another button is on:
+        // the colours turn grey but the opacity setting of the background is kept
+        val grey = dim || (tap != null && System.currentTimeMillis() < Store.busyUntil(ctx))
+        val bg = if (grey) withAlpha(0xFF8A8A8A.toInt(), a) to withAlpha(0xFF8A8A8A.toInt(), a)
+            else withAlpha(bg0.first, a) to withAlpha(bg0.second, a)
+        val fg = if (grey) 0xFFB0B0B0.toInt() to 0xFFB0B0B0.toInt()
+            else if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
         // "no background": the button area stays tappable, only the coloured shape is not drawn
         rv.setViewVisibility(R.id.item_bg, if (noBg || a == 0 || (if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
         rv.setImageViewResource(R.id.item_bg, joinShape ?: shapeRes(p.shape))
@@ -151,10 +156,11 @@ object Widgets {
         val pad = (padDp * dp).roundToInt()
         rv.setViewPadding(R.id.item_content, pad, pad, pad, pad)
 
-        // greyed while the app is busy with the last tap (taps are ignored for a moment, see TapActivity)
-        val busy = tap != null && System.currentTimeMillis() < Store.busyUntil(ctx)
         val state = Loc.str(ctx, if (active) R.string.state_on else R.string.state_off)
-        rv.setFloat(R.id.item_root, "setAlpha", if (dim || busy) 0.35f else 1f)
+        rv.setFloat(R.id.item_root, "setAlpha", 1f)
+        rv.setInt(R.id.item_image, "setImageAlpha", if (grey) 110 else 255)
+        // a warning mark while the last problem (changed from outside, release failed ...) is still not cleared
+        rv.setViewVisibility(R.id.item_warn, if (tap != null && Store.lastError(ctx) != null) View.VISIBLE else View.GONE)
         rv.setContentDescription(R.id.item_root, p.name + ": " + state)
         if (tap != null) rv.setOnClickPendingIntent(R.id.item_root, tap)
     }
@@ -177,21 +183,62 @@ object Widgets {
         return PendingIntent.getActivity(ctx, 0, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
-    /** With this much height (dp) and at least 3 buttons the switch widget wraps into two rows. */
-    private const val TWO_ROW_MIN_DP = 105f
+    /**
+     * How many rows the buttons of a switch widget are laid out in: the number that makes the buttons closest
+     * to square for the widget area (rows get at least ~44 dp of height); on a tie the larger number wins.
+     * 1 = one row, n = one column.
+     */
+    private fun chooseRows(n: Int, w: Float, h: Float): Int {
+        var best = 1; var bestScore = Double.MAX_VALUE
+        val scores = HashMap<Int, Double>()
+        for (r in 1..n) {
+            val cols = (n + r - 1) / r
+            val cw = w / cols; val ch = h / r
+            if (r > 1 && ch < 44f) continue
+            scores[r] = Math.abs(Math.log((cw / ch).toDouble()))
+        }
+        for ((_, v) in scores) if (v < bestScore) bestScore = v
+        for ((r, v) in scores) if (v <= bestScore + 0.15 && r > best) best = r
+        if (scores.isEmpty()) return 1
+        return if (scores.containsKey(best)) best else 1
+    }
+
+    private enum class Corner { TL, TR, BR, BL }
+
+    private fun joinDrawable(c: Set<Corner>): Int? {
+        val tl = Corner.TL in c; val tr = Corner.TR in c; val br = Corner.BR in c; val bl = Corner.BL in c
+        return when {
+            !tl && !tr && !br && !bl -> R.drawable.shape_join_h_mid
+            tl && bl && !tr && !br -> R.drawable.shape_join_h_start
+            tr && br && !tl && !bl -> R.drawable.shape_join_h_end
+            tl && !tr && !br && !bl -> R.drawable.shape_join_tl
+            tr && !tl && !br && !bl -> R.drawable.shape_join_tr
+            bl && !tl && !tr && !br -> R.drawable.shape_join_bl
+            br && !tl && !tr && !bl -> R.drawable.shape_join_br
+            tl && tr && !br && !bl -> R.drawable.shape_join_t
+            bl && br && !tl && !tr -> R.drawable.shape_join_b
+            else -> null // all four: the profile's own shape
+        }
+    }
 
     private fun buildSwitch(ctx: Context, mgr: AppWidgetManager, id: Int): RemoteViews {
         val list = Store.widgetProfiles(ctx, id)?.mapNotNull { Store.profile(ctx, it) }
         if (list.isNullOrEmpty()) return placeholder(ctx, id)
+        val n = list.size
         val o = mgr.getAppWidgetOptions(id)
         val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
         val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
-        val vertical = h > w * 1.3
         val box = boxDp(ctx, mgr, id)
-        // room in height: wrap into two rows, the upper one gets the extra button, the lower row is centred
-        val twoRows = !vertical && list.size >= 3 && (box?.second ?: h.toFloat()) >= TWO_ROW_MIN_DP
-        val rows: List<List<Profile>> = if (twoRows) { val top = (list.size + 1) / 2; listOf(list.take(top), list.drop(top)) } else listOf(list)
-        val rv = RemoteViews(ctx.packageName, when { vertical -> R.layout.widget_switch_v; twoRows -> R.layout.widget_switch_rows; else -> R.layout.widget_switch_h })
+        val rowCount = if (n == 1) 1 else if (box != null) chooseRows(n, box.first, box.second) else if (h > w * 1.3) n else 1
+        val vertical = n > 1 && rowCount == n
+        val multi = rowCount in 2 until n
+        // the upper rows get the extra buttons; a shorter row is centred
+        val rows: List<List<Profile>> = if (!multi) listOf(list) else {
+            val base = n / rowCount; val extra = n % rowCount
+            var at = 0
+            (0 until rowCount).map { r -> val k = base + if (r < extra) 1 else 0; list.subList(at, at + k).also { at += k } }
+        }
+        val rv = RemoteViews(ctx.packageName, when { vertical -> R.layout.widget_switch_v; multi -> R.layout.widget_switch_rows; else -> R.layout.widget_switch_h })
         val activeId = Store.state(ctx).activeId
         val oneIsOn = list.any { it.id == activeId }
         // A RemoteViews update is applied on top of the view that is already on screen: without this the
@@ -210,36 +257,49 @@ object Widgets {
             rv.setViewVisibility(R.id.switch_bg, View.GONE)
             rv.setViewPadding(R.id.switch_container, 0, 0, 0, 0)
         }
-        for (row in rows) {
+        for ((ri, row) in rows.withIndex()) {
             val holder: RemoteViews
             val holderId: Int
-            if (twoRows) {
+            if (multi) {
                 holder = RemoteViews(ctx.packageName, R.layout.widget_switch_row)
                 holderId = R.id.switch_row
             } else { holder = rv; holderId = R.id.switch_container }
-            // a shorter row is centred: spacers of half / whole button width on both sides
             val gap = rows[0].size - row.size
             fun spacers() {
                 repeat(gap / 2) { holder.addView(holderId, RemoteViews(ctx.packageName, R.layout.widget_spacer)) }
                 if (gap % 2 == 1) holder.addView(holderId, RemoteViews(ctx.packageName, R.layout.widget_spacer_half))
             }
-            if (twoRows && gap > 0) spacers()
+            if (multi && gap > 0) spacers()
+            val belowNarrower = multi && ri < rows.size - 1 && rows[ri + 1].size < row.size
             for ((i, p) in row.withIndex()) {
                 val item = RemoteViews(ctx.packageName, if (vertical) R.layout.widget_item_v else R.layout.widget_item_h)
-                val join = when {
-                    row.size == 1 -> null
-                    i == 0 -> if (vertical) R.drawable.shape_join_v_start else R.drawable.shape_join_h_start
-                    i == row.size - 1 -> if (vertical) R.drawable.shape_join_v_end else R.drawable.shape_join_h_end
-                    else -> R.drawable.shape_join_h_mid
+                val first = i == 0; val last = i == row.size - 1
+                val join: Int?
+                val edges: Edges
+                if (multi) {
+                    val c = HashSet<Corner>()
+                    if (ri == 0 && first) c.add(Corner.TL)
+                    if (ri == 0 && last) c.add(Corner.TR)
+                    if (first && (ri == rows.size - 1 || belowNarrower)) c.add(Corner.BL)
+                    if (last && (ri == rows.size - 1 || belowNarrower)) c.add(Corner.BR)
+                    join = joinDrawable(c) ?: shapeRes(p.shape)
+                    edges = Edges(first && gap == 0, ri == 0, last && gap == 0, ri == rows.size - 1)
+                } else {
+                    join = when {
+                        row.size == 1 -> null
+                        first -> if (vertical) R.drawable.shape_join_v_start else R.drawable.shape_join_h_start
+                        last -> if (vertical) R.drawable.shape_join_v_end else R.drawable.shape_join_h_end
+                        else -> R.drawable.shape_join_h_mid
+                    }
+                    edges = if (vertical) Edges(true, first, true, last) else Edges(first, true, last, true)
                 }
-                val edges = if (vertical) Edges(true, i == 0, true, i == row.size - 1) else Edges(i == 0, true, i == row.size - 1, true)
                 // while one of this widget's profiles is on, all the others are greyed out
                 bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id,
-                    joinShape = join, noBg = !look.items, boxDp = if (row.size == 1 && !twoRows) box else null, edges = edges)
+                    joinShape = join, noBg = !look.items, boxDp = if (row.size == 1 && !multi) box else null, edges = edges)
                 holder.addView(holderId, item)
             }
-            if (twoRows && gap > 0) spacers()
-            if (twoRows) rv.addView(R.id.switch_container, holder)
+            if (multi && gap > 0) spacers()
+            if (multi) rv.addView(R.id.switch_container, holder)
         }
         return rv
     }
@@ -261,8 +321,9 @@ object Widgets {
     }
 
     /** Preview for the editor: the same RemoteViews code path as the real widget. */
-    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int): View {
+    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int, outline: Boolean = false): View {
         val holder = FrameLayout(ctx)
+        if (outline) holder.setBackgroundResource(R.drawable.widget_cell_outline)
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
         bindItem(ctx, rv, p, active, null)
         val px = (sizeDp * ctx.resources.displayMetrics.density).roundToInt()

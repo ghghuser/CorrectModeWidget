@@ -205,11 +205,11 @@
     <string name="pat_1">Normal (sound)</string>
     <string name="pat_2">Vibrate</string>
     <string name="pat_3">Mute</string>
-    <string name="pat_4">Sound + DND priority only</string>
-    <string name="pat_5">Vibrate + DND priority only</string>
-    <string name="pat_6">Mute + DND priority only</string>
-    <string name="pat_7">DND alarms only</string>
-    <string name="pat_8">DND block everything</string>
+    <string name="pat_4">Sound + DND priority only (BT audio)</string>
+    <string name="pat_5">Vibrate + DND priority only (BT audio)</string>
+    <string name="pat_6">Mute + DND priority only (BT audio)</string>
+    <string name="pat_7">Alarms only (DND)</string>
+    <string name="pat_8">Block everything (DND)</string>
     <string name="mode_set">Pick a combination</string>
     <string name="mode_detail">Pick each one</string>
     <string name="mode_set_hint">Just pick how it should sound. What makes a sound appears below.</string>
@@ -353,4 +353,6 @@
     <string name="lic_title">License</string>
     <string name="lic_text">No commercial use and no redistribution. Personal non-commercial use only. See LICENSE in the repository.</string>
     <string name="time_changed">Another profile is on now, nothing was changed</string>
+    <string name="opt_release_all">On release, switch everything off (normal ringer, DND off)</string>
+    <string name="opt_release_all_hint">When off, the state from before is put back. A DND you had turned on yourself cannot be cleared by this app.</string>
 </resources>

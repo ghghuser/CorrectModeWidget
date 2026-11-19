@@ -105,7 +105,12 @@ object Engine {
         val app = ctx.applicationContext
         val st = Store.state(app)
         Scheduler.cancel(app)
-        val snap = st.snapshot
+        // "everything off" profiles: ringer normal and our DND off instead of the state from before
+        val snap = st.snapshot?.let { sn ->
+            if (st.activeId?.let { Store.profile(app, it) }?.releaseAll == true)
+                sn.copy(ringer = android.media.AudioManager.RINGER_MODE_NORMAL, filter = NotificationManager.INTERRUPTION_FILTER_ALL)
+            else sn
+        }
         var problem: String? = null
         var noAccess = false
         if (st.activeId != null && snap != null) {

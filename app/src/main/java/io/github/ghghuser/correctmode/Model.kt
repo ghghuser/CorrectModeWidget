@@ -125,6 +125,8 @@ data class Profile(
     var volFixed: List<Int> = listOf(50, 50, 50, 50),
     /** short vibration when this profile is switched from a widget */
     var tapVibe: Boolean = false,
+    /** on release: false = put back what was there before; true = everything off (ringer normal, our DND off) */
+    var releaseAll: Boolean = false,
     /** timer that turns this profile ON by itself (see Schedules) */
     var schedOn: Boolean = false,
     /** minutes since midnight */
@@ -152,7 +154,7 @@ data class Profile(
         if (preset >= 0) put("pre", preset)
         iconKey?.let { put("icon", it) }
         put("vm", volMode); put("vf", JSONArray(volFixed))
-        put("vib", tapVibe)
+        put("vib", tapVibe); put("ra", releaseAll)
         put("son", schedOn); put("ss", schedStart); put("se", schedEnd); put("sd", schedDays)
     }
 
@@ -196,6 +198,7 @@ data class Profile(
             volMode = o.optInt("vm", VolMode.OFF).coerceIn(0, 2),
             volFixed = (0 until 4).map { i -> o.optJSONArray("vf")?.optInt(i, 50)?.coerceIn(0, 100) ?: 50 },
             tapVibe = o.optBoolean("vib", false),
+            releaseAll = o.optBoolean("ra", false),
             schedOn = o.optBoolean("son", false),
             schedStart = o.optInt("ss", 22 * 60).coerceIn(0, 1439),
             schedEnd = o.optInt("se", -1).coerceIn(-1, 1439),

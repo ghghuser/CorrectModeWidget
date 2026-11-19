@@ -142,7 +142,7 @@ class ProfileEditActivity : Activity() {
         previewBox.removeAllViews()
         for (on in listOf(false, true)) {
             val col = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(dp(6), 0, dp(6), 0) }
-            col.addView(Widgets.preview(this, p, on, 56))
+            col.addView(Widgets.preview(this, p, on, 72, outline = true))
             col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true))
             // tap the preview: jump to the look settings
             col.setOnClickListener { scroll.post { scroll.smoothScrollTo(0, lookCard.top) } }
@@ -243,6 +243,12 @@ class ProfileEditActivity : Activity() {
             text = s(R.string.opt_tap_vibe); isChecked = p.tapVibe
             setOnCheckedChangeListener { _, v -> p.tapVibe = v }
         })
+
+        card.addView(CheckBox(this).apply {
+            text = s(R.string.opt_release_all); isChecked = p.releaseAll
+            setOnCheckedChangeListener { _, v -> p.releaseAll = v }
+        })
+        card.addView(Ui.text(this, s(R.string.opt_release_all_hint), 11f, secondary = true))
 
         // what happens to the volumes when THIS profile is released
         val volBox = Ui.vbox(this)
