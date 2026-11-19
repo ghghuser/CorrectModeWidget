@@ -21,6 +21,8 @@
     </style>
 
     <!-- Invisible host for the duration dialog / widget tap (own task, never stays on screen). -->
+    <style name="DialogTheme" parent="@android:style/Theme.DeviceDefault.DayNight.Dialog" />
+
     <style name="TapTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>

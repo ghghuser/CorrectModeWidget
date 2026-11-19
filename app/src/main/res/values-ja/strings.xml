@@ -340,4 +340,16 @@
     <string name="margin_bottom">下 %1$d dp</string>
     <string name="margin_left">左 %1$d dp</string>
     <string name="margin_right">右 %1$d dp</string>
+    <string name="time_dialog_title">時間の変更</string>
+    <string name="time_action">時間</string>
+    <string name="time_release_in">解除までの時間(今から)</string>
+    <string name="time_minutes_hint">分(1〜10080)</string>
+    <string name="time_minutes_bad">1〜10080分で入力してください</string>
+    <string name="time_next_start">次回の自動起動(毎日この時刻・選んだ曜日)</string>
+    <string name="time_sched_off">自動起動はオフです</string>
+    <string name="time_set_start">時刻を指定して自動起動をオン</string>
+    <string name="time_saved">自動起動の時刻を保存しました</string>
+    <string name="time_sched_stop">自動起動をオフにする</string>
+    <string name="lic_title">ライセンス</string>
+    <string name="lic_text">商用利用禁止・再配布禁止です。個人の非商用利用のみ可能です。詳細はリポジトリのLICENSEを参照してください。</string>
 </resources>

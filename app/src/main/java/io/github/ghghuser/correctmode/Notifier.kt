@@ -144,6 +144,10 @@ object Notifier {
                 ctx, 4, Intent(ctx, ActionReceiver::class.java).setAction(ACTION_REPOST),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
+            val timeDlg = PendingIntent.getActivity(
+                ctx, 7, Intent(ctx, TimeDialogActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
             val until = if (st.expiresAt > 0) {
                 c.getString(R.string.until_time, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(st.expiresAt)))
             } else c.getString(R.string.no_limit)
@@ -159,6 +163,7 @@ object Notifier {
                 .setContentIntent(openApp(ctx))
                 .setDeleteIntent(repost)
                 .addAction(Notification.Action.Builder(Icon.createWithResource(ctx, R.drawable.ic_stat), c.getString(R.string.release), release).build())
+                .addAction(Notification.Action.Builder(Icon.createWithResource(ctx, R.drawable.ic_stat), c.getString(R.string.time_action), timeDlg).build())
             if (st.expiresAt > 0) {
                 b.setWhen(st.expiresAt).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
             }
