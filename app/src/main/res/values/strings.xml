@@ -355,4 +355,5 @@
     <string name="time_changed">Another profile is on now, nothing was changed</string>
     <string name="opt_release_all">On release, switch everything off (normal ringer, DND off)</string>
     <string name="opt_release_all_hint">When off, the state from before is put back. A DND you had turned on yourself cannot be cleared by this app.</string>
+    <string name="released_all_text">Auto release done. Everything is switched off.</string>
 </resources>

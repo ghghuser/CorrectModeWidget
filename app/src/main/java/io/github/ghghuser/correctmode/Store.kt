@@ -129,7 +129,10 @@ object Store {
     }
 
     /** Replaces the whole list (import). */
-    fun replaceProfiles(ctx: Context, list: List<Profile>) { save(ctx, list) }
+    fun replaceProfiles(ctx: Context, list: List<Profile>) {
+        save(ctx, list)
+        sp(ctx).edit().putBoolean("presetNames1", false).commit() // an imported older backup gets the new factory names too
+    }
 
     // ---- one-time: the old preset emoji become the new flat icons ---------------------------
 

@@ -163,7 +163,8 @@ object Engine {
             Store.setLastError(app, null)
             if (snap != null && st.activeId != null) warning = dndRemainsWarning(app, strictness(snap.filter))
             if (reason == Reason.EXPIRED) {
-                Notifier.info(app, Loc.str(app, R.string.released_text) + (warning?.let { "\n" + it } ?: ""))
+                val all = st.activeId?.let { Store.profile(app, it) }?.releaseAll == true
+                Notifier.info(app, Loc.str(app, if (all) R.string.released_all_text else R.string.released_text) + (warning?.let { "\n" + it } ?: ""))
             }
         }
         Widgets.updateAll(app)

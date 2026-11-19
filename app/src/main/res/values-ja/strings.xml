@@ -355,4 +355,5 @@
     <string name="time_changed">別のプロファイルに切り替わったため、変更しませんでした</string>
     <string name="opt_release_all">解除したら「すべて解除」の状態にする(通常の着信音・DNDオフ)</string>
     <string name="opt_release_all_hint">オフのときは、オンにする前の状態に戻します。端末側で元からDNDをオンにしていた場合、そのDNDはアプリでは消せません。</string>
+    <string name="released_all_text">解除しました。通常の状態(すべて解除)にしました。</string>
 </resources>
