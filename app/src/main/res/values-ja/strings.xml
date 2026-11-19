@@ -329,4 +329,15 @@
     <string name="wl_items_hint">オフにすると、アイコンだけが並びます。オンとオフは、アイコンの色で見分けます。</string>
     <string name="sched_skipped">「%1$s」は、いまオンの「%2$s」より音が出る設定のため、予定の時刻でも切り替えませんでした。</string>
     <string name="err_apply_restore_failed">オンにできませんでした(%1$s)。さらに、元の設定への復元にも失敗しました(%2$s)。端末の音の設定を確認してください。</string>
+    <string name="icon_sep">オンのときは別のアイコンを使う</string>
+    <string name="icon_edit_off">オフ時のアイコン</string>
+    <string name="icon_edit_on">オン時のアイコン</string>
+    <string name="bg_alpha">背景の不透明度 %1$d%%</string>
+    <string name="keep_ratio">比率を維持する(円・四角を崩さない)</string>
+    <string name="keep_ratio_hint">オフにすると、ウィジェットの枠いっぱいに広がります(縦長・横長になることがあります)。</string>
+    <string name="margin_title">アイコンの外側の余白</string>
+    <string name="margin_top">上 %1$d dp</string>
+    <string name="margin_bottom">下 %1$d dp</string>
+    <string name="margin_left">左 %1$d dp</string>
+    <string name="margin_right">右 %1$d dp</string>
 </resources>

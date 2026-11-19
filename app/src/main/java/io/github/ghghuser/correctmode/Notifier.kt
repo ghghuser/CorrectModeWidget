@@ -41,6 +41,22 @@ object Scheduler {
         ctx.getSystemService(AlarmManager::class.java).cancel(watchPi(ctx))
     }
 
+    const val ACTION_REDRAW = "io.github.ghghuser.correctmode.REDRAW"
+
+    private fun redrawPi(ctx: Context): PendingIntent = PendingIntent.getBroadcast(
+        ctx, 9,
+        Intent(ctx, ExpireReceiver::class.java).setAction(ACTION_REDRAW),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    /** Safety net for the greyed "busy" look of the widgets: redraw them even if the app process is gone by then. */
+    fun scheduleRedraw(ctx: Context, delayMs: Long) {
+        try {
+            ctx.getSystemService(AlarmManager::class.java)
+                .setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delayMs, redrawPi(ctx))
+        } catch (e: Exception) { /* best effort */ }
+    }
+
     const val ACTION_WATCH = "io.github.ghghuser.correctmode.WATCH"
     private const val WATCH_MS = 15 * 60_000L
 

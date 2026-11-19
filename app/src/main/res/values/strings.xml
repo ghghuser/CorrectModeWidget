@@ -329,4 +329,15 @@
     <string name="wl_items_hint">When off, only the icons are shown. On and off are told apart by the icon colour.</string>
     <string name="sched_skipped">%1$s was not switched on at its scheduled time: it allows more sound than %2$s, which is on.</string>
     <string name="err_apply_restore_failed">Could not turn it on (%1$s), and restoring the previous settings failed too (%2$s). Please check the sound settings of the phone.</string>
+    <string name="icon_sep">Use a different icon while on</string>
+    <string name="icon_edit_off">Icon when off</string>
+    <string name="icon_edit_on">Icon when on</string>
+    <string name="bg_alpha">Background opacity %1$d%%</string>
+    <string name="keep_ratio">Keep the ratio (circle and square stay exact)</string>
+    <string name="keep_ratio_hint">When off, the button fills the whole widget (it can become tall or wide).</string>
+    <string name="margin_title">Space around the button</string>
+    <string name="margin_top">Top %1$d dp</string>
+    <string name="margin_bottom">Bottom %1$d dp</string>
+    <string name="margin_left">Left %1$d dp</string>
+    <string name="margin_right">Right %1$d dp</string>
 </resources>
