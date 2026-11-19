@@ -158,6 +158,7 @@ object Widgets {
 
         val state = Loc.str(ctx, if (active) R.string.state_on else R.string.state_off)
         rv.setFloat(R.id.item_root, "setAlpha", 1f)
+        rv.setFloat(R.id.item_emoji, "setAlpha", if (grey) 0.4f else 1f) // colour emojis ignore the text colour
         rv.setInt(R.id.item_image, "setImageAlpha", if (grey) 110 else 255)
         // a warning mark while the last problem (changed from outside, release failed ...) is still not cleared
         rv.setViewVisibility(R.id.item_warn, if (tap != null && Store.lastError(ctx) != null) View.VISIBLE else View.GONE)

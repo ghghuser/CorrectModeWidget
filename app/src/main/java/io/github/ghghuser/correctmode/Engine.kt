@@ -122,7 +122,7 @@ object Engine {
                     val r = restoreSnapshot(app, snap)
                     // Volumes only AFTER the ringer / DND are back: while DND is still on, Android can refuse
                     // (or flip the ringer) when the ring volume is changed.
-                    if (r == null) restoreVolumes(app, snap, Store.profile(app, st.activeId))
+                    if (r == null) restoreVolumes(app, st.snapshot ?: snap, Store.profile(app, st.activeId)) // the ringer of BEFORE decides about the ring volumes
                     r
                 } catch (e: Exception) {
                     describe(e)
