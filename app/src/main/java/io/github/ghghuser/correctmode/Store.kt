@@ -69,9 +69,9 @@ object Store {
         val s = sp(ctx).getString("profiles", null) ?: return seed(ctx)
         return try {
             val arr = JSONArray(s)
-            migratePresetIndex(ctx, migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
+            migratePresetNames(ctx, migratePresetIndex(ctx, migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
                 try { Profile.fromJson(arr.getJSONObject(i)) } catch (e: Exception) { null }
-            })))
+            }))))
         } catch (e: Exception) { emptyList() }
     }
 
@@ -129,7 +129,10 @@ object Store {
     }
 
     /** Replaces the whole list (import). */
-    fun replaceProfiles(ctx: Context, list: List<Profile>) { save(ctx, list) }
+    fun replaceProfiles(ctx: Context, list: List<Profile>) {
+        save(ctx, list)
+        sp(ctx).edit().putBoolean("presetNames1", false).commit() // an imported older backup gets the new factory names too
+    }
 
     // ---- one-time: the old preset emoji become the new flat icons ---------------------------
 
@@ -152,6 +155,24 @@ object Store {
         val c = Loc.wrap(ctx)
         val (ringer, dnd) = Patterns.ALL[i]
         return Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
+    }
+
+    /** One time: ready-made profiles that still carry an old factory name get the new one. */
+    private fun migratePresetNames(ctx: Context, list: List<Profile>): List<Profile> {
+        if (sp(ctx).getBoolean("presetNames1", false)) return list
+        val old = mapOf(
+            3 to listOf("音あり + DND優先のみ", "Sound + DND priority only"), 4 to listOf("バイブ + DND優先のみ", "Vibrate + DND priority only"),
+            5 to listOf("ミュート + DND優先のみ", "Mute + DND priority only"), 6 to listOf("DND アラームのみ", "DND alarms only"),
+            7 to listOf("DND すべてブロック", "DND block everything"),
+        )
+        var changed = false
+        for (p in list) {
+            val names = old[p.preset] ?: continue
+            if (p.name in names) { p.name = Loc.wrap(ctx).getString(Patterns.NAMES[p.preset]); changed = true }
+        }
+        if (changed) save(ctx, list)
+        sp(ctx).edit().putBoolean("presetNames1", true).commit()
+        return list
     }
 
     /** One time: presets made by an earlier version get their pattern number, so they can be reset. */

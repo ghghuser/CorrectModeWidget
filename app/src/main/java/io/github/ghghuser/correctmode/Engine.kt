@@ -105,7 +105,12 @@ object Engine {
         val app = ctx.applicationContext
         val st = Store.state(app)
         Scheduler.cancel(app)
-        val snap = st.snapshot
+        // "everything off" profiles: ringer normal and our DND off instead of the state from before
+        val snap = st.snapshot?.let { sn ->
+            if (st.activeId?.let { Store.profile(app, it) }?.releaseAll == true)
+                sn.copy(ringer = android.media.AudioManager.RINGER_MODE_NORMAL, filter = NotificationManager.INTERRUPTION_FILTER_ALL)
+            else sn
+        }
         var problem: String? = null
         var noAccess = false
         if (st.activeId != null && snap != null) {
@@ -117,7 +122,7 @@ object Engine {
                     val r = restoreSnapshot(app, snap)
                     // Volumes only AFTER the ringer / DND are back: while DND is still on, Android can refuse
                     // (or flip the ringer) when the ring volume is changed.
-                    if (r == null) restoreVolumes(app, snap, Store.profile(app, st.activeId))
+                    if (r == null) restoreVolumes(app, st.snapshot ?: snap, Store.profile(app, st.activeId)) // the ringer of BEFORE decides about the ring volumes
                     r
                 } catch (e: Exception) {
                     describe(e)
@@ -158,7 +163,8 @@ object Engine {
             Store.setLastError(app, null)
             if (snap != null && st.activeId != null) warning = dndRemainsWarning(app, strictness(snap.filter))
             if (reason == Reason.EXPIRED) {
-                Notifier.info(app, Loc.str(app, R.string.released_text) + (warning?.let { "\n" + it } ?: ""))
+                val all = st.activeId?.let { Store.profile(app, it) }?.releaseAll == true
+                Notifier.info(app, Loc.str(app, if (all) R.string.released_all_text else R.string.released_text) + (warning?.let { "\n" + it } ?: ""))
             }
         }
         Widgets.updateAll(app)

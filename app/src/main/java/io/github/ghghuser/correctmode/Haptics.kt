@@ -11,7 +11,10 @@ object Haptics {
             val v = ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator ?: return
             val effect = if (turnedOn) VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
             else VibrationEffect.createWaveform(longArrayOf(0, 30, 70, 30), -1) // two ticks = off
-            v.vibrate(effect)
+            // ALARM usage: the system does not drop it because of the ringer mode, DND or the touch-vibration setting
+            // (a short tick the user asked for on purpose). With the default usage it was silently suppressed.
+            @Suppress("DEPRECATION")
+            v.vibrate(effect, android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_ALARM).build())
         } catch (e: Exception) {
             // no vibrator / not allowed: nothing to report
         }

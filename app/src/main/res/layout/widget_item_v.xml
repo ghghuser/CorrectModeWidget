@@ -68,4 +68,15 @@
             android:textColor="@color/widget_fg_default"
             android:visibility="gone" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/item_warn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="3dp"
+        android:text="⚠"
+        android:textColor="#FFC107"
+        android:textSize="13sp"
+        android:visibility="gone" />
 </FrameLayout>
