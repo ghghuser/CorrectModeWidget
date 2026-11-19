@@ -3,6 +3,8 @@ package io.github.ghghuser.correctmode
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 
 /**
@@ -30,6 +32,12 @@ class TapActivity : Activity() {
         t0 = SystemClock.elapsedRealtime()
         if (t0 - lastDone < DEBOUNCE_MS) { done = true; finishAndRemoveTask(); return }
         Flow.fromWidget = true
+        // grey the buttons while this tap is handled and a moment after it (taps are ignored then)
+        try {
+            Store.setBusyUntil(this, System.currentTimeMillis() + 4000L)
+            Scheduler.scheduleRedraw(applicationContext, 5000L) // safety net if the process dies while a dialog is open
+            Widgets.updateAll(this)
+        } catch (e: Exception) { }
         // Look at the real device first: if it was changed from outside (volume key, quick settings), the
         // stale "on" is cleaned up here, so the tap below acts on the truth, not on an old widget picture.
         try { Engine.reconcile(this) } catch (e: Exception) { }
@@ -61,6 +69,21 @@ class TapActivity : Activity() {
         }
     }
 
+    /**
+     * The greyed look ends DEBOUNCE_MS after the tap was handled. If the process is gone before that, the
+     * recheck alarm redraws the widgets (Engine.reconcile ends in Widgets.updateAll), so they cannot stay grey.
+     */
+    private fun endBusy() {
+        val app = applicationContext
+        try {
+            Store.setBusyUntil(app, System.currentTimeMillis() + DEBOUNCE_MS)
+            Scheduler.scheduleRedraw(app, 2500L)
+            Handler(Looper.getMainLooper()).postDelayed({
+                try { Store.setBusyUntil(app, 0L); Widgets.updateAll(app) } catch (e: Exception) { }
+            }, DEBOUNCE_MS + 50L)
+        } catch (e: Exception) { }
+    }
+
     private fun finishNow() {
         if (done) return
         done = true
@@ -68,6 +91,7 @@ class TapActivity : Activity() {
         val now = SystemClock.elapsedRealtime()
         lastDone = now
         try { Store.setLastTapMs(this, now - t0) } catch (e: Exception) { }
+        endBusy()
         if (!isFinishing) finishAndRemoveTask()
     }
 }

@@ -14,6 +14,7 @@ class ExpireReceiver : BroadcastReceiver() {
         // which re-reads the device, so a forged or early call can never do more than that.
         when (intent.action) {
             Scheduler.ACTION_EXPIRE, Scheduler.ACTION_RECHECK, Scheduler.ACTION_WATCH -> Engine.reconcile(context)
+            Scheduler.ACTION_REDRAW -> Widgets.updateAll(context)
             Schedules.ACTION -> Schedules.runDue(context) // timer that turns a profile on
         }
     }

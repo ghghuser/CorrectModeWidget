@@ -1,8 +1,8 @@
 # CorrectMode(CorrectModeWidget)
 
-Android 16 / 17 向けの、**着信音(音あり/バイブ/ミュート)** と **DND(サイレントモード)** の組み合わせをウィジェットで切り替えるアプリです。自分専用のデバッグAPKをGitHub Actionsでビルドして使います。MITライセンス。
+Android 16 / 17 向けの、**着信音(音あり/バイブ/ミュート)** と **DND(サイレントモード)** の組み合わせをウィジェットで切り替えるアプリです。自分専用のデバッグAPKをGitHub Actionsでビルドして使います。**商用利用禁止・再配布禁止**(LICENSE参照)。
 
-An Android 16/17 widget app that switches combinations of **Ringer** (sound / vibrate / mute) and **DND** (Do Not Disturb). Personal-use debug APK built by GitHub Actions. MIT licensed.
+An Android 16/17 widget app that switches combinations of **Ringer** (sound / vibrate / mute) and **DND** (Do Not Disturb). Personal-use debug APK built by GitHub Actions. **No commercial use, no redistribution** (see LICENSE).
 
 ## 用語(取り違え防止)
 
@@ -59,7 +59,7 @@ INTERNET権限はありません。データはすべて端末内です。
 
 ## ライセンス
 
-MIT
+商用利用禁止・再配布禁止 / No commercial use, no redistribution. 詳細は [LICENSE](LICENSE)。
 
 ---
 
@@ -70,3 +70,7 @@ MIT
 - **構成**: Kotlin、外部ライブラリなし、画面はコードで構築(XMLレイアウトはウィジェットのみ)。`Engine.kt` が状態機械(変更前に保存 → 消音側を先に変更 → 読み戻して確認 → 失敗なら元に戻す)。`Schedules.kt` がタイマー、`Backup.kt` がエクスポート/インポート。
 - **消音の安全策**: 外部変更は上書きしない、通知チャンネルは無音、Bluetooth切断は即時に除外。詳細と点検結果は [docs/REVIEW.md](docs/REVIEW.md)。
 - **未確認(実機で要確認)**: Android 16/17でのDNDの挙動、許可した着信がバイブのみで届くか、メーカー独自の省電力による受信機の停止。[docs/REVIEW.md](docs/REVIEW.md) を参照。
+
+## 秘匿情報の方針 / Secrets policy
+- 現在、APIキー・トークン・パスワード等の秘匿情報はリポジトリに入れていません(署名鍵は公開前提のデバッグ用 `debug.keystore`、パスワード `android`)。
+- 今後、秘匿が必要な情報(APIキー、トークン、リリース用署名鍵など)を扱う段階になったら、アプリ完成後にリポジトリを **プライベートへ移行** してから変更し、値はGitHub Actionsの Secrets に置きます。コードには書きません。

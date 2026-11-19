@@ -37,6 +37,13 @@
             android:exported="false" />
 
         <activity
+            android:name=".TimeDialogActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
+            android:theme="@style/WizardTheme" />
+
+        <activity
             android:name=".WizardActivity"
             android:theme="@style/WizardTheme"
             android:exported="false" />

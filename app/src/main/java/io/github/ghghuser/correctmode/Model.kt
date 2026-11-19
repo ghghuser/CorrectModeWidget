@@ -101,6 +101,20 @@ data class Profile(
     var shape: Int = Shape.ROUND_L,
     var iconSize: Int = IconSize.MEDIUM,
     var showLabel: Boolean = false,
+    /** opacity of the background colour in percent (0 = invisible .. 100) */
+    var bgOffA: Int = 100,
+    var bgOnA: Int = 100,
+    /** keep circle / square perfectly round / square, whatever the grid cell of the launcher is */
+    var keepRatio: Boolean = true,
+    /** space between the widget edge and the button, in dp (left, top, right, bottom) */
+    var mL: Int = 2,
+    var mT: Int = 2,
+    var mR: Int = 2,
+    var mB: Int = 2,
+    /** a different icon while this profile is on (built-in icon or emoji) */
+    var onSep: Boolean = false,
+    var iconKeyOn: String? = null,
+    var emojiOn: String = "🔔",
     /** 0 = left tab, 1 = right tab (the user can name both) */
     var tab: Int = 0,
     /** key of a built-in flat icon (see FlatIcons); null = emoji */
@@ -131,6 +145,9 @@ data class Profile(
         bgOn?.let { put("bgOn", it) }; bgOff?.let { put("bgOff", it) }
         fgOn?.let { put("fgOn", it) }; fgOff?.let { put("fgOff", it) }
         put("shape", shape); put("iconSize", iconSize); put("showLabel", showLabel)
+        put("boa", bgOffA); put("bna", bgOnA); put("kr", keepRatio)
+        put("ml", mL); put("mt", mT); put("mr", mR); put("mb", mB)
+        put("osep", onSep); iconKeyOn?.let { put("ikon", it) }; put("emon", emojiOn)
         put("tab", tab)
         if (preset >= 0) put("pre", preset)
         iconKey?.let { put("icon", it) }
@@ -164,6 +181,16 @@ data class Profile(
             shape = o.optInt("shape", Shape.ROUND_L).coerceIn(0, 3),
             iconSize = o.optInt("iconSize", IconSize.MEDIUM).coerceIn(0, 2),
             showLabel = o.optBoolean("showLabel", false),
+            bgOffA = o.optInt("boa", 100).coerceIn(0, 100),
+            bgOnA = o.optInt("bna", 100).coerceIn(0, 100),
+            keepRatio = o.optBoolean("kr", true),
+            mL = o.optInt("ml", 2).coerceIn(0, 32),
+            mT = o.optInt("mt", 2).coerceIn(0, 32),
+            mR = o.optInt("mr", 2).coerceIn(0, 32),
+            mB = o.optInt("mb", 2).coerceIn(0, 32),
+            onSep = o.optBoolean("osep", false),
+            iconKeyOn = if (o.has("ikon")) o.optString("ikon").takeIf { FlatIcons.has(it) } else null,
+            emojiOn = o.optString("emon", "🔔").take(8),
             tab = o.optInt("tab", 0).coerceIn(0, 1),
             iconKey = if (o.has("icon")) o.optString("icon").takeIf { FlatIcons.has(it) } else null,
             volMode = o.optInt("vm", VolMode.OFF).coerceIn(0, 2),

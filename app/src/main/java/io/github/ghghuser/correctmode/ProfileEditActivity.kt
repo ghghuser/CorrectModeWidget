@@ -61,6 +61,12 @@ class ProfileEditActivity : Activity() {
     private lateinit var colorsBox: LinearLayout
     private lateinit var removeImg: android.widget.Button
     private lateinit var emojiEdit: EditText
+    private lateinit var imgRow: LinearLayout
+    private lateinit var stateRow: LinearLayout
+    /** true = the icon grid / emoji field edit the icon used while the profile is ON (only with p.onSep) */
+    private var editOn = false
+    /** the on-state icon has been given a first value (set once, kept when the checkbox is toggled) */
+    private var onInit = false
     private lateinit var iconBox: GridLayout
     private lateinit var lookCard: LinearLayout
     private lateinit var scroll: ScrollView
@@ -394,11 +400,62 @@ class ProfileEditActivity : Activity() {
 
     // ---- look -----------------------------------------------------------------------------
 
+    private fun curKey(): String? = if (editOn) p.iconKeyOn else p.iconKey
+    private fun curEmoji(): String = if (editOn) p.emojiOn else p.emoji
+
+    /** [key]: built-in icon or null; [emoji]: new emoji or null to leave it. Own pictures belong to the OFF icon only. */
+    private fun setIcon(key: String?, emoji: String?) {
+        if (editOn) { p.iconKeyOn = key; if (emoji != null) p.emojiOn = emoji }
+        else { p.iconKey = key; if (emoji != null) p.emoji = emoji; p.imageFile = null }
+    }
+
+    private fun refreshStateRow() {
+        stateRow.removeAllViews()
+        stateRow.visibility = if (p.onSep) View.VISIBLE else View.GONE
+        if (!p.onSep) return
+        stateRow.addView(Ui.button(this, (if (!editOn) "▶ " else "") + s(R.string.icon_edit_off)) { editOn = false; refreshLook() }, Ui.lp(0, weight = 1f))
+        stateRow.addView(Ui.button(this, (if (editOn) "▶ " else "") + s(R.string.icon_edit_on)) { editOn = true; refreshLook() }, Ui.lp(0, weight = 1f))
+    }
+
+    private fun marginRow(label: Int, get: () -> Int, set: (Int) -> Unit): View {
+        val col = Ui.vbox(this)
+        val t = Ui.text(this, "", 12f, secondary = true)
+        fun show() { t.text = s(label, get()) }
+        show()
+        col.addView(t)
+        col.addView(SeekBar(this).apply {
+            max = 32; progress = get()
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) { set(v); show(); updatePreview() }
+                override fun onStartTrackingTouch(sb: SeekBar) {}
+                override fun onStopTrackingTouch(sb: SeekBar) {}
+            })
+        })
+        return col
+    }
+
     private fun buildLook(root: LinearLayout) {
+        onInit = p.onSep || p.iconKeyOn != null || p.emojiOn != "🔔"
         val card = Ui.card(this)
         lookCard = card
         card.addView(Ui.text(this, s(R.string.look_title), 16f, bold = true))
 
+        card.addView(CheckBox(this).apply {
+            text = s(R.string.icon_sep); isChecked = p.onSep
+            setOnCheckedChangeListener { _, v ->
+                p.onSep = v
+                if (v) { // first time only: start from the current OFF icon, later choices are kept
+                    if (!onInit) {
+                        p.iconKeyOn = p.iconKey
+                        if (p.imageFile == null) p.emojiOn = p.emoji
+                        onInit = true
+                    }
+                } else editOn = false
+                refreshLook()
+            }
+        })
+        stateRow = Ui.hbox(this)
+        card.addView(stateRow)
         card.addView(Ui.text(this, s(R.string.icon_flat_pick), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
         iconBox = GridLayout(this).apply { columnCount = 6 }
         card.addView(iconBox)
@@ -409,7 +466,7 @@ class ProfileEditActivity : Activity() {
             grid.addView(Ui.text(this, e, 26f).apply {
                 setPadding(dp(6), dp(6), dp(6), dp(6))
                 setOnClickListener {
-                    p.emoji = e; p.imageFile = null; p.iconKey = null
+                    setIcon(null, e)
                     emojiEdit.setText(e)
                     refreshLook()
                 }
@@ -419,16 +476,16 @@ class ProfileEditActivity : Activity() {
 
         emojiEdit = EditText(this).apply {
             hint = s(R.string.icon_custom)
-            setText(p.emoji)
+            setText(curEmoji())
             filters = arrayOf(InputFilter.LengthFilter(8))
             setSingleLine()
             onChange {
-                if (hasFocus() && it.isNotEmpty()) { p.emoji = it; p.imageFile = null; p.iconKey = null; refreshLook() }
+                if (hasFocus() && it.isNotEmpty()) { setIcon(null, it); refreshLook() }
             }
         }
         card.addView(emojiEdit)
 
-        val imgRow = Ui.hbox(this)
+        imgRow = Ui.hbox(this)
         imgRow.addView(Ui.button(this, s(R.string.image_choose)) {
             try {
                 startActivityForResult(
@@ -460,6 +517,16 @@ class ProfileEditActivity : Activity() {
         card.addView(sizeBtn)
 
         card.addView(CheckBox(this).apply {
+            text = s(R.string.keep_ratio); isChecked = p.keepRatio
+            setOnCheckedChangeListener { _, v -> p.keepRatio = v }
+        })
+        card.addView(Ui.text(this, s(R.string.keep_ratio_hint), 11f, secondary = true))
+        card.addView(Ui.text(this, s(R.string.margin_title), 13f, secondary = true).apply { setPadding(0, dp(8), 0, 0) })
+        card.addView(marginRow(R.string.margin_top, { p.mT }, { p.mT = it }))
+        card.addView(marginRow(R.string.margin_bottom, { p.mB }, { p.mB = it }))
+        card.addView(marginRow(R.string.margin_left, { p.mL }, { p.mL = it }))
+        card.addView(marginRow(R.string.margin_right, { p.mR }, { p.mR = it }))
+        card.addView(CheckBox(this).apply {
             text = s(R.string.show_label); isChecked = p.showLabel
             setOnCheckedChangeListener { _, v -> p.showLabel = v; updatePreview() }
         })
@@ -470,7 +537,7 @@ class ProfileEditActivity : Activity() {
         iconBox.removeAllViews()
         val tint = android.content.res.ColorStateList.valueOf(Ui.text(this, "").currentTextColor)
         for ((key, res) in FlatIcons.ALL) {
-            val selected = p.imageFile == null && p.iconKey == key
+            val selected = (editOn || p.imageFile == null) && curKey() == key
             iconBox.addView(ImageView(this).apply {
                 setImageResource(res)
                 imageTintList = tint
@@ -481,21 +548,44 @@ class ProfileEditActivity : Activity() {
                     if (selected) { setColor(0x331F6FEB); setStroke(dp(2), 0xFF1F6FEB.toInt()) } else setStroke(dp(1), 0x33808080)
                 }
                 layoutParams = GridLayout.LayoutParams().apply { width = dp(46); height = dp(46); setMargins(dp(3), dp(3), dp(3), dp(3)) }
-                setOnClickListener { p.iconKey = key; p.imageFile = null; refreshLook() }
+                setOnClickListener { setIcon(key, null); refreshLook() }
             })
         }
     }
 
     private fun refreshLook() {
         fillIcons()
+        refreshStateRow()
+        imgRow.visibility = if (editOn) View.GONE else View.VISIBLE // pictures are shared by both states
+        if (!emojiEdit.hasFocus() && emojiEdit.text.toString() != curEmoji()) emojiEdit.setText(curEmoji())
         removeImg.visibility = if (p.imageFile != null) View.VISIBLE else View.GONE
         colorsBox.removeAllViews()
         // order: icon/text (off), background (off), icon/text (on), background (on)
         colorsBox.addView(colorRow(s(R.string.color_fg_off), false, { p.fgOff }, { p.fgOff = it }))
         colorsBox.addView(colorRow(s(R.string.color_bg_off), true, { p.bgOff }, { p.bgOff = it }))
+        colorsBox.addView(alphaRow({ p.bgOffA }, { p.bgOffA = it }))
         colorsBox.addView(colorRow(s(R.string.color_fg_on), false, { p.fgOn }, { p.fgOn = it }))
         colorsBox.addView(colorRow(s(R.string.color_bg_on), true, { p.bgOn }, { p.bgOn = it }))
+        colorsBox.addView(alphaRow({ p.bgOnA }, { p.bgOnA = it }))
         updatePreview()
+    }
+
+    /** Opacity of the background colour, 0..100 %. Only the preview is redrawn while dragging (not the whole card). */
+    private fun alphaRow(get: () -> Int, set: (Int) -> Unit): View {
+        val col = Ui.vbox(this)
+        val t = Ui.text(this, "", 12f, secondary = true)
+        fun show() { t.text = s(R.string.bg_alpha, get()) }
+        show()
+        col.addView(t)
+        col.addView(SeekBar(this).apply {
+            max = 100; progress = get()
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) { set(v); show(); updatePreview() }
+                override fun onStartTrackingTouch(sb: SeekBar) {}
+                override fun onStopTrackingTouch(sb: SeekBar) {}
+            })
+        })
+        return col
     }
 
     private fun colorRow(label: String, allowNone: Boolean, get: () -> Int?, set: (Int?) -> Unit): View {

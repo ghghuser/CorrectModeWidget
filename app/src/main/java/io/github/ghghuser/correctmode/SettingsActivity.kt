@@ -190,6 +190,10 @@ class SettingsActivity : Activity() {
         card.addView(Ui.text(this, s(R.string.terms_title), 16f, bold = true))
         card.addView(Ui.text(this, s(R.string.terms_body), 13f))
         content.addView(card)
+        val lic = Ui.card(this)
+        lic.addView(Ui.text(this, s(R.string.lic_title), 16f, bold = true))
+        lic.addView(Ui.text(this, s(R.string.lic_text), 13f))
+        content.addView(lic)
     }
 
     private fun addDiagnostics() {
