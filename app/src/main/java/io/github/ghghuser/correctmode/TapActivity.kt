@@ -33,7 +33,11 @@ class TapActivity : Activity() {
         if (t0 - lastDone < DEBOUNCE_MS) { done = true; finishAndRemoveTask(); return }
         Flow.fromWidget = true
         // grey the buttons while this tap is handled and a moment after it (taps are ignored then)
-        try { Store.setBusyUntil(this, System.currentTimeMillis() + 4000L); Widgets.updateAll(this) } catch (e: Exception) { }
+        try {
+            Store.setBusyUntil(this, System.currentTimeMillis() + 4000L)
+            Scheduler.scheduleRedraw(applicationContext, 5000L) // safety net if the process dies while a dialog is open
+            Widgets.updateAll(this)
+        } catch (e: Exception) { }
         // Look at the real device first: if it was changed from outside (volume key, quick settings), the
         // stale "on" is cleaned up here, so the tap below acts on the truth, not on an old widget picture.
         try { Engine.reconcile(this) } catch (e: Exception) { }

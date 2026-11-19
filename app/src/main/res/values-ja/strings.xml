@@ -352,4 +352,5 @@
     <string name="time_sched_stop">自動起動をオフにする</string>
     <string name="lic_title">ライセンス</string>
     <string name="lic_text">商用利用禁止・再配布禁止です。個人の非商用利用のみ可能です。詳細はリポジトリのLICENSEを参照してください。</string>
+    <string name="time_changed">別のプロファイルに切り替わったため、変更しませんでした</string>
 </resources>

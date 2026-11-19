@@ -41,7 +41,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:taskAffinity=""
-            android:theme="@style/DialogTheme" />
+            android:theme="@style/WizardTheme" />
 
         <activity
             android:name=".WizardActivity"

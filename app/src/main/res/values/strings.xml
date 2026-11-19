@@ -352,4 +352,5 @@
     <string name="time_sched_stop">Turn auto start off</string>
     <string name="lic_title">License</string>
     <string name="lic_text">No commercial use and no redistribution. Personal non-commercial use only. See LICENSE in the repository.</string>
+    <string name="time_changed">Another profile is on now, nothing was changed</string>
 </resources>

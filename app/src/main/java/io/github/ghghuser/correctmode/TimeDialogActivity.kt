@@ -17,6 +17,9 @@ import java.util.Date
 class TimeDialogActivity : Activity() {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(Loc.wrap(newBase))
 
+    /** Identity of the "on" session shown when the dialog opened; edits are refused if another one is on now. */
+    private var sessionStart = 0L
+
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,8 +27,9 @@ class TimeDialogActivity : Activity() {
         val st = Store.state(this)
         val p = st.activeId?.let { Store.profile(this, it) }
         if (p == null) { finish(); return }
-        setTitle(R.string.time_dialog_title)
+        sessionStart = st.startedAt
         val root = Ui.vbox(this).apply { setPadding(dp(20), dp(12), dp(20), dp(12)) }
+        root.addView(Ui.text(this, getString(R.string.time_dialog_title), 17f, bold = true))
         val tf = DateFormat.getTimeInstance(DateFormat.SHORT)
         val now = System.currentTimeMillis()
 
@@ -35,7 +39,7 @@ class TimeDialogActivity : Activity() {
         root.addView(Ui.text(this, getString(R.string.time_release_in), 13f).apply { setPadding(0, dp(8), 0, 0) })
         val presets = Ui.hbox(this)
         for (m in intArrayOf(15, 30, 60, 120)) {
-            presets.addView(Ui.button(this, if (m < 60) "${m}m" else "${m / 60}h") { setExpiry(now + m * 60_000L) }, Ui.lp(0, weight = 1f))
+            presets.addView(Ui.button(this, if (m < 60) "${m}m" else "${m / 60}h") { setExpiry(System.currentTimeMillis() + m * 60_000L) }, Ui.lp(0, weight = 1f))
         }
         root.addView(presets)
         val custom = Ui.hbox(this)
@@ -77,7 +81,10 @@ class TimeDialogActivity : Activity() {
 
     private fun setExpiry(at: Long) {
         val st = Store.state(this)
-        if (st.activeId == null) { finish(); return }
+        if (st.activeId == null || st.startedAt != sessionStart) {
+            Ui.toast(this, getString(R.string.time_changed))
+            finish(); return
+        }
         try {
             Store.saveState(this, st.copy(expiresAt = at))
             Scheduler.schedule(applicationContext, at)

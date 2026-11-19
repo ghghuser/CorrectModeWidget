@@ -65,6 +65,8 @@ class ProfileEditActivity : Activity() {
     private lateinit var stateRow: LinearLayout
     /** true = the icon grid / emoji field edit the icon used while the profile is ON (only with p.onSep) */
     private var editOn = false
+    /** the on-state icon has been given a first value (set once, kept when the checkbox is toggled) */
+    private var onInit = false
     private lateinit var iconBox: GridLayout
     private lateinit var lookCard: LinearLayout
     private lateinit var scroll: ScrollView
@@ -433,6 +435,7 @@ class ProfileEditActivity : Activity() {
     }
 
     private fun buildLook(root: LinearLayout) {
+        onInit = p.onSep || p.iconKeyOn != null || p.emojiOn != "🔔"
         val card = Ui.card(this)
         lookCard = card
         card.addView(Ui.text(this, s(R.string.look_title), 16f, bold = true))
@@ -441,9 +444,12 @@ class ProfileEditActivity : Activity() {
             text = s(R.string.icon_sep); isChecked = p.onSep
             setOnCheckedChangeListener { _, v ->
                 p.onSep = v
-                if (v) { // start from the current OFF icon
-                    p.iconKeyOn = p.iconKeyOn ?: p.iconKey
-                    if (p.imageFile == null) p.emojiOn = p.emoji
+                if (v) { // first time only: start from the current OFF icon, later choices are kept
+                    if (!onInit) {
+                        p.iconKeyOn = p.iconKey
+                        if (p.imageFile == null) p.emojiOn = p.emoji
+                        onInit = true
+                    }
                 } else editOn = false
                 refreshLook()
             }
