@@ -8,4 +8,8 @@
     <color name="bg_bottom">#F8FAFF</color>
     <color name="card_bg">#FFFFFF</color>
     <color name="card_stroke">#AEC1DD</color>
+    <color name="btn_bg">#D6E4FA</color>
+    <color name="btn_stroke">#9DB6DB</color>
+    <color name="btn_text">#16315E</color>
+    <color name="accent">#1F6FEB</color>
 </resources>

@@ -45,7 +45,7 @@ object Patterns {
     val ALL: List<Pair<Int, Int>> = listOf(
         Ringer.NORMAL to Dnd.OFF, Ringer.VIBRATE to Dnd.OFF, Ringer.MUTE to Dnd.OFF,
         Ringer.NORMAL to Dnd.PRIORITY, Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.PRIORITY,
-        Ringer.VIBRATE to Dnd.ALARMS, Ringer.MUTE to Dnd.NONE,
+        Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.NONE, // [6]: "alarms only" = priority with alarms + media (see Store.freshPreset)
     )
     val NAMES = listOf(
         R.string.pat_1, R.string.pat_2, R.string.pat_3, R.string.pat_4,
@@ -53,8 +53,9 @@ object Patterns {
     )
     val ICONS = listOf("bell", "vibrate", "volume_off", "moon", "bell_off", "dnd", "bed", "flight")
 
+    /** Pattern number of a profile by ringer + DND (the first one: pattern 6 shares them with 4). */
     fun indexOf(p: Profile): Int =
-        ALL.indexOfFirst { it.second == p.dnd && (p.dnd >= Dnd.ALARMS || it.first == p.ringer) }
+        if (p.dnd == Dnd.NONE) ALL.size - 1 else ALL.indexOfFirst { it.second == p.dnd && it.first == p.ringer }
 }
 
 /** Stored colour value 0 = "no background" (a real colour always has the alpha bits set). */
@@ -162,7 +163,21 @@ data class Profile(
     }
 
     companion object {
-        fun fromJson(o: JSONObject): Profile = Profile(
+        /**
+         * "Alarms only" is not a separate DND level any more: it is "notification filter" with alarms and media allowed.
+         * Older saved profiles / backups are converted here.
+         */
+        fun fromJson(o: JSONObject): Profile {
+            val p = parse(o)
+            if (p.dnd == Dnd.ALARMS) {
+                p.dnd = Dnd.PRIORITY
+                p.alarms = true; p.media = true; p.system = false; p.reminders = false; p.events = false
+                p.calls = 0; p.messages = 0
+            }
+            return p
+        }
+
+        private fun parse(o: JSONObject): Profile = Profile(
             id = o.getString("id"),
             name = o.optString("name", ""),
             ringer = o.optInt("ringer", Ringer.VIBRATE).coerceIn(0, 2),

@@ -3,18 +3,16 @@
     <string name="app_name">CorrectMode</string>
 
     <!-- Words. RINGER = the sound / vibrate / mute switch. DND = Do Not Disturb. Never "silent mode". -->
-    <string name="ringer_label">Ringer</string>
-    <string name="ringer_hint">sound / vibrate / mute</string>
-    <string name="ringer_normal">Sound</string>
+    <string name="ringer_label">Ringer mode</string>
+    <string name="ringer_normal">Ring</string>
     <string name="ringer_vibrate">Vibrate</string>
     <string name="ringer_mute">Mute</string>
     <string name="dnd_label">DND</string>
-    <string name="dnd_hint">Do Not Disturb</string>
-    <string name="dnd_off">Off</string>
-    <string name="dnd_priority">Priority only</string>
+    <string name="dnd_off">Off (sound on)</string>
+    <string name="dnd_priority">Notification filter (allow some sounds)</string>
     <string name="dnd_alarms">Alarms only</string>
-    <string name="dnd_none">Block all</string>
-    <string name="dnd_forced_note">With this DND level Android silences the phone by itself, so the ringer setting is left alone.</string>
+    <string name="dnd_none">On (no sound at all)</string>
+    <string name="dnd_forced_note">With On (no sound at all) Android itself silences the phone. The ringer mode is not changed.</string>
 
     <string name="senders_none">nobody</string>
     <string name="senders_any">anyone</string>
@@ -24,13 +22,12 @@
     <string name="allow_calls">Calls</string>
     <string name="allow_messages">Messages</string>
     <string name="allow_media">Media (music, video, games)</string>
-    <string name="allow_media_bt">Allow media only while Bluetooth audio is connected</string>
+    <string name="allow_media_bt">Also allow media while Bluetooth audio is connected</string>
     <string name="allow_media_bt_short">Media (only while Bluetooth audio is connected)</string>
     <string name="allow_alarms">Alarms</string>
     <string name="allow_system">System sounds (touch sounds etc.)</string>
     <string name="allow_nothing">nothing</string>
     <string name="allowed_prefix">Allowed:</string>
-    <string name="priority_allows">What “Priority only” lets through</string>
 
     <string name="preset_vib_dnd">Quiet (Vibrate + DND priority)</string>
     <string name="preset_vib">Vibrate only</string>
@@ -81,20 +78,20 @@
     <string name="perm_alarm_hint">Without it the auto release can be a few minutes late.</string>
 
     <string name="profiles_title">Profiles</string>
-    <string name="profiles_hint">A profile is one combination of ringer and DND. Each profile can be a widget button.</string>
-    <string name="widget_howto">Long-press the home screen → Widgets → CorrectMode. "Toggle" is 1x1 with one profile (on/off) or several (each tap goes to the next, then off). "Switch" is a row of buttons; all but the active one are greyed out.</string>
+    <string name="profiles_hint">A profile = one combination of Ringer mode and DND. Each can be a widget button.</string>
+    <string name="widget_howto">Long-press the home screen, then Widgets, then CorrectMode.\n- Toggle (1x1): on/off of one profile. With several profiles, each tap goes to the next one and the last tap turns it off.\n- Switch: a row of buttons, wrapping into rows when the widget is made larger. All except the one in use are greyed out.</string>
     <string name="widget_toggle_title">CorrectMode toggle</string>
     <string name="widget_switch_title">CorrectMode switch</string>
     <string name="widget_toggle_desc">One profile: tap to turn it on or off.</string>
     <string name="widget_switch_desc">Several profiles: tap one to switch to it, tap the active one to release.</string>
-    <string name="widget_pick_one">Choose the profiles for this toggle (a profile = a Ringer + DND combination). With several, each tap goes to the next one from the top, and after the last one it turns off.</string>
-    <string name="widget_pick_many">Choose the profiles to show in this widget (a profile = a Ringer + DND combination).</string>
+    <string name="widget_pick_one">Choose the profiles for this toggle.\nWith several, each tap goes to the next one in the order below, and the tap after the last turns it off.</string>
+    <string name="widget_pick_many">Choose the profiles to show in this widget.</string>
     <string name="widget_pick_none">Choose at least one profile.</string>
     <string name="widget_setup">Tap to set up this widget</string>
     <string name="no_profiles">No profiles yet. Create one in the app.</string>
 
     <string name="behavior_title">Behavior</string>
-    <string name="look_title">Widget look</string>
+    <string name="look_title">Look</string>
     <string name="icon_pick">Icon</string>
     <string name="icon_custom">Or type your own emoji</string>
     <string name="image_choose">Choose image…</string>
@@ -126,14 +123,14 @@
     <string name="vol_off">Do not touch volumes</string>
     <string name="vol_saved">Back to the volumes from before</string>
     <string name="vol_fixed">Set fixed volumes</string>
-    <string name="vol_hint">Ring and notification volumes are only restored when the ringer goes back to “Sound”.</string>
+    <string name="vol_hint">Ring and notification volume are restored only when the ringer mode goes back to Ring.</string>
     <string name="vol_ring">Ring</string>
     <string name="vol_notification">Notification</string>
     <string name="vol_media">Media</string>
     <string name="vol_alarm">Alarm</string>
 
     <string name="terms_title">Words used in this app</string>
-    <string name="terms_body">Ringer = the sound / vibrate / mute switch of the phone (what is called “silent mode” in English).\nDND = Do Not Disturb (what is called “サイレントモード” in Japanese).\nTo avoid mix-ups this app only says “Ringer” and “DND”.\nA profile is one combination of the two.</string>
+    <string name="terms_body">Ringer mode = Ring / Vibrate / Mute.\nDND = Do Not Disturb (silent mode). It limits notifications and calls.\n\nTo avoid mix-ups this app only writes Ringer mode and DND.\nProfile = one combination of the two.</string>
 
     <string name="diag_title">Diagnostics</string>
     <string name="diag_version">Version %1$s (build %2$d)</string>
@@ -148,7 +145,7 @@
     <string name="err_apply_failed">Could not turn it on (%1$s). The previous settings were restored.</string>
     <string name="err_restore_failed">Could not fully restore the previous settings (%1$s). Please check your sound settings.</string>
     <string name="err_verify_dnd">DND did not become “%1$s”</string>
-    <string name="err_verify_ringer">The ringer did not become “%1$s”</string>
+    <string name="err_verify_ringer">The ringer mode did not become: %1$s</string>
     <string name="err_bt_policy">Could not update the media permission for Bluetooth (%1$s)</string>
     <string name="err_profile_missing">This profile no longer exists.</string>
     <string name="err_image">Image error: %1$s</string>
@@ -160,13 +157,11 @@
     <string name="widget_pick_count">Profiles available: %1$d (add / edit them in the app)</string>
     <string name="widget_open_app">Open the app (add / edit profiles)</string>
     <string name="tab_default_0">Mine</string>
-    <string name="tab_default_1">All patterns</string>
+    <string name="tab_default_1">Templates</string>
     <string name="tab_rename_title">Rename tab</string>
     <string name="tab_rename_hint">Leave empty for the default name</string>
     <string name="tab_hint">Long-press a tab to rename it. New profiles are added to this tab.</string>
     <string name="tab_empty">There are no profiles in this tab.</string>
-    <string name="move_left">Move to the left tab</string>
-    <string name="move_right">Move to the right tab</string>
     <string name="decide">OK</string>
     <string name="back">Back</string>
     <string name="perm_first_title">Permissions are needed first</string>
@@ -178,7 +173,7 @@
     <string name="tabs_title">Tabs</string>
     <string name="tab_name_left">Left tab name: %1$s</string>
     <string name="tab_name_right">Right tab name: %1$s</string>
-    <string name="icon_flat_pick">Icon (flat; change its colour with "icon / text colour" below)</string>
+    <string name="icon_flat_pick">Icons (colour: see Icon / text colour below)</string>
     <string name="backup_title">Backup (export / import)</string>
     <string name="backup_hint">Saves / restores profiles (with their pictures), tab names, language and the Bluetooth setting as one JSON file. Widget placement and the current on/off state are not included.</string>
     <string name="backup_export">Export all settings</string>
@@ -189,7 +184,7 @@
     <string name="backup_err_active">Cannot import while a profile is on. Release it first.</string>
     <string name="backup_err_format">Not a backup file of this app (%1$s).</string>
     <string name="backup_err_big">The file is too large.</string>
-    <string name="label_calls">Phone calls</string>
+    <string name="label_calls">Calls</string>
     <string name="label_messages">Messages</string>
     <string name="label_notif">Other notification sounds</string>
     <string name="label_media">Music / video</string>
@@ -201,19 +196,15 @@
     <string name="val_bt">sounds only with earphones</string>
     <string name="val_unknown">unverified</string>
     <string name="matrix_title">What makes a sound with this setting</string>
-    <string name="legend">📞calls 💬messages 📣notifications 🎵music/video ⏰alarms 🔧touch sounds\n✅sounds 📳vibrate only ✖silent 🎧only with earphones ❓unverified</string>
-    <string name="pat_1">Normal (sound)</string>
+    <string name="legend">Upper row: 📞calls 💬messages 📣notification sounds 🎵music/video ⏰alarm 🔧touch sounds\nLower row: ✅sounds 📳vibrate only ✖silent 🎧only with earphones ❓to check</string>
+    <string name="pat_1">Normal (ring)</string>
     <string name="pat_2">Vibrate</string>
     <string name="pat_3">Mute</string>
-    <string name="pat_4">Sound + DND priority only (BT audio)</string>
-    <string name="pat_5">Vibrate + DND priority only (BT audio)</string>
-    <string name="pat_6">Mute + DND priority only (BT audio)</string>
+    <string name="pat_4">Ring + notification filter (BT audio)</string>
+    <string name="pat_5">Vibrate + notification filter (BT audio)</string>
+    <string name="pat_6">Mute + notification filter (BT audio)</string>
     <string name="pat_7">Alarms only (DND)</string>
     <string name="pat_8">Block everything (DND)</string>
-    <string name="mode_set">Pick a combination</string>
-    <string name="mode_detail">Pick each one</string>
-    <string name="mode_set_hint">Just pick how it should sound. What makes a sound appears below.</string>
-    <string name="pat_forced_note">With alarms only / block everything, Android overrides the ringer setting.</string>
     <string name="opt_tap_vibe">Vibrate briefly when switched from a widget (on = once, off = twice)</string>
     <string name="sched_title">Timer (turn on by itself)</string>
     <string name="sched_enable">Turn on automatically at a set time</string>
@@ -235,7 +226,6 @@
     <string name="menu_edit">Edit</string>
     <string name="menu_copy">Make a copy</string>
     <string name="copy_suffix">(copy)</string>
-    <string name="moved_to">Moved to %1$s</string>
     <string name="add_choose_title">Add a profile</string>
     <string name="add_wizard">Answer a few questions (recommended)</string>
     <string name="add_manual">Set it up myself</string>
@@ -245,37 +235,18 @@
     <string name="picker_hue">Hue</string>
     <string name="picker_sat">Saturation</string>
     <string name="picker_val">Brightness</string>
-    <string name="preview_hint">Tap the preview to jump to the look settings.</string>
+    <string name="preview_hint">Tap the preview to edit the look.</string>
     <string name="diag_tap_ms">Last widget tap, time inside the app: %1$d ms</string>
     <string name="wiz_title">Quick setup</string>
     <string name="wiz_skip">Skip and set it up myself</string>
     <string name="wiz_back">Back</string>
-    <string name="wiz_q1">Is there a sound you do not want?</string>
+    <string name="wiz_q1">Is there a sound you want to silence?</string>
     <string name="wiz_q1_hint">Choose the one that fits.</string>
-    <string name="wiz_q1_yes">Yes, quiet please</string>
-    <string name="wiz_q1_no">No, let it sound (normal)</string>
-    <string name="wiz_q2">Which sounds should go?</string>
-    <string name="wiz_q2_hint">How calls and messages notify you.</string>
-    <string name="wiz_q2_vib">Keep vibration (Vibrate)</string>
-    <string name="wiz_q2_mute">No vibration either (Mute)</string>
-    <string name="wiz_q3">Restrict notifications and calls further?</string>
-    <string name="wiz_q3_hint">DND (Do Not Disturb) narrows down what may get through.</string>
-    <string name="wiz_q3_off">No restriction (DND off)</string>
-    <string name="wiz_q3_pri">Let some things through (priority only)</string>
-    <string name="wiz_q3_alarms">Block everything but alarms (alarms only)</string>
-    <string name="wiz_q3_none">Block everything incl. alarms (block everything)</string>
-    <string name="wiz_q4">Calls and messages allowed through</string>
-    <string name="wiz_q4_hint">Who may reach you in priority only.</string>
-    <string name="wiz_q5">Sounds allowed through</string>
-    <string name="wiz_q5_hint">Only what you choose here sounds (nothing chosen = silent).</string>
-    <string name="wiz_media">Music / video (media)</string>
-    <string name="wiz_media_none">Not allowed</string>
-    <string name="wiz_media_bt">Only with earphones</string>
-    <string name="wiz_media_any">Always</string>
+    <string name="wiz_q2">Which sounds to silence?</string>
     <string name="wiz_q6">Auto release?</string>
-    <string name="wiz_q6_hint">Helps you not to forget it. You can change it later.</string>
+    <string name="wiz_q6_hint">Prevents forgetting to switch it off. Can be changed later.</string>
     <string name="wiz_q7">Done</string>
-    <string name="wiz_q7_hint">Give it a name and create it. The look (icon, colours) comes next.</string>
+    <string name="wiz_q7_hint">Give it a name and create it.\nIcon and colours are set on the next screen.</string>
     <string name="wiz_create">Create and set the look</string>
     <string name="wiz_next">Next</string>
     <string name="wiz_name_default">New profile</string>
@@ -287,40 +258,40 @@
     <string name="wiz_step">Step %1$d / %2$d</string>
     <string name="wiz_step1">Step %1$d</string>
     <string name="wiz_cancel">Cancel</string>
-    <string name="wiz_a_vib">Yes, some sounds should go. I want vibration.</string>
-    <string name="wiz_a_mute">Yes, some sounds should go. No vibration either.</string>
-    <string name="wiz_a_all">Yes, no sound at all</string>
-    <string name="wiz_a_all_sub">Creates a profile with no sound whatsoever. The volume cannot be raised either.\nIt behaves the same with or without vibration, so it uses Mute.\n※Alarms do not sound either. To keep only the alarm, choose the top option.</string>
-    <string name="wiz_a_none">No, let it sound</string>
-    <string name="wiz_a_none_sub">Creates a profile where everything sounds.</string>
-    <string name="wiz_foot1">※Vibration works when a call or notification comes in. But if you choose that some sounds should go, app notifications stop vibrating too.</string>
-    <string name="wiz_q2_hint_vib">Checked sounds are turned off. Calls and messages notify you by vibration instead.</string>
-    <string name="wiz_q2_hint_mute">Checked sounds are turned off. With Mute, calls and messages have no sound and no vibration.</string>
-    <string name="wiz_row_calls">Calls or messages</string>
-    <string name="wiz_calls_sub">Choose who may notify you: everyone / contacts / starred / nobody. They notify you by vibration. Everyone else does not even vibrate.</string>
-    <string name="wiz_calls_mute_note">No sound and no vibration (because of Mute).</string>
+    <string name="wiz_a_vib">📳 Yes (keep vibration)</string>
+    <string name="wiz_a_mute">🔕 Yes (no vibration either)</string>
+    <string name="wiz_a_all">🚫 Silence everything</string>
+    <string name="wiz_a_all_sub">All sound and vibration stop.\nAlarms do not ring either, and the volume cannot be raised.\nIf you want alarms, choose one of the items above.</string>
+    <string name="wiz_a_none">🔔 No (normal)</string>
+    <string name="wiz_a_none_sub">Makes a profile that lets every sound through.</string>
+    <string name="wiz_foot1">Vibration works when a call or message arrives.\nWith Yes, app notifications do not vibrate either.</string>
+    <string name="wiz_q2_hint_vib">Checked sounds are silenced.\nCalls and messages notify by vibration instead of sound.</string>
+    <string name="wiz_q2_hint_mute">Checked sounds are silenced.\nMuted: calls and messages make no sound and no vibration.</string>
+    <string name="wiz_row_calls">Calls and messages</string>
+    <string name="wiz_calls_sub">Choose who may notify you.\nThey notify by vibration; everyone else makes nothing.</string>
+    <string name="wiz_calls_mute_note">No sound and no vibration (muted).</string>
     <string name="wiz_row_apps">App notifications</string>
-    <string name="wiz_apps_note">Their sound and vibration stop. Apps that may still sound or vibrate are chosen in the system settings (shared by all profiles).</string>
-    <string name="apps_open_btn">Choose apps that may sound (opens system settings)</string>
+    <string name="wiz_apps_note">No sound and no vibration.\nAllowed apps are chosen in the system settings (same for all profiles).</string>
+    <string name="apps_open_btn">Choose allowed apps (opens system settings)</string>
     <string name="apps_open_fail">Could not open the settings screen. Look for Do Not Disturb in the system settings.</string>
     <string name="wiz_row_alarm">Alarms</string>
-    <string name="wiz_row_media">Media sounds (video, games, etc.)</string>
+    <string name="wiz_row_media">Media (video, music, games)</string>
     <string name="wiz_media_bt_opt">Sound only while Bluetooth earphones are connected</string>
     <string name="wiz_row_touch">Touch sounds (keyboard etc.)</string>
     <string name="wiz_row_rem">Reminders</string>
     <string name="wiz_row_evt">Calendar events</string>
-    <string name="wiz_timer_check">Turn on automatically at a set time</string>
-    <string name="wiz_timer_hint">The time is set in the editor that opens after creating.</string>
+    <string name="wiz_timer_check">Turn on by itself at a set time</string>
+    <string name="wiz_timer_hint">The time is set in the editor after creating.</string>
     <string name="reset_preset">Reset</string>
-    <string name="reset_hint">Ready-made patterns can be edited. Reset returns them to the first state.</string>
+    <string name="reset_hint">Templates can be edited. Reset returns to the original.</string>
     <string name="reset_confirm">Return %1$s to its first state? Your changes are lost.</string>
-    <string name="add_pattern">Pick a ready-made pattern</string>
-    <string name="add_pattern_title">Ready-made patterns</string>
-    <string name="tab_hint_presets">Ready-made patterns. You can edit them; Reset in the editor returns them to the first state.</string>
-    <string name="wiz_foot2">※App notifications stop vibrating along with their sound. Only the calls and messages chosen above notify you by vibration.</string>
-    <string name="wiz_foot2_mute">※With Mute there is no vibration.</string>
-    <string name="wiz_alarm_note">If unchecked, alarms still sound even in Vibrate or Mute.</string>
-    <string name="wiz_media_note">If unchecked, video and music still sound even in Vibrate or Mute.</string>
+    <string name="add_pattern">Pick from the templates</string>
+    <string name="add_pattern_title">Templates</string>
+    <string name="tab_hint_presets">Ready-made profiles. Edit them freely; Reset in the editor brings the original back.</string>
+    <string name="wiz_foot2">App notifications lose their vibration together with their sound.\nOnly the callers and senders chosen above vibrate.</string>
+    <string name="wiz_foot2_mute">Muted: no vibration.</string>
+    <string name="wiz_alarm_note">If not checked, alarms ring even on vibrate or mute.</string>
+    <string name="wiz_media_note">If not checked, video and music play even on vibrate or mute.</string>
     <string name="wl_title">Background of the whole widget (switch widget)</string>
     <string name="wl_color">Choose background colour and opacity</string>
     <string name="wl_alpha">Opacity %1$d%%</string>
@@ -358,4 +329,20 @@
     <string name="released_all_text">Auto release done. Everything is switched off.</string>
     <string name="picker_alpha">Opacity</string>
     <string name="bg_alpha_open">Background opacity %1$d%% (tap to change with the colour)</string>
+    <string name="apps_note">Notifications of apps that are not allowed make no sound and no vibration. Allowed apps are chosen in the system settings (same for all profiles).</string>
+    <string name="bt_open_btn">Open Bluetooth settings</string>
+    <string name="sample_vib_bt">Calls vibrate + Bluetooth auto media + rest silent</string>
+    <string name="sample_mute_all">Silent (everything silent)</string>
+    <string name="widget_order_title">Order</string>
+    <string name="widget_order_hint">In the order they were ticked. Change it with the arrows.</string>
+    <string name="look_hint">Icon, colours, shape and margins of the widget button.</string>
+    <string name="look_edit">Edit the look</string>
+    <string name="done">Done</string>
+    <string name="look_tab_off">When off</string>
+    <string name="look_tab_on">When on</string>
+    <string name="look_tab_shape">Shape / margins</string>
+    <string name="icon_sep_hint">The same icon as when off is used. The colours can be set separately below.</string>
+    <string name="margin_hint">The dashed line is the widget area. The margins are inside it.</string>
+    <string name="wiz_a_vib_sub">Calls and messages notify by vibration.</string>
+    <string name="wiz_a_mute_sub">No sound and no vibration for calls and messages.</string>
 </resources>
