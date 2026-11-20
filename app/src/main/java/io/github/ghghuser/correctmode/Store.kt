@@ -46,7 +46,10 @@ object Store {
 
     fun lastError(ctx: Context): String? = sp(ctx).getString("lastError", null)
     fun setLastError(ctx: Context, msg: String?) {
+        val had = lastError(ctx) != null
         sp(ctx).edit().apply { if (msg == null) remove("lastError") else putString("lastError", msg) }.commit()
+        // the warning mark on the widgets follows this value
+        if (had != (msg != null)) try { Widgets.updateAll(ctx) } catch (e: Exception) { }
     }
 
     // ---- state ----------------------------------------------------------------------------
@@ -92,7 +95,7 @@ object Store {
 
     fun delete(ctx: Context, id: String) {
         val list = profiles(ctx)
-        list.firstOrNull { it.id == id }?.imageFile?.let { imageFile(ctx, it).delete() }
+        list.firstOrNull { it.id == id }?.imageFiles()?.forEach { imageFile(ctx, it).delete() }
         save(ctx, list.filter { it.id != id })
         // drop it from every widget
         val w = widgets(ctx)
@@ -253,14 +256,14 @@ object Store {
     }
 
     /** Whole-widget background of a switch widget. alpha 0 = none. [items]: the buttons keep their own backgrounds on top. */
-    class WidgetLook(val color: Int = 0x1F2933, val alpha: Int = 0, val items: Boolean = true)
+    class WidgetLook(val color: Int = 0x1F2933, val alpha: Int = 100, val items: Boolean = true)
 
     private fun looks(ctx: Context): JSONObject =
         try { JSONObject(sp(ctx).getString("wlook", "{}") ?: "{}") } catch (e: Exception) { JSONObject() }
 
     fun widgetLook(ctx: Context, widgetId: Int): WidgetLook {
         val o = looks(ctx).optJSONObject(widgetId.toString()) ?: return WidgetLook()
-        return WidgetLook(o.optInt("c", 0x1F2933) and 0xFFFFFF, o.optInt("a", 0).coerceIn(0, 100), o.optBoolean("i", true))
+        return WidgetLook(o.optInt("c", 0x1F2933) and 0xFFFFFF, o.optInt("a", 100).coerceIn(0, 100), o.optBoolean("i", true))
     }
 
     fun setWidgetLook(ctx: Context, widgetId: Int, look: WidgetLook) {

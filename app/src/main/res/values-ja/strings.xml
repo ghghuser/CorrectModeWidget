@@ -322,7 +322,7 @@
     <string name="wiz_alarm_note">チェックしないと、バイブやミュートでもアラームは鳴ります。</string>
     <string name="wiz_media_note">チェックしないと、バイブやミュートでも動画や音楽は鳴ります。</string>
     <string name="wl_title">ウィジェット全体の背景(切り替えウィジェット)</string>
-    <string name="wl_color">背景の色を選ぶ</string>
+    <string name="wl_color">背景の色と不透明度を選ぶ</string>
     <string name="wl_alpha">不透明度 %1$d%%</string>
     <string name="wl_alpha_hint">0%にすると背景なしになります。</string>
     <string name="wl_items">ボタンごとの背景も重ねて表示する</string>
@@ -356,4 +356,6 @@
     <string name="opt_release_all">解除したら「すべて解除」の状態にする(通常の着信音・DNDオフ)</string>
     <string name="opt_release_all_hint">オフのときは、オンにする前の状態に戻します。端末側で元からDNDをオンにしていた場合、そのDNDはアプリでは消せません。</string>
     <string name="released_all_text">解除しました。通常の状態(すべて解除)にしました。</string>
+    <string name="picker_alpha">不透明度</string>
+    <string name="bg_alpha_open">背景の不透明度 %1$d%%(タップして色と一緒に変更)</string>
 </resources>

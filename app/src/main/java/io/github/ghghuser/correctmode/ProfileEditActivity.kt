@@ -48,6 +48,7 @@ class ProfileEditActivity : Activity() {
     private lateinit var p: Profile
     private var isNew = false
     private var origImage: String? = null
+    private var origImageOn: String? = null
     private val created = ArrayList<String>()
     private var saved = false
 
@@ -85,6 +86,7 @@ class ProfileEditActivity : Activity() {
         p = ex?.copy() ?: if (fromPattern in Patterns.ALL.indices) Store.freshPreset(this, fromPattern, Store.newId(), 0, -1)
         else Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
         origImage = ex?.imageFile
+        origImageOn = ex?.imageFileOn
         title = s(if (isNew) R.string.profile_new_title else R.string.profile_edit_title)
 
         val root = Ui.vbox(this).apply { setPadding(dp(16), dp(8), dp(16), dp(24)) }
@@ -142,7 +144,7 @@ class ProfileEditActivity : Activity() {
         previewBox.removeAllViews()
         for (on in listOf(false, true)) {
             val col = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(dp(6), 0, dp(6), 0) }
-            col.addView(Widgets.preview(this, p, on, 72, outline = true))
+            col.addView(Widgets.preview(this, p, on, 72, outline = true, margins = Widgets.Margins.OWN))
             col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true))
             // tap the preview: jump to the look settings
             col.setOnClickListener { scroll.post { scroll.smoothScrollTo(0, lookCard.top) } }
@@ -408,10 +410,11 @@ class ProfileEditActivity : Activity() {
 
     private fun curKey(): String? = if (editOn) p.iconKeyOn else p.iconKey
     private fun curEmoji(): String = if (editOn) p.emojiOn else p.emoji
+    private fun curImage(): String? = if (editOn) p.imageFileOn else p.imageFile
 
     /** [key]: built-in icon or null; [emoji]: new emoji or null to leave it. Own pictures belong to the OFF icon only. */
     private fun setIcon(key: String?, emoji: String?) {
-        if (editOn) { p.iconKeyOn = key; if (emoji != null) p.emojiOn = emoji }
+        if (editOn) { p.iconKeyOn = key; if (emoji != null) p.emojiOn = emoji; p.imageFileOn = null }
         else { p.iconKey = key; if (emoji != null) p.emoji = emoji; p.imageFile = null }
     }
 
@@ -501,7 +504,7 @@ class ProfileEditActivity : Activity() {
                 Ui.toast(this, s(R.string.err_image, e.javaClass.simpleName + ": " + e.message), true)
             }
         }, Ui.lp(0, weight = 1f))
-        removeImg = Ui.button(this, s(R.string.image_remove)) { p.imageFile = null; refreshLook() }
+        removeImg = Ui.button(this, s(R.string.image_remove)) { if (editOn) p.imageFileOn = null else p.imageFile = null; refreshLook() }
         imgRow.addView(removeImg, Ui.lp(0, weight = 1f))
         card.addView(imgRow)
 
@@ -510,8 +513,12 @@ class ProfileEditActivity : Activity() {
 
         val shapeLabels = listOf(R.string.shape_pill, R.string.shape_round, R.string.shape_round_l, R.string.shape_square).map { s(it) }
         val shapeBtn = Ui.button(this, "") {}
+        // listed from the roundest: circle/capsule, large rounded corners, rounded corners, square (stored numbers unchanged)
+        val shapeOrder = listOf(Shape.PILL, Shape.ROUND_L, Shape.ROUND, Shape.SQUARE)
         fun setShapeText() { shapeBtn.text = s(R.string.shape) + ": " + shapeLabels[p.shape] }
-        shapeBtn.setOnClickListener { Ui.choose(this, s(R.string.shape), shapeLabels, p.shape) { i -> p.shape = i; setShapeText(); updatePreview() } }
+        shapeBtn.setOnClickListener {
+            Ui.choose(this, s(R.string.shape), shapeOrder.map { shapeLabels[it] }, shapeOrder.indexOf(p.shape)) { i -> p.shape = shapeOrder[i]; setShapeText(); updatePreview() }
+        }
         setShapeText()
         card.addView(shapeBtn)
 
@@ -543,7 +550,7 @@ class ProfileEditActivity : Activity() {
         iconBox.removeAllViews()
         val tint = android.content.res.ColorStateList.valueOf(Ui.text(this, "").currentTextColor)
         for ((key, res) in FlatIcons.ALL) {
-            val selected = (editOn || p.imageFile == null) && curKey() == key
+            val selected = curImage() == null && curKey() == key
             iconBox.addView(ImageView(this).apply {
                 setImageResource(res)
                 imageTintList = tint
@@ -562,36 +569,26 @@ class ProfileEditActivity : Activity() {
     private fun refreshLook() {
         fillIcons()
         refreshStateRow()
-        imgRow.visibility = if (editOn) View.GONE else View.VISIBLE // pictures are shared by both states
         if (!emojiEdit.hasFocus() && emojiEdit.text.toString() != curEmoji()) emojiEdit.setText(curEmoji())
-        removeImg.visibility = if (p.imageFile != null) View.VISIBLE else View.GONE
+        removeImg.visibility = if (curImage() != null) View.VISIBLE else View.GONE
         colorsBox.removeAllViews()
         // order: icon/text (off), background (off), icon/text (on), background (on)
         colorsBox.addView(colorRow(s(R.string.color_fg_off), false, { p.fgOff }, { p.fgOff = it }))
         colorsBox.addView(colorRow(s(R.string.color_bg_off), true, { p.bgOff }, { p.bgOff = it }))
-        colorsBox.addView(alphaRow({ p.bgOffA }, { p.bgOffA = it }))
+        colorsBox.addView(alphaRow({ p.bgOff }, { p.bgOff = it }, { p.bgOffA }, { p.bgOffA = it }))
         colorsBox.addView(colorRow(s(R.string.color_fg_on), false, { p.fgOn }, { p.fgOn = it }))
         colorsBox.addView(colorRow(s(R.string.color_bg_on), true, { p.bgOn }, { p.bgOn = it }))
-        colorsBox.addView(alphaRow({ p.bgOnA }, { p.bgOnA = it }))
+        colorsBox.addView(alphaRow({ p.bgOn }, { p.bgOn = it }, { p.bgOnA }, { p.bgOnA = it }))
         updatePreview()
     }
 
-    /** Opacity of the background colour, 0..100 %. Only the preview is redrawn while dragging (not the whole card). */
-    private fun alphaRow(get: () -> Int, set: (Int) -> Unit): View {
-        val col = Ui.vbox(this)
-        val t = Ui.text(this, "", 12f, secondary = true)
-        fun show() { t.text = s(R.string.bg_alpha, get()) }
-        show()
-        col.addView(t)
-        col.addView(SeekBar(this).apply {
-            max = 100; progress = get()
-            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) { set(v); show(); updatePreview() }
-                override fun onStartTrackingTouch(sb: SeekBar) {}
-                override fun onStopTrackingTouch(sb: SeekBar) {}
-            })
-        })
-        return col
+    /** Opacity of the background colour lives in the colour chooser; this row shows the value and opens it. */
+    private fun alphaRow(getC: () -> Int?, setC: (Int?) -> Unit, get: () -> Int, set: (Int) -> Unit): View {
+        return Ui.button(this, s(R.string.bg_alpha_open, get())) {
+            val cur = getC()
+            val real = cur != null && cur != ColorMark.TRANSPARENT
+            ColorPicker.show(this, if (real) cur!! else 0xFF1F6FEB.toInt(), get()) { c, al -> setC(c); set(al); refreshLook() }
+        }
     }
 
     private fun colorRow(label: String, allowNone: Boolean, get: () -> Int?, set: (Int?) -> Unit): View {
@@ -704,8 +701,7 @@ class ProfileEditActivity : Activity() {
             throw IllegalStateException("saved image cannot be read")
         }
         created.add(name)
-        p.imageFile = name
-        p.iconKey = null
+        if (editOn) { p.imageFileOn = name; p.iconKeyOn = null } else { p.imageFile = name; p.iconKey = null }
     }
 
     // ---- save / delete --------------------------------------------------------------------
@@ -750,9 +746,9 @@ class ProfileEditActivity : Activity() {
         val st = Store.state(this)
         val before = Store.profile(this, p.id) // what is really applied on the phone if it is on now
         Store.upsert(this, p)
-        val keep = p.imageFile
-        created.filter { it != keep }.forEach { Store.imageFile(this, it).delete() }
-        origImage?.let { if (it != keep) Store.imageFile(this, it).delete() }
+        val keep = p.imageFiles()
+        created.filter { it !in keep }.forEach { Store.imageFile(this, it).delete() }
+        listOfNotNull(origImage, origImageOn).forEach { if (it !in keep) Store.imageFile(this, it).delete() }
         saved = true
         if (st.activeId == p.id) {
             // it is on right now: apply the edited version, keeping the same end time

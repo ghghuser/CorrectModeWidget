@@ -42,9 +42,11 @@ object Backup {
         val arr = JSONArray()
         for (p in Store.profiles(ctx)) {
             val o = p.toJson()
-            val f = p.imageFile?.let { Store.imageFile(ctx, it) }
-            if (f != null && f.isFile && f.length() in 1..MAX_IMAGE_BYTES.toLong()) {
-                o.put("imageData", Base64.encodeToString(f.readBytes(), Base64.NO_WRAP))
+            for ((name, key) in listOf(p.imageFile to "imageData", p.imageFileOn to "imageDataOn")) {
+                val f = name?.let { Store.imageFile(ctx, it) }
+                if (f != null && f.isFile && f.length() in 1..MAX_IMAGE_BYTES.toLong()) {
+                    o.put(key, Base64.encodeToString(f.readBytes(), Base64.NO_WRAP))
+                }
             }
             arr.put(o)
         }
@@ -83,12 +85,17 @@ object Backup {
                     name = p.name.trim().take(30).ifEmpty { "?" },
                     emoji = p.emoji.take(8).ifEmpty { "🔕" },
                     duration = if (p.duration == Dur.ASK || p.duration == Dur.NONE) p.duration else p.duration.coerceIn(1, 1440),
-                    imageFile = null,
+                    imageFile = null, imageFileOn = null,
                 )
                 val data = o.optString("imageData", "")
                 if (data.isNotEmpty()) {
                     val name = "${id}_${stamp}_$i.png"
                     if (writeImage(app, data, name)) { written.add(name); clean.imageFile = name }
+                }
+                val dataOn = o.optString("imageDataOn", "")
+                if (dataOn.isNotEmpty()) {
+                    val name = "${id}_${stamp}_${i}_on.png"
+                    if (writeImage(app, dataOn, name)) { written.add(name); clean.imageFileOn = name }
                 }
                 list.add(clean)
             }
@@ -102,7 +109,7 @@ object Backup {
                 Store.setTabName(app, 0, st.optString("tab0", ""))
                 Store.setTabName(app, 1, st.optString("tab1", ""))
             }
-            val keep = list.mapNotNull { it.imageFile }.toSet()
+            val keep = list.flatMap { it.imageFiles() }.toSet()
             Store.imageDir(app).listFiles()?.forEach { if (it.name !in keep) it.delete() }
             Widgets.updateAll(app)
             Schedules.reschedule(app)
