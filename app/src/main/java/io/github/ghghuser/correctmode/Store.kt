@@ -134,7 +134,7 @@ object Store {
     /** Replaces the whole list (import). */
     fun replaceProfiles(ctx: Context, list: List<Profile>) {
         save(ctx, list)
-        sp(ctx).edit().putBoolean("presetNames1", false).commit() // an imported older backup gets the new factory names too
+        sp(ctx).edit().putBoolean("presetNames1", false).putBoolean("presetNames2", false).commit() // an imported older backup gets the new factory names too
     }
 
     // ---- one-time: the old preset emoji become the new flat icons ---------------------------
@@ -148,21 +148,21 @@ object Store {
     /** The 8 behaviours that really differ, ready-made, for the right tab. */
     private fun patternPresets(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
-        return Patterns.ALL.mapIndexed { i, (ringer, dnd) ->
-            Profile(newId(), c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = 1, preset = i)
-        }
+        return Patterns.ALL.indices.map { i -> freshPreset(c, i, newId(), 1, i) }
     }
 
     /** The factory version of pattern [i], keeping [id] (used by "reset" and by "pick from the ready-made patterns"). */
     fun freshPreset(ctx: Context, i: Int, id: String, tab: Int, preset: Int): Profile {
         val c = Loc.wrap(ctx)
         val (ringer, dnd) = Patterns.ALL[i]
-        return Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
+        val p = Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
+        if (i == 6) { p.alarms = true; p.media = true; p.calls = 0; p.messages = 0 } // alarms only
+        return p
     }
 
     /** One time: ready-made profiles that still carry an old factory name get the new one. */
     private fun migratePresetNames(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("presetNames1", false)) return list
+        if (sp(ctx).getBoolean("presetNames1", false)) return migratePresetNames2(ctx, list)
         val old = mapOf(
             3 to listOf("音あり + DND優先のみ", "Sound + DND priority only"), 4 to listOf("バイブ + DND優先のみ", "Vibrate + DND priority only"),
             5 to listOf("ミュート + DND優先のみ", "Mute + DND priority only"), 6 to listOf("DND アラームのみ", "DND alarms only"),
@@ -175,6 +175,25 @@ object Store {
         }
         if (changed) save(ctx, list)
         sp(ctx).edit().putBoolean("presetNames1", true).commit()
+        return migratePresetNames2(ctx, list)
+    }
+
+    /** Second renaming: "DND priority only" became "notification filter", "Normal" became "ring". */
+    private fun migratePresetNames2(ctx: Context, list: List<Profile>): List<Profile> {
+        if (sp(ctx).getBoolean("presetNames2", false)) return list
+        val old = mapOf(
+            0 to listOf("通常(音あり)", "Normal (sound on)", "Normal (sound)"),
+            3 to listOf("音あり + DND優先のみ（BT音声）", "Sound + DND priority only (BT audio)"),
+            4 to listOf("バイブ + DND優先のみ（BT音声）", "Vibrate + DND priority only (BT audio)"),
+            5 to listOf("ミュート + DND優先のみ（BT音声）", "Mute + DND priority only (BT audio)"),
+        )
+        var changed = false
+        for (p in list) {
+            val names = old[p.preset] ?: continue
+            if (p.name in names) { p.name = Loc.wrap(ctx).getString(Patterns.NAMES[p.preset]); changed = true }
+        }
+        if (changed) save(ctx, list)
+        sp(ctx).edit().putBoolean("presetNames2", true).commit()
         return list
     }
 
@@ -276,8 +295,11 @@ object Store {
 
     private fun seed(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
+        // two profiles of your own to start with
         val list = listOf(
-            Profile(newId(), c.getString(R.string.preset_vib_dnd), Ringer.VIBRATE, Dnd.PRIORITY, emoji = "🤫", iconKey = "bell_off"),
+            Profile(newId(), c.getString(R.string.sample_vib_bt), Ringer.VIBRATE, Dnd.PRIORITY, iconKey = "vibrate",
+                calls = 1, messages = 0, mediaOnBt = true),
+            Profile(newId(), c.getString(R.string.sample_mute_all), Ringer.MUTE, Dnd.NONE, iconKey = "volume_off", mediaOnBt = false),
         )
         val all = list + patternPresets(ctx)
         save(ctx, all)

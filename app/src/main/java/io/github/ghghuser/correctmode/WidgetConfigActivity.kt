@@ -46,9 +46,30 @@ class WidgetConfigActivity : Activity() {
         if (profiles.isEmpty()) {
             list.addView(Ui.text(this, Loc.str(this, R.string.no_profiles), 14f, secondary = true))
         }
+        // the order of the widget: the order of this list (new ticks go to the end; change it with the arrows below)
+        val order = ArrayList<String>(current.filter { id -> profiles.any { it.id == id } })
+        val orderBox = Ui.vbox(this)
+        fun showOrder() {
+            orderBox.removeAllViews()
+            if (order.size < 2) return
+            orderBox.addView(Ui.text(this, Loc.str(this, R.string.widget_order_title), 14f, bold = true).apply { setPadding(0, dp(12), 0, 0) })
+            orderBox.addView(Ui.text(this, Loc.str(this, R.string.widget_order_hint), 12f, secondary = true))
+            order.forEachIndexed { i, id ->
+                val p = profiles.firstOrNull { it.id == id } ?: return@forEachIndexed
+                val row = Ui.hbox(this)
+                row.addView(Ui.text(this, "${i + 1}. " + p.titlePrefix() + p.name, 14f), Ui.lp(0, weight = 1f))
+                row.addView(Ui.button(this, "▲") { if (i > 0) { order.add(i - 1, order.removeAt(i)); showOrder() } }.apply { minWidth = 0; minHeight = 0 }, Ui.lp(dp(48), dp(40)))
+                row.addView(Ui.button(this, "▼") { if (i < order.size - 1) { order.add(i + 1, order.removeAt(i)); showOrder() } }.apply { minWidth = 0; minHeight = 0 }, Ui.lp(dp(48), dp(40)))
+                orderBox.addView(row)
+            }
+        }
         for (p in profiles) {
             val label = p.titlePrefix() + p.name + "\n" + Describe.summary(this, p)
             val cb = CheckBox(this).apply { text = label; isChecked = p.id in current }
+            cb.setOnCheckedChangeListener { _, v ->
+                if (v) { if (p.id !in order) order.add(p.id) } else order.remove(p.id)
+                showOrder()
+            }
             list.addView(cb)
             rows.add(Triple(p, cb, cb))
         }
@@ -65,6 +86,8 @@ class WidgetConfigActivity : Activity() {
         showTab()
         root.addView(tabHolder)
         root.addView(list)
+        showOrder()
+        root.addView(orderBox)
 
         // switch widget only: one background behind the whole set
         var look = Store.widgetLook(this, widgetId)
@@ -103,7 +126,7 @@ class WidgetConfigActivity : Activity() {
         buttons.addView(Ui.button(this, getString(android.R.string.cancel)) { finish() }, Ui.lp(0, weight = 1f))
         buttons.addView(
             Ui.button(this, Loc.str(this, R.string.decide)) {
-                val chosen = rows.filter { it.second.isChecked }.map { it.first.id }
+                val chosen = order.filter { id -> rows.any { it.first.id == id && it.second.isChecked } }
                 if (chosen.isEmpty()) {
                     Ui.toast(this, Loc.str(this, R.string.widget_pick_none))
                 } else {

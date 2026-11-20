@@ -131,8 +131,8 @@ class WizardActivity : Activity() {
 
     private fun renderChoose() {
         title(s(R.string.wiz_q1), s(R.string.wiz_q1_hint))
-        option(s(R.string.wiz_a_vib), null) { branch = BRANCH_VIB; go(SOUNDS) }
-        option(s(R.string.wiz_a_mute), null) { branch = BRANCH_MUTE; go(SOUNDS) }
+        option(s(R.string.wiz_a_vib), s(R.string.wiz_a_vib_sub)) { branch = BRANCH_VIB; go(SOUNDS) }
+        option(s(R.string.wiz_a_mute), s(R.string.wiz_a_mute_sub)) { branch = BRANCH_MUTE; go(SOUNDS) }
         option(s(R.string.wiz_a_all), s(R.string.wiz_a_all_sub)) {
             branch = BRANCH_ALL
             p.ringer = Ringer.MUTE; p.dnd = Dnd.NONE; p.mediaOnBt = false // no sound at all, earphones included
@@ -267,7 +267,7 @@ class WizardActivity : Activity() {
         val shown = p.copy(iconKey = iconKey)
         body.addView(Widgets.preview(this, shown, false, 72), Ui.lp(dp(72), dp(72)).apply { gravity = Gravity.CENTER_HORIZONTAL })
         body.addView(Ui.text(this, Describe.summary(this, p), 13f).apply { gravity = Gravity.CENTER; setPadding(0, dp(8), 0, 0) }, Ui.lp())
-        body.addView(Ui.text(this, Describe.chips(p), 15f).apply { gravity = Gravity.CENTER }, Ui.lp())
+        body.addView(Ui.chipsView(this, p, centered = true), Ui.lp())
         body.addView(Ui.text(this, s(R.string.matrix_title) + "\n" + Describe.matrixLines(this, p), 13f).apply { setPadding(0, dp(6), 0, dp(4)) }, Ui.lp())
         body.addView(Ui.text(this, Describe.detail(this, p), 12f, secondary = true), Ui.lp())
         body.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(4), 0, 0) }, Ui.lp())

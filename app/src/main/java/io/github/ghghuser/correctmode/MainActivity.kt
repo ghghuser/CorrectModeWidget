@@ -157,7 +157,7 @@ class MainActivity : Activity() {
 
         val col = Ui.vbox(this).apply { setPadding(dp(12), 0, dp(8), 0) }
         col.addView(Ui.text(this, p.name, 16f, bold = true))
-        col.addView(Ui.text(this, Describe.chips(p), 14f))
+        col.addView(android.widget.HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(Ui.chipsView(this@MainActivity, p)) }) // scrolls if large text makes it wider
         col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
         val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
         col.addView(Ui.text(this, extra, 12f, secondary = true))

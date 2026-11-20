@@ -3,34 +3,31 @@
     <string name="app_name">CorrectMode</string>
 
     <!-- 用語: 「着信音」= 音あり/バイブ/ミュートの切替。「DND」= サイレントモード(通知の制限)。両者は別物。 -->
-    <string name="ringer_label">着信音</string>
-    <string name="ringer_hint">音あり / バイブ / ミュート</string>
-    <string name="ringer_normal">音あり</string>
+    <string name="ringer_label">マナーモード</string>
+    <string name="ringer_normal">着信音</string>
     <string name="ringer_vibrate">バイブ</string>
     <string name="ringer_mute">ミュート</string>
     <string name="dnd_label">DND</string>
-    <string name="dnd_hint">サイレントモード</string>
-    <string name="dnd_off">オフ</string>
-    <string name="dnd_priority">優先のみ</string>
+    <string name="dnd_off">オフ(音あり)</string>
+    <string name="dnd_priority">通知フィルタ(音声を許可)</string>
     <string name="dnd_alarms">アラームのみ</string>
-    <string name="dnd_none">すべてブロック</string>
-    <string name="dnd_forced_note">このDNDの段階ではAndroid自身が端末を消音にするため、着信音の設定は変更しません。</string>
+    <string name="dnd_none">オン(すべて音なし)</string>
+    <string name="dnd_forced_note">「オン(すべて音なし)」では、Android自身が端末を消音にします。マナーモードの設定は変更しません。</string>
 
     <string name="senders_none">なし</string>
     <string name="senders_any">全員</string>
     <string name="senders_contacts">連絡先のみ</string>
     <string name="senders_starred">スター付きのみ</string>
 
-    <string name="allow_calls">着信</string>
+    <string name="allow_calls">通話</string>
     <string name="allow_messages">メッセージ</string>
     <string name="allow_media">メディア(音楽・動画・ゲーム)</string>
-    <string name="allow_media_bt">Bluetooth音声の接続中だけメディアも許可</string>
+    <string name="allow_media_bt">Bluetooth音声の接続中だけ、メディアも許可</string>
     <string name="allow_media_bt_short">メディア(Bluetooth音声の接続中のみ)</string>
     <string name="allow_alarms">アラーム</string>
     <string name="allow_system">システム音(タッチ音など)</string>
     <string name="allow_nothing">なし</string>
     <string name="allowed_prefix">許可:</string>
-    <string name="priority_allows">「優先のみ」で通すもの</string>
 
     <string name="preset_vib_dnd">マナーモード(バイブ+DND優先のみ)</string>
     <string name="preset_vib">バイブのみ</string>
@@ -81,20 +78,20 @@
     <string name="perm_alarm_hint">許可がないと、自動解除が数分遅れることがあります。</string>
 
     <string name="profiles_title">プロファイル</string>
-    <string name="profiles_hint">プロファイル=「着信音」と「DND」の組み合わせ1つ。それぞれをウィジェットのボタンにできます。</string>
-    <string name="widget_howto">ホーム画面を長押し → ウィジェット → CorrectMode。「トグル」は1x1で、選んだプロファイルを1つ(オン/オフ)または複数(タップごとに順番に切り替え→最後でオフ)。「切り替え」は横並びのボタンで、使用中以外はグレーになります。</string>
+    <string name="profiles_hint">プロファイル = 「マナーモード」と「DND」の組み合わせ1つ。それぞれをウィジェットのボタンにできます。</string>
+    <string name="widget_howto">ホーム画面を長押し → ウィジェット → CorrectMode。\n・トグル(1x1): プロファイル1つのオン/オフ。複数選ぶと、タップのたびに順番に切り替わり、最後でオフになります。\n・切り替え: ボタンが並びます。広げると段に折り返します。使用中以外はグレーになります。</string>
     <string name="widget_toggle_title">CorrectMode トグル</string>
     <string name="widget_switch_title">CorrectMode 切り替え</string>
     <string name="widget_toggle_desc">プロファイル1つ:タップでオン/オフ。</string>
     <string name="widget_switch_desc">複数のプロファイル:タップでそれに切り替え、オン中のものをタップで解除。</string>
-    <string name="widget_pick_one">このトグルに入れるプロファイルを選んでください(プロファイル=着信音とDNDの組み合わせ)。複数選ぶと、タップするたびに 上から順に切り替わり、最後のあとでオフになります。</string>
-    <string name="widget_pick_many">このウィジェットに並べるプロファイルを選んでください(プロファイル=着信音とDNDの組み合わせ)。</string>
+    <string name="widget_pick_one">このトグルに入れるプロファイルを選んでください。\n複数選ぶと、タップのたびに下の順番で切り替わり、最後のあとでオフになります。</string>
+    <string name="widget_pick_many">このウィジェットに並べるプロファイルを選んでください。</string>
     <string name="widget_pick_none">プロファイルを1つ以上選んでください。</string>
     <string name="widget_setup">タップしてウィジェットを設定</string>
     <string name="no_profiles">プロファイルがありません。アプリで作成してください。</string>
 
     <string name="behavior_title">動作</string>
-    <string name="look_title">ウィジェットの見た目</string>
+    <string name="look_title">見た目</string>
     <string name="icon_pick">アイコン</string>
     <string name="icon_custom">好きな絵文字を入力</string>
     <string name="image_choose">画像を選ぶ…</string>
@@ -126,14 +123,14 @@
     <string name="vol_off">音量には触れない</string>
     <string name="vol_saved">オンにする前の音量に戻す</string>
     <string name="vol_fixed">決めた音量にする</string>
-    <string name="vol_hint">着信音・通知の音量は、着信音が「音あり」に戻る場合だけ復元します。</string>
+    <string name="vol_hint">着信音・通知の音量は、マナーモードが「着信音」に戻る場合だけ復元します。</string>
     <string name="vol_ring">着信音</string>
     <string name="vol_notification">通知</string>
     <string name="vol_media">メディア</string>
     <string name="vol_alarm">アラーム</string>
 
     <string name="terms_title">このアプリの用語</string>
-    <string name="terms_body">着信音 = 音あり/バイブ/ミュートの切替(英語圏で「Silent mode」と呼ばれるもの)。\nDND = Do Not Disturb(日本語の「サイレントモード」)。\n取り違えを避けるため、このアプリでは「着信音」と「DND」とだけ書きます。\nプロファイル = この2つの組み合わせ1つ。</string>
+    <string name="terms_body">マナーモード = 着信音 / バイブ / ミュートの切替。\nDND = Do Not Disturb(サイレントモード)。通知や通話を絞る機能です。\n\n取り違えを避けるため、このアプリでは「マナーモード」と「DND」とだけ書きます。\nプロファイル = この2つの組み合わせ1つ。</string>
 
     <string name="diag_title">診断</string>
     <string name="diag_version">バージョン %1$s(ビルド %2$d)</string>
@@ -148,7 +145,7 @@
     <string name="err_apply_failed">オンにできませんでした(%1$s)。元の設定に戻しました。</string>
     <string name="err_restore_failed">元の設定を完全には戻せませんでした(%1$s)。音の設定を確認してください。</string>
     <string name="err_verify_dnd">DNDが「%1$s」になりませんでした</string>
-    <string name="err_verify_ringer">着信音が「%1$s」になりませんでした</string>
+    <string name="err_verify_ringer">マナーモードが「%1$s」になりませんでした</string>
     <string name="err_bt_policy">Bluetooth用のメディア許可を更新できませんでした(%1$s)</string>
     <string name="err_profile_missing">このプロファイルは存在しません。</string>
     <string name="err_image">画像のエラー:%1$s</string>
@@ -160,13 +157,11 @@
     <string name="widget_pick_count">登録済みのプロファイル: %1$d件(追加・編集はアプリで)</string>
     <string name="widget_open_app">アプリを開く(プロファイルの追加・編集)</string>
     <string name="tab_default_0">自分用</string>
-    <string name="tab_default_1">全パターン</string>
+    <string name="tab_default_1">テンプレート</string>
     <string name="tab_rename_title">タブ名を変更</string>
     <string name="tab_rename_hint">空欄で初期名に戻ります</string>
     <string name="tab_hint">タブ名は長押しで変更できます。新しいプロファイルは、このタブに追加されます。</string>
     <string name="tab_empty">このタブにはプロファイルがありません。</string>
-    <string name="move_left">左のタブへ移動</string>
-    <string name="move_right">右のタブへ移動</string>
     <string name="decide">決定</string>
     <string name="back">戻る</string>
     <string name="perm_first_title">最初に許可が必要です</string>
@@ -178,7 +173,7 @@
     <string name="tabs_title">タブ</string>
     <string name="tab_name_left">左のタブの名前: %1$s</string>
     <string name="tab_name_right">右のタブの名前: %1$s</string>
-    <string name="icon_flat_pick">アイコン(フラット・色は下の「アイコン・文字色」で変更)</string>
+    <string name="icon_flat_pick">アイコン(色は下の「アイコン・文字色」で変更)</string>
     <string name="backup_title">バックアップ(エクスポート/インポート)</string>
     <string name="backup_hint">プロファイル(アイコン画像を含む)、タブ名、言語、Bluetooth設定を1つのJSONファイルに保存・復元します。ウィジェットの配置と現在のオン/オフ状態は含みません。</string>
     <string name="backup_export">全設定を書き出す(エクスポート)</string>
@@ -189,7 +184,7 @@
     <string name="backup_err_active">プロファイルがオン中は読み込めません。先に解除してください。</string>
     <string name="backup_err_format">このアプリのバックアップファイルではありません(%1$s)。</string>
     <string name="backup_err_big">ファイルが大きすぎます。</string>
-    <string name="label_calls">電話の着信</string>
+    <string name="label_calls">通話</string>
     <string name="label_messages">メッセージ</string>
     <string name="label_notif">その他の通知音</string>
     <string name="label_media">音楽・動画</string>
@@ -201,19 +196,15 @@
     <string name="val_bt">イヤホン接続中だけ鳴る</string>
     <string name="val_unknown">鳴るか要確認</string>
     <string name="matrix_title">この設定で鳴るもの</string>
-    <string name="legend">📞着信 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ ❓要確認</string>
-    <string name="pat_1">通常(音あり)</string>
+    <string name="legend">上の段: 📞通話 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n下の段: ✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ ❓要確認</string>
+    <string name="pat_1">通常(着信音)</string>
     <string name="pat_2">バイブ</string>
     <string name="pat_3">ミュート</string>
-    <string name="pat_4">音あり + DND優先のみ（BT音声）</string>
-    <string name="pat_5">バイブ + DND優先のみ（BT音声）</string>
-    <string name="pat_6">ミュート + DND優先のみ（BT音声）</string>
+    <string name="pat_4">着信音 + 通知フィルタ（BT音声）</string>
+    <string name="pat_5">バイブ + 通知フィルタ（BT音声）</string>
+    <string name="pat_6">ミュート + 通知フィルタ（BT音声）</string>
     <string name="pat_7">アラームのみ (DND)</string>
     <string name="pat_8">すべてブロック（DND）</string>
-    <string name="mode_set">組み合わせから選ぶ</string>
-    <string name="mode_detail">個別に選ぶ</string>
-    <string name="mode_set_hint">音の出方を1つ選ぶだけです。選ぶと、下に「この設定で鳴るもの」が出ます。</string>
-    <string name="pat_forced_note">「アラームのみ」「すべてブロック」では、着信音の設定はAndroidが上書きします。</string>
     <string name="opt_tap_vibe">ウィジェットで切り替えたとき短く振動する(オン=1回、オフ=2回)</string>
     <string name="sched_title">タイマー(自動でオンにする)</string>
     <string name="sched_enable">決めた時刻に自動でオンにする</string>
@@ -235,7 +226,6 @@
     <string name="menu_edit">編集</string>
     <string name="menu_copy">コピーを作る</string>
     <string name="copy_suffix">(コピー)</string>
-    <string name="moved_to">「%1$s」へ移動しました</string>
     <string name="add_choose_title">プロファイルを追加</string>
     <string name="add_wizard">質問に答えて作る(おすすめ)</string>
     <string name="add_manual">自分で設定する</string>
@@ -245,37 +235,18 @@
     <string name="picker_hue">色相</string>
     <string name="picker_sat">鮮やかさ</string>
     <string name="picker_val">明るさ</string>
-    <string name="preview_hint">プレビューをタップすると、見た目の設定へ移動します。</string>
+    <string name="preview_hint">プレビューをタップすると、見た目を編集します。</string>
     <string name="diag_tap_ms">直近のウィジェットタップの処理時間(アプリ内): %1$d ms</string>
     <string name="wiz_title">かんたん作成</string>
     <string name="wiz_skip">スキップして自分で設定</string>
     <string name="wiz_back">戻る</string>
-    <string name="wiz_q1">鳴らしたくない音がある？</string>
+    <string name="wiz_q1">消したい音はある?</string>
     <string name="wiz_q1_hint">当てはまるものを1つ選んでください。</string>
-    <string name="wiz_q1_yes">はい、静かにしたい</string>
-    <string name="wiz_q1_no">いいえ、音を鳴らしたい(通常)</string>
-    <string name="wiz_q2">どの音を消す？</string>
-    <string name="wiz_q2_hint">着信やメッセージが来たときの知らせ方です。</string>
-    <string name="wiz_q2_vib">振動は残す(バイブ)</string>
-    <string name="wiz_q2_mute">振動もなし(ミュート)</string>
-    <string name="wiz_q3">通知や着信をさらに制限しますか?</string>
-    <string name="wiz_q3_hint">DND(サイレントモード / Do Not Disturb)は、通すものを絞る機能です。</string>
-    <string name="wiz_q3_off">制限しない(DNDオフ)</string>
-    <string name="wiz_q3_pri">一部だけ通す(優先のみ)</string>
-    <string name="wiz_q3_alarms">アラーム以外すべて止める(アラームのみ)</string>
-    <string name="wiz_q3_none">アラームも含めすべて止める(すべてブロック)</string>
-    <string name="wiz_q4">通す着信・メッセージ</string>
-    <string name="wiz_q4_hint">「優先のみ」で通す相手を選びます。</string>
-    <string name="wiz_q5">通す音</string>
-    <string name="wiz_q5_hint">ここで選んだものだけ鳴ります(選ばなければ鳴りません)。</string>
-    <string name="wiz_media">音楽・動画(メディア)</string>
-    <string name="wiz_media_none">通さない</string>
-    <string name="wiz_media_bt">イヤホン接続中だけ</string>
-    <string name="wiz_media_any">いつでも</string>
-    <string name="wiz_q6">自動解除は？</string>
+    <string name="wiz_q2">どの音を消す?</string>
+    <string name="wiz_q6">自動解除は?</string>
     <string name="wiz_q6_hint">消し忘れを防ぎます。あとから変更できます。</string>
     <string name="wiz_q7">できあがり</string>
-    <string name="wiz_q7_hint">名前を付けて作成します。見た目(アイコン・色)は次の画面で決められます。</string>
+    <string name="wiz_q7_hint">名前を付けて作成します。\nアイコンや色は、次の画面で決められます。</string>
     <string name="wiz_create">作成して見た目を設定</string>
     <string name="wiz_next">次へ</string>
     <string name="wiz_name_default">新しいプロファイル</string>
@@ -287,37 +258,37 @@
     <string name="wiz_step">Step %1$d / %2$d</string>
     <string name="wiz_step1">Step %1$d</string>
     <string name="wiz_cancel">キャンセル</string>
-    <string name="wiz_a_vib">はい、消したい音がある。振動は欲しい。</string>
-    <string name="wiz_a_mute">はい、消したい音がある。振動も不要。</string>
-    <string name="wiz_a_all">はい、一切の音を鳴らさない</string>
-    <string name="wiz_a_all_sub">音を全て鳴らさないプロファイルを作ります。音量を上げることもできなくなります。\nバイブありでも挙動は同じなのでミュートにしてあります。\n※アラームも鳴りません。アラームだけ鳴らしたいときは、一番上の項目を選んでください。</string>
-    <string name="wiz_a_none">いいえ、音を鳴らす</string>
-    <string name="wiz_a_none_sub">音を全て鳴らすプロファイルを作ります。</string>
-    <string name="wiz_foot1">※振動は、着信や通知が来たときに動作します。ただし「消したい音がある」を選ぶと、アプリの通知は振動も止まります。</string>
-    <string name="wiz_q2_hint_vib">チェックした音が消えます。着信とメッセージは、音の代わりにバイブで知らせます。</string>
-    <string name="wiz_q2_hint_mute">チェックした音が消えます。ミュートなので、着信とメッセージは音も振動もありません。</string>
-    <string name="wiz_row_calls">着信またはメッセージ</string>
-    <string name="wiz_calls_sub">「全員 / 連絡先のみ / スター付きのみ / 鳴らさない」から、知らせる相手を選べます。選んだ相手はバイブで知らせます。それ以外の相手は、バイブも鳴りません。</string>
+    <string name="wiz_a_vib">📳 ある(振動は残す)</string>
+    <string name="wiz_a_mute">🔕 ある(振動もいらない)</string>
+    <string name="wiz_a_all">🚫 すべて消す</string>
+    <string name="wiz_a_all_sub">音も振動も、すべて止めます。\nアラームも鳴りません。音量を上げることもできません。\nアラームだけ鳴らしたいときは、上の項目を選んでください。</string>
+    <string name="wiz_a_none">🔔 ない(通常)</string>
+    <string name="wiz_a_none_sub">すべての音を鳴らすプロファイルを作ります。</string>
+    <string name="wiz_foot1">※振動は、着信やメッセージが来たときに動作します。\n※「ある」を選ぶと、アプリの通知は振動も止まります。</string>
+    <string name="wiz_q2_hint_vib">チェックした音が消えます。\n通話とメッセージは、音の代わりにバイブで知らせます。</string>
+    <string name="wiz_q2_hint_mute">チェックした音が消えます。\nミュートなので、通話とメッセージは音も振動もありません。</string>
+    <string name="wiz_row_calls">通話・メッセージ</string>
+    <string name="wiz_calls_sub">知らせる相手を選べます。\n選んだ相手はバイブで知らせ、それ以外は何も鳴りません。</string>
     <string name="wiz_calls_mute_note">音も振動もありません(ミュートのため)。</string>
     <string name="wiz_row_apps">アプリの通知</string>
-    <string name="wiz_apps_note">通知音も振動も止まります。鳴らしたい(振動させたい)アプリは、端末の設定で選べます(全プロファイル共通の設定です)。</string>
-    <string name="apps_open_btn">鳴らすアプリを選ぶ(端末の設定を開く)</string>
+    <string name="wiz_apps_note">通知音も振動も止まります。\n許可するアプリは端末の設定で選びます(全プロファイル共通)。</string>
+    <string name="apps_open_btn">許可するアプリを選択(端末の設定を開く)</string>
     <string name="apps_open_fail">設定画面を開けませんでした。端末の設定で「サイレントモード/DND」を探してください。</string>
     <string name="wiz_row_alarm">アラーム</string>
-    <string name="wiz_row_media">メディア サウンド(動画・ゲームなどの音)</string>
-    <string name="wiz_media_bt_opt">Bluetoothイヤホン接続中だけ鳴らす</string>
-    <string name="wiz_row_touch">タッチ操作音(キーボードなどの音)</string>
+    <string name="wiz_row_media">メディア(動画・音楽・ゲーム)</string>
+    <string name="wiz_media_bt_opt">Bluetoothイヤホンの接続中だけ鳴らす</string>
+    <string name="wiz_row_touch">操作音(キーボードなど)</string>
     <string name="wiz_row_rem">リマインダー</string>
     <string name="wiz_row_evt">カレンダーの予定</string>
-    <string name="wiz_timer_check">決めた時刻に自動でオンにする</string>
-    <string name="wiz_timer_hint">時刻は、作成後の編集画面で設定します。</string>
+    <string name="wiz_timer_check">決めた時刻に、自動でオンにする</string>
+    <string name="wiz_timer_hint">時刻は、作成後の編集画面で決めます。</string>
     <string name="reset_preset">初期化</string>
-    <string name="reset_hint">基本パターンは編集できます。「初期化」で最初の状態に戻せます。</string>
+    <string name="reset_hint">テンプレートは編集できます。「初期化」で最初の状態に戻せます。</string>
     <string name="reset_confirm">「%1$s」を最初の状態に戻します。編集した内容は消えます。よろしいですか？</string>
-    <string name="add_pattern">基本パターンから選ぶ</string>
-    <string name="add_pattern_title">基本パターン</string>
-    <string name="tab_hint_presets">基本パターンです。編集できます。編集画面の「初期化」で元に戻せます。</string>
-    <string name="wiz_foot2">※アプリの通知は、音と一緒に振動も止まります。振動で知らせるのは、上で選んだ着信・メッセージの相手だけです。</string>
+    <string name="add_pattern">テンプレートから選ぶ</string>
+    <string name="add_pattern_title">テンプレート</string>
+    <string name="tab_hint_presets">ひな形です。自由に編集でき、編集画面の「初期化」で元に戻せます。</string>
+    <string name="wiz_foot2">※アプリの通知は、音と一緒に振動も止まります。\n※振動で知らせるのは、上で選んだ通話・メッセージの相手だけです。</string>
     <string name="wiz_foot2_mute">※ミュートでは、振動はありません。</string>
     <string name="wiz_alarm_note">チェックしないと、バイブやミュートでもアラームは鳴ります。</string>
     <string name="wiz_media_note">チェックしないと、バイブやミュートでも動画や音楽は鳴ります。</string>
@@ -358,4 +329,20 @@
     <string name="released_all_text">解除しました。通常の状態(すべて解除)にしました。</string>
     <string name="picker_alpha">不透明度</string>
     <string name="bg_alpha_open">背景の不透明度 %1$d%%(タップして色と一緒に変更)</string>
+    <string name="apps_note">許可しないアプリの通知は、音も振動も止まります。許可するアプリは端末の設定で選びます(全プロファイル共通)。</string>
+    <string name="bt_open_btn">Bluetoothの設定を開く</string>
+    <string name="sample_vib_bt">着信バイブ+Bluetooth自動モード変更+それ以外消音</string>
+    <string name="sample_mute_all">消音(すべて消音)</string>
+    <string name="widget_order_title">並び順</string>
+    <string name="widget_order_hint">チェックした順に並びます。▲▼で入れ替えます。</string>
+    <string name="look_hint">ウィジェットのボタンの見た目(アイコン・色・形・余白)を設定します。</string>
+    <string name="look_edit">見た目を編集</string>
+    <string name="done">完了</string>
+    <string name="look_tab_off">オフ時</string>
+    <string name="look_tab_on">オン時</string>
+    <string name="look_tab_shape">形・余白</string>
+    <string name="icon_sep_hint">オン時も、オフ時と同じアイコンを使います。色は下で別に決められます。</string>
+    <string name="margin_hint">点線がウィジェットの範囲です。その内側に余白を取ります。</string>
+    <string name="wiz_a_vib_sub">着信やメッセージは、バイブで知らせます。</string>
+    <string name="wiz_a_mute_sub">着信もメッセージも、音も振動もありません。</string>
 </resources>

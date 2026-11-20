@@ -132,6 +132,11 @@ object Ui {
         toast(a, a.getString(R.string.apps_open_fail), true)
     }
 
+    /** The system's Bluetooth settings (paired devices and their details). */
+    fun openBluetoothSettings(a: Activity) {
+        try { a.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } catch (e: Exception) { toast(a, a.getString(R.string.apps_open_fail), true) }
+    }
+
     fun clock(minutes: Int): String = "%02d:%02d".format(minutes / 60, minutes % 60)
 
     /** "⏰ 22:00–07:00 Mon Tue" or null when the profile has no timer. */
@@ -148,6 +153,24 @@ object Ui {
             isAllCaps = false
             setOnClickListener { onClick() }
         }
+
+    /**
+     * "What sounds" at a glance: one small column per source, the function (📞) above and its state (📳) below,
+     * with a thin gap (less than a half-width space) between the columns.
+     */
+    fun chipsView(ctx: Context, p: Profile, centered: Boolean = false): LinearLayout {
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            if (centered) gravity = Gravity.CENTER_HORIZONTAL
+        }
+        for (r in Describe.matrix(p)) {
+            val col = vbox(ctx).apply { gravity = Gravity.CENTER_HORIZONTAL }
+            col.addView(text(ctx, r.emoji, 15f).apply { gravity = Gravity.CENTER })
+            col.addView(text(ctx, r.cell.mark, 15f).apply { gravity = Gravity.CENTER })
+            row.addView(col, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = ctx.dp(4) })
+        }
+        return row
+    }
 
     fun vbox(ctx: Context): LinearLayout = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
 
