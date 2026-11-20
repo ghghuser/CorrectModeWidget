@@ -587,7 +587,12 @@ class ProfileEditActivity : Activity() {
         return Ui.button(this, s(R.string.bg_alpha_open, get())) {
             val cur = getC()
             val real = cur != null && cur != ColorMark.TRANSPARENT
-            ColorPicker.show(this, if (real) cur!! else 0xFF1F6FEB.toInt(), get()) { c, al -> setC(c); set(al); refreshLook() }
+            val start = if (real) cur!! else 0xFF1F6FEB.toInt()
+            ColorPicker.show(this, start, get()) { c, al ->
+                // only the opacity was changed: keep "automatic" (follows light/dark) or "no background" as it was
+                if (real || c != start) setC(c)
+                set(al); refreshLook()
+            }
         }
     }
 

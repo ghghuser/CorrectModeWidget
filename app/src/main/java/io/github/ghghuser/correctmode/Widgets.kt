@@ -321,6 +321,7 @@ object Widgets {
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
         rv.setImageViewResource(R.id.item_bg, R.drawable.shape_round_l)
         rv.setColorInt(R.id.item_bg, "setColorFilter", BG_OFF.first, BG_OFF.second)
+        rv.setInt(R.id.item_bg, "setImageAlpha", 255)
         rv.setTextViewText(R.id.item_emoji, "⚙")
         rv.setColorInt(R.id.item_emoji, "setTextColor", FG_OFF.first, FG_OFF.second)
         rv.setViewVisibility(R.id.item_image, View.GONE)
