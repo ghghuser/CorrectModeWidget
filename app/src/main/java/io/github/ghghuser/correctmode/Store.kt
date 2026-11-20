@@ -182,7 +182,7 @@ object Store {
     private fun migratePresetNames2(ctx: Context, list: List<Profile>): List<Profile> {
         if (sp(ctx).getBoolean("presetNames2", false)) return list
         val old = mapOf(
-            0 to listOf("通常(音あり)", "Normal (sound on)"),
+            0 to listOf("通常(音あり)", "Normal (sound on)", "Normal (sound)"),
             3 to listOf("音あり + DND優先のみ（BT音声）", "Sound + DND priority only (BT audio)"),
             4 to listOf("バイブ + DND優先のみ（BT音声）", "Vibrate + DND priority only (BT audio)"),
             5 to listOf("ミュート + DND優先のみ（BT音声）", "Mute + DND priority only (BT audio)"),
