@@ -271,7 +271,9 @@ object Engine {
             }
         }
         Notifier.cancelActive(app)
-        Notifier.info(app, Loc.str(app, R.string.ended_external, why))
+        val msg = Loc.str(app, R.string.ended_external, why)
+        Notifier.info(app, msg)
+        Store.setLastError(app, msg) // shown as the warning mark on the widgets until the next successful switch
         Widgets.updateAll(app)
     }
 

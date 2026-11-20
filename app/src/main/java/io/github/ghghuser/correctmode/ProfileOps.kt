@@ -15,7 +15,7 @@ object ProfileOps {
     fun resetPreset(ctx: Context, p: Profile) {
         if (p.preset < 0) return
         if (Store.state(ctx).activeId == p.id) Engine.release(ctx, Reason.USER)
-        p.imageFile?.let { Store.imageFile(ctx, it).delete() }
+        p.imageFiles().forEach { Store.imageFile(ctx, it).delete() }
         Store.upsert(ctx, Store.freshPreset(ctx, p.preset, p.id, p.tab, p.preset))
         Widgets.updateAll(ctx)
         Schedules.reschedule(ctx)
@@ -29,13 +29,20 @@ object ProfileOps {
         val c = p.copy(
             id = Store.newId(),
             name = (p.name + " " + Loc.str(ctx, R.string.copy_suffix)).take(30),
-            tab = 0, preset = -1, schedOn = false, imageFile = null,
+            tab = 0, preset = -1, schedOn = false, imageFile = null, imageFileOn = null,
         )
         p.imageFile?.let { old ->
             val src = Store.imageFile(ctx, old)
             if (src.isFile) {
                 val n = "${c.id}_copy.png"
                 try { src.copyTo(Store.imageFile(ctx, n), overwrite = true); c.imageFile = n } catch (e: Exception) { /* no picture in the copy */ }
+            }
+        }
+        p.imageFileOn?.let { old ->
+            val src = Store.imageFile(ctx, old)
+            if (src.isFile) {
+                val n = "${c.id}_copy_on.png"
+                try { src.copyTo(Store.imageFile(ctx, n), overwrite = true); c.imageFileOn = n } catch (e: Exception) { /* no picture in the copy */ }
             }
         }
         Store.upsert(ctx, c)

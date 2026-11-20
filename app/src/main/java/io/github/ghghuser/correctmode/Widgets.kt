@@ -93,9 +93,13 @@ object Widgets {
      * (no gap) and only the two outer ends are rounded.
      * [boxDp]: size of the widget area; with [Profile.keepRatio] the button becomes a perfect square / circle in it.
      */
+    enum class Margins { OWN, LIST, NONE }
+    private const val LIST_MARGIN = 2
+
     fun bindItem(
         ctx: Context, rv: RemoteViews, p: Profile, active: Boolean, tap: PendingIntent?, dim: Boolean = false,
         joinShape: Int? = null, noBg: Boolean = false, boxDp: Pair<Float, Float>? = null, edges: Edges? = null,
+        margins: Margins = Margins.OWN,
     ) {
         val dp = ctx.resources.displayMetrics.density
         val bg0 = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
@@ -103,24 +107,31 @@ object Widgets {
         // greyed while the app is busy with the last tap, or (switch widget) while another button is on:
         // the colours turn grey but the opacity setting of the background is kept
         val grey = dim || (tap != null && System.currentTimeMillis() < Store.busyUntil(ctx))
-        val bg = if (grey) withAlpha(0xFF8A8A8A.toInt(), a) to withAlpha(0xFF8A8A8A.toInt(), a)
-            else withAlpha(bg0.first, a) to withAlpha(bg0.second, a)
+        // opaque colour + image alpha: a translucent colour filter would only be blended with the white shape (stays opaque)
+        val bg = if (grey) 0xFF8A8A8A.toInt() to 0xFF8A8A8A.toInt()
+            else (bg0.first or 0xFF000000.toInt()) to (bg0.second or 0xFF000000.toInt())
         val fg = if (grey) 0xFFB0B0B0.toInt() to 0xFFB0B0B0.toInt()
             else if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
         // "no background": the button area stays tappable, only the coloured shape is not drawn
         rv.setViewVisibility(R.id.item_bg, if (noBg || a == 0 || (if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
         rv.setImageViewResource(R.id.item_bg, joinShape ?: shapeRes(p.shape))
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
+        rv.setInt(R.id.item_bg, "setImageAlpha", (a * 255 / 100).coerceIn(0, 255))
+        // margins: the profile's own, the same small one for every button of a list (otherwise it looks ragged), or none
+        val mL = when (margins) { Margins.OWN -> p.mL; Margins.LIST -> LIST_MARGIN; else -> 0 }
+        val mT = when (margins) { Margins.OWN -> p.mT; Margins.LIST -> LIST_MARGIN; else -> 0 }
+        val mR = when (margins) { Margins.OWN -> p.mR; Margins.LIST -> LIST_MARGIN; else -> 0 }
+        val mB = when (margins) { Margins.OWN -> p.mB; Margins.LIST -> LIST_MARGIN; else -> 0 }
 
         // margins around the button; with "keep ratio" the rest of the room is shared out so the shape stays square
         fun px(v: Float) = (v * dp).roundToInt()
         if (joinShape != null) {
             val e = edges ?: Edges(true, true, true, true)
-            rv.setViewPadding(R.id.item_root, if (e.left) px(p.mL.toFloat()) else 0, if (e.top) px(p.mT.toFloat()) else 0,
-                if (e.right) px(p.mR.toFloat()) else 0, if (e.bottom) px(p.mB.toFloat()) else 0)
+            rv.setViewPadding(R.id.item_root, if (e.left) px(mL.toFloat()) else 0, if (e.top) px(mT.toFloat()) else 0,
+                if (e.right) px(mR.toFloat()) else 0, if (e.bottom) px(mB.toFloat()) else 0)
         } else {
-            var l = p.mL.toFloat(); var t = p.mT.toFloat(); var r = p.mR.toFloat(); var b = p.mB.toFloat()
-            if (p.keepRatio && boxDp != null) {
+            var l = mL.toFloat(); var t = mT.toFloat(); var r = mR.toFloat(); var b = mB.toFloat()
+            if (p.keepRatio && boxDp != null && margins != Margins.NONE) {
                 val aw = boxDp.first - l - r
                 val ah = boxDp.second - t - b
                 val side = minOf(aw, ah).coerceAtLeast(16f)
@@ -133,7 +144,7 @@ object Widgets {
 
         // an own icon for the "on" state (built-in icon or emoji); the picture is shared
         val useOn = active && p.onSep
-        val bmp = if (useOn) null else p.imageFile?.let { BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
+        val bmp = (if (useOn) p.imageFileOn else p.imageFile)?.let { BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
         val iconRes = FlatIcons.res(if (useOn) p.iconKeyOn else p.iconKey)
         // priority: own picture, then built-in flat icon, then emoji
         rv.setViewVisibility(R.id.item_image, if (bmp != null) View.VISIBLE else View.GONE)
@@ -296,7 +307,7 @@ object Widgets {
                 }
                 // while one of this widget's profiles is on, all the others are greyed out
                 bindItem(ctx, item, p, activeId == p.id, tapIntent(ctx, p.id), dim = oneIsOn && activeId != p.id,
-                    joinShape = join, noBg = !look.items, boxDp = if (row.size == 1 && !multi) box else null, edges = edges)
+                    joinShape = join, noBg = !look.items, boxDp = if (row.size == 1 && !multi) box else null, edges = edges, margins = Margins.LIST)
                 holder.addView(holderId, item)
             }
             if (multi && gap > 0) spacers()
@@ -310,6 +321,7 @@ object Widgets {
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
         rv.setImageViewResource(R.id.item_bg, R.drawable.shape_round_l)
         rv.setColorInt(R.id.item_bg, "setColorFilter", BG_OFF.first, BG_OFF.second)
+        rv.setInt(R.id.item_bg, "setImageAlpha", 255)
         rv.setTextViewText(R.id.item_emoji, "⚙")
         rv.setColorInt(R.id.item_emoji, "setTextColor", FG_OFF.first, FG_OFF.second)
         rv.setViewVisibility(R.id.item_image, View.GONE)
@@ -322,11 +334,11 @@ object Widgets {
     }
 
     /** Preview for the editor: the same RemoteViews code path as the real widget. */
-    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int, outline: Boolean = false): View {
+    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int, outline: Boolean = false, margins: Margins = Margins.NONE): View {
         val holder = FrameLayout(ctx)
         if (outline) holder.setBackgroundResource(R.drawable.widget_cell_outline)
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
-        bindItem(ctx, rv, p, active, null)
+        bindItem(ctx, rv, p, active, null, margins = margins)
         val px = (sizeDp * ctx.resources.displayMetrics.density).roundToInt()
         holder.addView(rv.apply(ctx, holder), FrameLayout.LayoutParams(px, px))
         return holder

@@ -55,7 +55,7 @@ class WidgetConfigActivity : Activity() {
 
         val firstTicked = profiles.firstOrNull { it.id in current }?.tab
         var tab = firstTicked
-            ?: try { getSharedPreferences("ui", MODE_PRIVATE).getInt("tab", 0).coerceIn(0, 1) } catch (e: Exception) { 0 }
+            ?: 0 // a new widget starts on the left tab (own profiles)
         val tabHolder = Ui.vbox(this)
         fun showTab() {
             tabHolder.removeAllViews()
@@ -83,21 +83,11 @@ class WidgetConfigActivity : Activity() {
             }
             root.addView(strip, Ui.lp(h = dp(40)))
             root.addView(Ui.button(this, getString(R.string.wl_color)) {
-                ColorPicker.show(this, look.color or 0xFF000000.toInt()) { c ->
-                    look = Store.WidgetLook(c and 0xFFFFFF, if (look.alpha == 0) 100 else look.alpha, look.items); refreshLook()
+                ColorPicker.show(this, look.color or 0xFF000000.toInt(), look.alpha) { c, al ->
+                    look = Store.WidgetLook(c and 0xFFFFFF, al, look.items); refreshLook()
                 }
             })
             root.addView(alphaText)
-            root.addView(android.widget.SeekBar(this).apply {
-                max = 100; progress = look.alpha
-                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
-                    override fun onProgressChanged(sb: android.widget.SeekBar, v: Int, fromUser: Boolean) {
-                        look = Store.WidgetLook(look.color, v, look.items); refreshLook()
-                    }
-                    override fun onStartTrackingTouch(sb: android.widget.SeekBar) {}
-                    override fun onStopTrackingTouch(sb: android.widget.SeekBar) {}
-                })
-            })
             root.addView(Ui.text(this, getString(R.string.wl_alpha_hint), 11f, secondary = true))
             root.addView(CheckBox(this).apply {
                 text = getString(R.string.wl_items); isChecked = look.items

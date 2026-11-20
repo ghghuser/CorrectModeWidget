@@ -322,7 +322,7 @@
     <string name="wiz_alarm_note">If unchecked, alarms still sound even in Vibrate or Mute.</string>
     <string name="wiz_media_note">If unchecked, video and music still sound even in Vibrate or Mute.</string>
     <string name="wl_title">Background of the whole widget (switch widget)</string>
-    <string name="wl_color">Choose the background colour</string>
+    <string name="wl_color">Choose background colour and opacity</string>
     <string name="wl_alpha">Opacity %1$d%%</string>
     <string name="wl_alpha_hint">0% means no background.</string>
     <string name="wl_items">Also show each button own background on top</string>
@@ -356,4 +356,6 @@
     <string name="opt_release_all">On release, switch everything off (normal ringer, DND off)</string>
     <string name="opt_release_all_hint">When off, the state from before is put back. A DND you had turned on yourself cannot be cleared by this app.</string>
     <string name="released_all_text">Auto release done. Everything is switched off.</string>
+    <string name="picker_alpha">Opacity</string>
+    <string name="bg_alpha_open">Background opacity %1$d%% (tap to change with the colour)</string>
 </resources>

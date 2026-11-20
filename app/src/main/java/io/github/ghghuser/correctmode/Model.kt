@@ -94,6 +94,8 @@ data class Profile(
     var duration: Int = Dur.ASK,
     var emoji: String = "🔕",
     var imageFile: String? = null,
+    /** own picture for the "on" look (only used when onSep is set) */
+    var imageFileOn: String? = null,
     var bgOn: Int? = null,
     var bgOff: Int? = null,
     var fgOn: Int? = null,
@@ -124,7 +126,7 @@ data class Profile(
     /** percent 0..100 for ring, notification, media, alarm (used with VolMode.FIXED) */
     var volFixed: List<Int> = listOf(50, 50, 50, 50),
     /** short vibration when this profile is switched from a widget */
-    var tapVibe: Boolean = false,
+    var tapVibe: Boolean = true,
     /** on release: false = put back what was there before; true = everything off (ringer normal, our DND off) */
     var releaseAll: Boolean = false,
     /** timer that turns this profile ON by itself (see Schedules) */
@@ -144,6 +146,7 @@ data class Profile(
         put("mediaOnBt", mediaOnBt); put("duration", duration)
         put("emoji", emoji)
         if (imageFile != null) put("imageFile", imageFile)
+        if (imageFileOn != null) put("imageFileOn", imageFileOn)
         bgOn?.let { put("bgOn", it) }; bgOff?.let { put("bgOff", it) }
         fgOn?.let { put("fgOn", it) }; fgOff?.let { put("fgOff", it) }
         put("shape", shape); put("iconSize", iconSize); put("showLabel", showLabel)
@@ -176,6 +179,7 @@ data class Profile(
             duration = o.optInt("duration", Dur.ASK),
             emoji = o.optString("emoji", "🔕"),
             imageFile = if (o.has("imageFile")) o.optString("imageFile") else null,
+            imageFileOn = if (o.has("imageFileOn")) o.optString("imageFileOn") else null,
             bgOn = if (o.has("bgOn")) o.optInt("bgOn") else null,
             bgOff = if (o.has("bgOff")) o.optInt("bgOff") else null,
             fgOn = if (o.has("fgOn")) o.optInt("fgOn") else null,
@@ -197,7 +201,7 @@ data class Profile(
             iconKey = if (o.has("icon")) o.optString("icon").takeIf { FlatIcons.has(it) } else null,
             volMode = o.optInt("vm", VolMode.OFF).coerceIn(0, 2),
             volFixed = (0 until 4).map { i -> o.optJSONArray("vf")?.optInt(i, 50)?.coerceIn(0, 100) ?: 50 },
-            tapVibe = o.optBoolean("vib", false),
+            tapVibe = o.optBoolean("vib", true),
             releaseAll = o.optBoolean("ra", false),
             schedOn = o.optBoolean("son", false),
             schedStart = o.optInt("ss", 22 * 60).coerceIn(0, 1439),
@@ -265,4 +269,6 @@ data class State(
 }
 
 /** Text put in front of the profile name where no picture is shown (notification, dialogs). */
+fun Profile.imageFiles(): List<String> = listOfNotNull(imageFile, imageFileOn)
+
 fun Profile.titlePrefix(): String = if (imageFile == null && iconKey == null) "$emoji " else ""
