@@ -8,6 +8,7 @@
     <string name="ringer_vibrate">バイブ</string>
     <string name="ringer_mute">ミュート</string>
     <string name="dnd_label">DND</string>
+    <string name="dnd_heading">DND(モード)</string>
     <string name="dnd_off">オフ(音あり)</string>
     <string name="dnd_priority">通知フィルタ(音声を許可)</string>
     <string name="dnd_alarms">アラームのみ</string>
@@ -39,7 +40,7 @@
     <string name="state_off">オフ</string>
     <string name="turn_on">オンにする</string>
     <string name="release">解除</string>
-    <string name="add">追加</string>
+    <string name="add">⊕追加</string>
     <string name="edit">編集</string>
     <string name="delete">削除</string>
     <string name="save">保存</string>
@@ -195,7 +196,7 @@
     <string name="val_none">鳴らない</string>
     <string name="val_bt">イヤホン接続中だけ鳴る</string>
     <string name="val_unknown">鳴るか要確認</string>
-    <string name="matrix_title">この設定で鳴るもの</string>
+    <string name="matrix_title">[現在の設定で音が鳴るもの]</string>
     <string name="legend">上の段: 📞通話 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n下の段: ✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ ❓要確認</string>
     <string name="pat_1">通常(着信音)</string>
     <string name="pat_2">バイブ</string>
@@ -227,8 +228,8 @@
     <string name="menu_copy">コピーを作る</string>
     <string name="copy_suffix">(コピー)</string>
     <string name="add_choose_title">プロファイルを追加</string>
-    <string name="add_wizard">質問に答えて作る(おすすめ)</string>
-    <string name="add_manual">自分で設定する</string>
+    <string name="add_wizard">質問に答えながら作成</string>
+    <string name="add_manual">自分で詳細に作成</string>
     <string name="color_transparent">なし</string>
     <string name="color_custom">自由な色</string>
     <string name="picker_title">色を選ぶ</string>
@@ -272,7 +273,7 @@
     <string name="wiz_calls_mute_note">音も振動もありません(ミュートのため)。</string>
     <string name="wiz_row_apps">アプリの通知</string>
     <string name="wiz_apps_note">通知音も振動も止まります。\n許可するアプリは端末の設定で選びます(全プロファイル共通)。</string>
-    <string name="apps_open_btn">許可するアプリを選択(端末の設定を開く)</string>
+    <string name="apps_open_btn">DND(モード)の詳細設定を開く</string>
     <string name="apps_open_fail">設定画面を開けませんでした。端末の設定で「サイレントモード/DND」を探してください。</string>
     <string name="wiz_row_alarm">アラーム</string>
     <string name="wiz_row_media">メディア(動画・音楽・ゲーム)</string>
@@ -329,8 +330,7 @@
     <string name="released_all_text">解除しました。通常の状態(すべて解除)にしました。</string>
     <string name="picker_alpha">不透明度</string>
     <string name="bg_alpha_open">背景の不透明度 %1$d%%(タップして色と一緒に変更)</string>
-    <string name="apps_note">許可しないアプリの通知は、音も振動も止まります。許可するアプリは端末の設定で選びます(全プロファイル共通)。</string>
-    <string name="bt_open_btn">Bluetoothの設定を開く</string>
+    <string name="apps_note">許可しないアプリの通知は、音も振動も止まります。許可するアプリは端末の設定で選びます(全プロファイル共通)。開いた画面で「サイレントモード(CorrectMode)→アプリ」の順に進みます。</string>
     <string name="sample_vib_bt">着信バイブ+Bluetooth自動モード変更+それ以外消音</string>
     <string name="sample_mute_all">消音(すべて消音)</string>
     <string name="widget_order_title">並び順</string>
@@ -345,4 +345,9 @@
     <string name="margin_hint">点線がウィジェットの範囲です。その内側に余白を取ります。</string>
     <string name="wiz_a_vib_sub">着信やメッセージは、バイブで知らせます。</string>
     <string name="wiz_a_mute_sub">着信もメッセージも、音も振動もありません。</string>
+    <string name="discard">破棄</string>
+    <string name="keep_editing">編集を続ける</string>
+    <string name="leave_unsaved">変更が保存されていません。保存しますか?</string>
+    <string name="widget_open_unsaved">ウィジェットの設定に変更があります。「決定」で保存していない変更は、このまま開くと反映されません。アプリを開きますか?</string>
+    <string name="open_app_anyway">開く</string>
 </resources>

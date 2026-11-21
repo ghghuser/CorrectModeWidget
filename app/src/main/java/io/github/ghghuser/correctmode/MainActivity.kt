@@ -49,7 +49,8 @@ class MainActivity : Activity() {
         prefs.edit().putBoolean("askedPerms", true).apply()
         val missing = missingRuntime()
         if (missing.isEmpty() && Engine.hasAccess(this)) return
-        AlertDialog.Builder(this)
+        // the very first notice of the app: the plain system look (not the app's card colours)
+        AlertDialog.Builder(this, if (isNight()) android.R.style.Theme_DeviceDefault_Dialog_Alert else android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
             .setTitle(s(R.string.perm_first_title))
             .setMessage(s(R.string.perm_first_body))
             .setPositiveButton(s(R.string.perm_first_go)) { _, _ ->
@@ -119,7 +120,8 @@ class MainActivity : Activity() {
     private fun addProfiles() {
         val head = Ui.hbox(this)
         head.addView(Ui.text(this, s(R.string.profiles_title), 18f, bold = true), Ui.lp(0, weight = 1f))
-        head.addView(Ui.button(this, s(R.string.add)) { chooseHowToAdd() })
+        // the templates tab is read-only: new profiles always go to the left tab, so the button is greyed there
+        head.addView(Ui.button(this, s(R.string.add)) { chooseHowToAdd() }.apply { isEnabled = tab != 1 })
         content.addView(head)
         content.addView(Ui.text(this, s(R.string.profiles_hint), 12f, secondary = true))
 
@@ -199,13 +201,13 @@ class MainActivity : Activity() {
 
     private fun chooseHowToAdd() {
         // a new profile always goes to the left tab (your own)
-        val items = arrayOf(s(R.string.add_wizard), s(R.string.add_manual), s(R.string.add_pattern))
+        val items = arrayOf(s(R.string.add_manual), s(R.string.add_wizard), s(R.string.add_pattern))
         AlertDialog.Builder(this).setTitle(s(R.string.add_choose_title)).setItems(items) { _, which ->
             tab = 0
             try { getSharedPreferences("ui", MODE_PRIVATE).edit().putInt("tab", 0).apply() } catch (e: Exception) { }
             when (which) {
-                0 -> startActivity(Intent(this, WizardActivity::class.java))
-                1 -> startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("tab", 0))
+                0 -> startActivity(Intent(this, ProfileEditActivity::class.java).putExtra("tab", 0))
+                1 -> startActivity(Intent(this, WizardActivity::class.java))
                 else -> choosePattern()
             }
         }.show()

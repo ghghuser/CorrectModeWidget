@@ -102,9 +102,4 @@ object Describe {
 
     /** One compact line for the profile card, e.g. "📞📳 💬📳 📣✖ 🎵✖ ⏰✖ 🔧✖". */
     fun chips(p: Profile): String = matrix(p).joinToString("  ") { it.emoji + it.cell.mark }
-
-    /** Full lines for the editor: "📞 Phone calls: 📳 Vibrate only". */
-    fun matrixLines(ctx: Context, p: Profile): String = matrix(p).joinToString("\n") {
-        it.emoji + " " + Loc.str(ctx, it.labelRes) + ": " + it.cell.mark + " " + Loc.str(ctx, it.cell.textRes)
-    }
 }
