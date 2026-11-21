@@ -79,7 +79,7 @@ class ProfileEditActivity : Activity(), BackGuard {
         val ex = Store.profile(this, intent?.getStringExtra("id"))
         isNew = ex == null
         val fromPattern = intent?.getIntExtra("pattern", -1) ?: -1
-        p = ex?.copy() ?: if (fromPattern in Patterns.ALL.indices) Store.freshPreset(this, fromPattern, Store.newId(), 0, -1)
+        p = ex?.copy() ?: if (fromPattern in Patterns.LIST.indices) Store.freshPreset(this, fromPattern, Store.newId(), 0, -1)
         else Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
         initialJson = p.toJson().toString()
         origImage = ex?.imageFile

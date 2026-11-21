@@ -139,15 +139,18 @@ object Store {
     /** The 8 behaviours that really differ, ready-made, for the right tab. */
     private fun patternPresets(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
-        return Patterns.ALL.indices.map { i -> freshPreset(c, i, newId(), 1, i) }
+        return Patterns.LIST.indices.map { i -> freshPreset(c, i, newId(), 1, i) }
     }
 
     /** The factory version of pattern [i], keeping [id] (used by "reset" and by "pick from the ready-made patterns"). */
     fun freshPreset(ctx: Context, i: Int, id: String, tab: Int, preset: Int): Profile {
         val c = Loc.wrap(ctx)
-        val (ringer, dnd) = Patterns.ALL[i]
-        val p = Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
-        if (i == 6) { p.alarms = true; p.media = true; p.calls = 0; p.messages = 0 } // alarms only
+        val t = Patterns.LIST[i]
+        val p = Profile(id, c.getString(t.nameRes), t.ringer, t.dnd, iconKey = t.icon, tab = tab, preset = preset)
+        p.mediaOnBt = t.bt != Patterns.NO_BT
+        if (p.mediaOnBt) p.btScope = t.bt
+        if (t.btOnly) { p.calls = 0; p.messages = 0 }
+        if (i == Patterns.ALARMS_ONLY) { p.alarms = true; p.media = true; p.calls = 0; p.messages = 0 } // alarms only
         return p
     }
 
