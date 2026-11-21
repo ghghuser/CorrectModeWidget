@@ -18,7 +18,7 @@ object Haptics {
         val app = ctx.applicationContext
         if (turnedOn && !afterChange) { vibrate(app, true); return }
         // after a change: a moment later, so the ringer / DND change that was just made is settled
-        Handler(Looper.getMainLooper()).postDelayed({ vibrate(app, false) }, 250L)
+        Handler(Looper.getMainLooper()).postDelayed({ vibrate(app, turnedOn) }, 250L)
     }
 
     private fun vibrate(ctx: Context, turnedOn: Boolean) {
