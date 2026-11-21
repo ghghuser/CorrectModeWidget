@@ -120,7 +120,6 @@ class SettingsActivity : Activity() {
             }
         })
         card.addView(Ui.text(this, s(R.string.bt_target_hint), 12f, secondary = true))
-        card.addView(Ui.button(this, s(R.string.bt_open_btn)) { Ui.openBluetoothSettings(this) })
         content.addView(card)
     }
 

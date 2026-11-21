@@ -22,7 +22,6 @@ import android.widget.GridLayout
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.ImageView
 import android.widget.ScrollView
 import android.view.ViewGroup
@@ -32,7 +31,7 @@ import java.io.FileOutputStream
 import kotlin.math.roundToInt
 
 /** Create / edit one Ringer + DND combination and the look of its widget button. */
-class ProfileEditActivity : Activity() {
+class ProfileEditActivity : Activity(), BackGuard {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(Loc.wrap(newBase))
 
     private companion object {
@@ -52,13 +51,13 @@ class ProfileEditActivity : Activity() {
     private var origImageOn: String? = null
     private val created = ArrayList<String>()
     private var saved = false
+    private lateinit var initialJson: String
 
     private lateinit var previewBox: LinearLayout
     private lateinit var detailBox: LinearLayout
     private lateinit var forcedNote: TextView
-    private lateinit var effectText: TextView
+    private lateinit var effectBox: LinearLayout
     private lateinit var btCheck: CheckBox
-    private lateinit var btSettingsBtn: android.widget.Button
     private lateinit var callsBtn: android.widget.Button
     private lateinit var msgBtn: android.widget.Button
     private lateinit var emojiEdit: EditText
@@ -81,6 +80,7 @@ class ProfileEditActivity : Activity() {
         val fromPattern = intent?.getIntExtra("pattern", -1) ?: -1
         p = ex?.copy() ?: if (fromPattern in Patterns.ALL.indices) Store.freshPreset(this, fromPattern, Store.newId(), 0, -1)
         else Profile(Store.newId(), s(R.string.new_profile), tab = (intent?.getIntExtra("tab", 0) ?: 0).coerceIn(0, 1))
+        initialJson = p.toJson().toString()
         origImage = ex?.imageFile
         origImageOn = ex?.imageFileOn
         title = s(if (isNew) R.string.profile_new_title else R.string.profile_edit_title)
@@ -105,6 +105,20 @@ class ProfileEditActivity : Activity() {
         setContentView(screen)
         refreshBehavior()
         refreshLook()
+        // swipe / back button: ask first when something was changed (target 36 does not call onBackPressed any more)
+        onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { leave() }
+    }
+
+    private fun dirty(): Boolean = p.toJson().toString() != initialJson
+
+    override fun leave() {
+        if (saved || !dirty()) { finish(); return }
+        android.app.AlertDialog.Builder(this)
+            .setMessage(s(R.string.leave_unsaved))
+            .setPositiveButton(s(R.string.save)) { _, _ -> save() }
+            .setNegativeButton(s(R.string.discard)) { _, _ -> finish() }
+            .setNeutralButton(s(R.string.keep_editing), null)
+            .show()
     }
 
     override fun onDestroy() {
@@ -120,19 +134,6 @@ class ProfileEditActivity : Activity() {
             override fun onTextChanged(a: CharSequence?, b: Int, c: Int, d: Int) {}
             override fun afterTextChanged(e: Editable?) { cb(e?.toString() ?: "") }
         })
-    }
-
-    private fun radios(labels: List<String>, current: Int, onPick: (Int) -> Unit): RadioGroup {
-        val g = RadioGroup(this)
-        labels.forEachIndexed { i, l ->
-            g.addView(RadioButton(this).apply {
-                text = l
-                id = View.generateViewId()
-                isChecked = i == current
-                setOnClickListener { onPick(i) }
-            })
-        }
-        return g
     }
 
     private fun updatePreview() {
@@ -179,8 +180,8 @@ class ProfileEditActivity : Activity() {
         card.addView(choiceBox)
         buildChoice()
 
-        effectText = Ui.text(this, "", 13f).apply { setPadding(0, dp(8), 0, dp(4)) }
-        card.addView(effectText)
+        effectBox = Ui.vbox(this).apply { setPadding(0, dp(8), 0, dp(4)) }
+        card.addView(effectBox)
 
         val durLabels = DURATIONS.map { Ui.durationLabel(this, it) } + s(R.string.duration_free)
         val durBtn = Ui.button(this, "") {}
@@ -303,12 +304,15 @@ class ProfileEditActivity : Activity() {
     private fun buildChoice() {
         choiceBox.removeAllViews()
         dndRadios.clear()
-        choiceBox.addView(Ui.text(this, "🔔 " + s(R.string.ringer_label), 14f, bold = true).apply { setPadding(0, dp(8), 0, 0) })
+        choiceBox.addView(Ui.text(this, "🔕 " + s(R.string.ringer_label), 14f, bold = true).apply { setPadding(0, dp(8), 0, dp(4)) })
         val ringers = listOf(Ringer.NORMAL to "🔔", Ringer.VIBRATE to "📳", Ringer.MUTE to "🔕")
-        choiceBox.addView(radios(ringers.map { it.second + " " + Describe.ringer(this, it.first) }, p.ringer) { p.ringer = it; refreshBehavior() })
+        choiceBox.addView(Ui.boxChoice(this, ringers.map { it.second to Describe.ringer(this, it.first) }, ringers.indexOfFirst { it.first == p.ringer }) { i ->
+            p.ringer = ringers[i].first
+            buildChoice(); refreshBehavior()
+        })
 
-        choiceBox.addView(Ui.text(this, "🌙 " + s(R.string.dnd_label), 14f, bold = true).apply { setPadding(0, dp(12), 0, 0) })
-        val opts = listOf(Dnd.OFF to "✅", Dnd.PRIORITY to "🔉", Dnd.NONE to "🚫")
+        choiceBox.addView(Ui.text(this, "🌙 " + s(R.string.dnd_heading), 14f, bold = true).apply { setPadding(0, dp(12), 0, 0) })
+        val opts = listOf(Dnd.OFF to "📢", Dnd.NONE to "🚫", Dnd.PRIORITY to "🔉")
         for ((d, emoji) in opts) {
             val rb = RadioButton(this).apply {
                 text = emoji + " " + Describe.dnd(this@ProfileEditActivity, d)
@@ -347,8 +351,6 @@ class ProfileEditActivity : Activity() {
         detailBox.addView(check(R.string.allow_media, { p.media }, { p.media = it }))
         btCheck = check(R.string.allow_media_bt, { p.mediaOnBt }, { p.mediaOnBt = it })
         detailBox.addView(btCheck)
-        btSettingsBtn = Ui.button(this, s(R.string.bt_open_btn)) { Ui.openBluetoothSettings(this) }
-        detailBox.addView(btSettingsBtn)
         detailBox.addView(check(R.string.allow_alarms, { p.alarms }, { p.alarms = it }))
         detailBox.addView(check(R.string.allow_system, { p.system }, { p.system = it }))
         detailBox.addView(check(R.string.allow_reminders, { p.reminders }, { p.reminders = it }))
@@ -360,7 +362,8 @@ class ProfileEditActivity : Activity() {
 
     /** "What makes a sound with this setting" - recomputed on every change. */
     private fun updateMatrix() {
-        effectText.text = s(R.string.matrix_title) + "\n" + Describe.matrixLines(this, p)
+        effectBox.removeAllViews()
+        effectBox.addView(Ui.matrixView(this, p))
     }
 
     private fun refreshBehavior() {
@@ -373,7 +376,6 @@ class ProfileEditActivity : Activity() {
         callsBtn.text = "📞 " + s(R.string.allow_calls) + ": " + Describe.senders(this, p.calls)
         msgBtn.text = "💬 " + s(R.string.allow_messages) + ": " + Describe.senders(this, p.messages)
         btCheck.visibility = if (p.media) View.GONE else View.VISIBLE
-        btSettingsBtn.visibility = btCheck.visibility
         updateMatrix()
         updatePreview()
     }

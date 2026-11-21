@@ -268,7 +268,7 @@ class WizardActivity : Activity() {
         body.addView(Widgets.preview(this, shown, false, 72), Ui.lp(dp(72), dp(72)).apply { gravity = Gravity.CENTER_HORIZONTAL })
         body.addView(Ui.text(this, Describe.summary(this, p), 13f).apply { gravity = Gravity.CENTER; setPadding(0, dp(8), 0, 0) }, Ui.lp())
         body.addView(Ui.chipsView(this, p, centered = true), Ui.lp())
-        body.addView(Ui.text(this, s(R.string.matrix_title) + "\n" + Describe.matrixLines(this, p), 13f).apply { setPadding(0, dp(6), 0, dp(4)) }, Ui.lp())
+        body.addView(Ui.matrixView(this, p).apply { setPadding(0, dp(6), 0, dp(4)) }, Ui.lp())
         body.addView(Ui.text(this, Describe.detail(this, p), 12f, secondary = true), Ui.lp())
         body.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(4), 0, 0) }, Ui.lp())
         body.addView(Ui.text(this, s(R.string.name), 13f, secondary = true).apply { setPadding(0, dp(12), 0, 0) }, Ui.lp())

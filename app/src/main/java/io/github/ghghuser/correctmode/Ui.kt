@@ -54,7 +54,7 @@ object Ui {
             header.addView(text(a, "←", 24f).apply {
                 setPadding(a.dp(12), a.dp(8), a.dp(12), a.dp(8))
                 contentDescription = Loc.str(a, R.string.back)
-                setOnClickListener { a.finish() }
+                setOnClickListener { (a as? BackGuard)?.leave() ?: a.finish() }
             })
         } else header.setPadding(a.dp(16), a.dp(4), a.dp(8), a.dp(4))
         header.addView(text(a, title, 20f, bold = true), lp(0, weight = 1f))
@@ -132,11 +132,6 @@ object Ui {
         toast(a, a.getString(R.string.apps_open_fail), true)
     }
 
-    /** The system's Bluetooth settings (paired devices and their details). */
-    fun openBluetoothSettings(a: Activity) {
-        try { a.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } catch (e: Exception) { toast(a, a.getString(R.string.apps_open_fail), true) }
-    }
-
     fun clock(minutes: Int): String = "%02d:%02d".format(minutes / 60, minutes % 60)
 
     /** "⏰ 22:00–07:00 Mon Tue" or null when the profile has no timer. */
@@ -167,9 +162,47 @@ object Ui {
             val col = vbox(ctx).apply { gravity = Gravity.CENTER_HORIZONTAL }
             col.addView(text(ctx, r.emoji, 15f).apply { gravity = Gravity.CENTER })
             col.addView(text(ctx, r.cell.mark, 15f).apply { gravity = Gravity.CENTER })
-            row.addView(col, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = ctx.dp(4) })
+            row.addView(col, lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = ctx.dp(8) })
         }
         return row
+    }
+
+    /** Boxes side by side (emoji above the label); the chosen one is outlined. */
+    fun boxChoice(ctx: Context, items: List<Pair<String, String>>, current: Int, onPick: (Int) -> Unit): LinearLayout {
+        val row = hbox(ctx)
+        items.forEachIndexed { i, (emoji, label) ->
+            val on = i == current
+            val box = vbox(ctx).apply {
+                gravity = Gravity.CENTER
+                setPadding(ctx.dp(4), ctx.dp(10), ctx.dp(4), ctx.dp(10))
+                background = GradientDrawable().apply {
+                    cornerRadius = ctx.dp(12).toFloat()
+                    if (on) { setColor(0x331F6FEB); setStroke(ctx.dp(2), 0xFF1F6FEB.toInt()) } else setStroke(ctx.dp(1), 0x55808080)
+                }
+                isClickable = true
+                isSelected = on
+                contentDescription = label
+                stateDescription = if (on) Loc.str(ctx, R.string.selected_state) else null // read out by screen readers
+                setOnClickListener { onPick(i) }
+            }
+            box.addView(text(ctx, emoji, 22f).apply { gravity = Gravity.CENTER })
+            box.addView(text(ctx, label, 13f, bold = on).apply { gravity = Gravity.CENTER })
+            row.addView(box, lp(0, weight = 1f).apply { if (i < items.lastIndex) marginEnd = ctx.dp(6) })
+        }
+        return row
+    }
+
+    /** "What makes a sound": the emojis sit in a fixed-width column, so every line starts at the same place. */
+    fun matrixView(ctx: Context, p: Profile): LinearLayout {
+        val box = vbox(ctx)
+        box.addView(text(ctx, Loc.str(ctx, R.string.matrix_title), 13f))
+        for (r in Describe.matrix(p)) {
+            val row = hbox(ctx).apply { gravity = Gravity.TOP }
+            row.addView(text(ctx, r.emoji, 13f).apply { gravity = Gravity.CENTER }, lp(ctx.dp(28)))
+            row.addView(text(ctx, Loc.str(ctx, r.labelRes) + ": " + r.cell.mark + " " + Loc.str(ctx, r.cell.textRes), 13f), lp(0, weight = 1f))
+            box.addView(row)
+        }
+        return box
     }
 
     fun vbox(ctx: Context): LinearLayout = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
@@ -228,6 +261,9 @@ object Ui {
 }
 
 /** Turning a profile on / off from the widget, the main screen or the notification. */
+/** A screen that asks before it is left with unsaved changes: the header arrow calls [leave]. */
+interface BackGuard { fun leave() }
+
 object Flow {
     /** Set by TapActivity while it handles a widget tap: a successful switch then gives the profile's vibration. */
     @Volatile var fromWidget = false
