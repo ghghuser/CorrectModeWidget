@@ -63,7 +63,9 @@ class TapActivity : Activity() {
         // true state. NOT when this tap releases: reconcile could end the session as "changed from outside", and the
         // tap then saw "nothing active" and turned the profile ON again (a tap on an ON widget did not release it).
         if (!releasing) try { Engine.reconcile(this) } catch (e: Exception) { }
-        val i = candidates.indexOfFirst { it.id == Store.state(this).activeId }
+        // The position in the cycle is the one the widget showed when it was tapped, even if reconcile ended that session:
+        // the tap still means "next one".
+        val i = candidates.indexOfFirst { it.id == st.activeId }
         when {
             data?.host != "cycle" -> Flow.toggle(this, candidates[0]) { finishNow() }
             i < 0 -> Flow.start(this, candidates[0]) { finishNow() }

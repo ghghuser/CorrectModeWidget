@@ -10,13 +10,14 @@ import android.os.VibratorManager
 /**
  * The small vibration after a widget tap (an option of each profile). Never makes a sound.
  * It uses the ALARM vibration channel, so it only works while "Alarm vibration" is on in the phone settings
- * (Sound & vibration > Vibration & haptics). On: one tick, given right before the change. Off: two ticks, given after it.
+ * (Sound & vibration > Vibration & haptics). On: one tick, given right before the change (after it when switching from
+ * another profile). Off: two ticks, given after it.
  */
 object Haptics {
-    fun tap(ctx: Context, turnedOn: Boolean) {
+    fun tap(ctx: Context, turnedOn: Boolean, afterChange: Boolean = true) {
         val app = ctx.applicationContext
-        if (turnedOn) { vibrate(app, true); return }
-        // off: a moment later, so the ringer / DND change that was just made is settled
+        if (turnedOn && !afterChange) { vibrate(app, true); return }
+        // after a change: a moment later, so the ringer / DND change that was just made is settled
         Handler(Looper.getMainLooper()).postDelayed({ vibrate(app, false) }, 250L)
     }
 
