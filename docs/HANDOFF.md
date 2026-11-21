@@ -14,7 +14,7 @@
 - Actions のビルドは main への push のみ(docs/, `*.md`, `*.txt`, LICENSE だけの変更ではビルドしない)。成果物名 `CorrectModeWidget-build<N>-debug.apk`。Maven 429 等の失敗は `gh api -X POST .../actions/runs/ID/rerun`
 - squash merge 後のローカルは `git checkout -B 新枝 FETCH_HEAD`(古い枝をrebaseしない)
 - ローカルでビルドできない場合は、strings の ja/en キー一致を確認して push → Actions で確認
-- マージ済み: PR #1〜#6(#6 = c808ad5、ビルド成功)
+- マージ済み: PR #1〜#7(#7 = de68c82、ビルド#34成功。バージョン表示を 2.0.(N÷100).(N%100) に変更、成果物は直近2つだけ残す)。成果物削除は一時的な502で1件残ることがあるが次回ビルドで消える
 
 ## 3. ユーザーが決めたルール(必ず守る)
 - **鳴ってはいけない時に音が出ない**ことが最優先。挙動・セキュリティはラウンドごとにレビュー
