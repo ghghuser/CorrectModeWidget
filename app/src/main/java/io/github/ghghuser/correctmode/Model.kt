@@ -166,7 +166,7 @@ data class Profile(
             id = o.getString("id"),
             name = o.optString("name", ""),
             ringer = o.optInt("ringer", Ringer.VIBRATE).coerceIn(0, 2),
-            dnd = o.optInt("dnd", Dnd.PRIORITY).coerceIn(0, 3),
+            dnd = o.optInt("dnd", Dnd.PRIORITY).also { require(it != 2) { "unsupported dnd level" } }.coerceIn(0, 3), // 2 = the removed "alarms only" level: such a profile is skipped, not guessed
             calls = o.optInt("calls", 1).coerceIn(0, 3),
             messages = o.optInt("messages", 1).coerceIn(0, 3),
             media = o.optBoolean("media", false),
