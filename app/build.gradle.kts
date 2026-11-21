@@ -15,7 +15,8 @@ android {
         minSdk = 34
         targetSdk = 36
         versionCode = buildNumber
-        versionName = "0.1.$buildNumber"
+        // Version shown to the user: build number N becomes 2.0.(N/100).(N%100), e.g. #1010 -> 2.0.10.10.
+        versionName = "2.0.${buildNumber / 100}.${buildNumber % 100}"
         buildConfigField("int", "BUILD_NUMBER", buildNumber.toString())
     }
 
