@@ -397,7 +397,7 @@ class ProfileEditActivity : Activity() {
         show()
         col.addView(t)
         col.addView(SeekBar(this).apply {
-            max = 32; progress = get()
+            max = 24; progress = get()
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(sb: SeekBar, v: Int, fromUser: Boolean) { set(v); show(); updatePreview() }
                 override fun onStartTrackingTouch(sb: SeekBar) {}

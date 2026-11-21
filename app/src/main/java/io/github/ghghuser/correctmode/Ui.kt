@@ -341,10 +341,14 @@ object Flow {
     }
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
+        // The tick for "on" is given BEFORE the quiet state is applied (afterwards DND / mute can suppress it). When another
+        // profile is on (a switch), the phone may be in a state that suppresses it now, so then it comes after the change.
+        val switching = Store.state(a).activeId != null
+        if (fromWidget && p.tapVibe && !switching) Haptics.tap(a, true, afterChange = false)
         val r = Engine.activate(a, p, expiresAt)
+        if (r.ok && fromWidget && p.tapVibe && switching) Haptics.tap(a, true, afterChange = true)
         if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
         if (!r.ok && r.needAccess) Ui.openAccessSettings(a)
-        if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, true)
         if (r.ok) nagPermissions(a, p)
         onDone()
     }

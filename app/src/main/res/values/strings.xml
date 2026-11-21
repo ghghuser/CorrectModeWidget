@@ -203,7 +203,7 @@
     <string name="pat_6">Mute + notification filter (BT audio)</string>
     <string name="pat_7">Alarms only (DND)</string>
     <string name="pat_8">Block everything (DND)</string>
-    <string name="opt_tap_vibe">Vibrate briefly when switched from a widget (on = once, off = twice)</string>
+    <string name="opt_tap_vibe">Vibrate briefly when switched from a widget (on = once, off = twice). Works only while Alarm vibration is on in the phone settings.</string>
     <string name="sched_title">Timer (turn on by itself)</string>
     <string name="sched_enable">Turn on automatically at a set time</string>
     <string name="sched_start">Start: %1$s</string>
