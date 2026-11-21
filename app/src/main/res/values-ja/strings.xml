@@ -194,7 +194,7 @@
     <string name="val_none">鳴らない</string>
     <string name="val_bt">イヤホン接続中だけ鳴る</string>
     <string name="matrix_title">この設定で鳴るもの</string>
-    <string name="legend">上の段: 📞通話 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n下の段: ✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ ❓要確認</string>
+    <string name="legend">上の段: 📞通話 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n下の段: ✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ</string>
     <string name="pat_1">通常(着信音)</string>
     <string name="pat_2">バイブ</string>
     <string name="pat_3">ミュート</string>
