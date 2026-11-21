@@ -205,7 +205,7 @@
     <string name="pat_6">ミュート + 通知フィルタ（BT音声）</string>
     <string name="pat_7">アラームのみ (DND)</string>
     <string name="pat_8">すべてブロック（DND）</string>
-    <string name="opt_tap_vibe">ウィジェットで切り替えたとき短く振動する(オン=1回、オフ=2回)</string>
+    <string name="opt_tap_vibe">ウィジェットで切り替えたとき短く振動する(オン=1回、オフ=2回)。端末の「アラームのバイブレーション」がオンのときだけ振動します。</string>
     <string name="sched_title">タイマー(自動でオンにする)</string>
     <string name="sched_enable">決めた時刻に自動でオンにする</string>
     <string name="sched_start">開始時刻: %1$s</string>

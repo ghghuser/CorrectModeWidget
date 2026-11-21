@@ -38,9 +38,9 @@ class TapActivity : Activity() {
             Scheduler.scheduleRedraw(applicationContext, 5000L) // safety net if the process dies while a dialog is open
             Widgets.updateAll(this)
         } catch (e: Exception) { }
-        // Look at the real device first: if it was changed from outside (volume key, quick settings), the
-        // stale "on" is cleaned up here, so the tap below acts on the truth, not on an old widget picture.
-        try { Engine.reconcile(this) } catch (e: Exception) { }
+        // No reconcile here on purpose: it could end the session as "changed from outside" and clear the state, and the
+        // tap below then saw "nothing active" and turned the profile ON again (a tap on an ON widget did not release it).
+        // A tap on an active profile always releases (back to the saved state); the real state is read by Flow / Engine.
         val data = intent?.data
         val key = data?.lastPathSegment
         // "tap/<profile id>" = a button of the switch widget; "cycle/<widget id>" = the toggle widget

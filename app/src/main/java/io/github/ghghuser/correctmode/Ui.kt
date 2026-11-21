@@ -341,10 +341,11 @@ object Flow {
     }
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
+        // The tick for "on" is given BEFORE the quiet state is applied: afterwards DND / mute can suppress it.
+        if (fromWidget && p.tapVibe) Haptics.tap(a, true)
         val r = Engine.activate(a, p, expiresAt)
         if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
         if (!r.ok && r.needAccess) Ui.openAccessSettings(a)
-        if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, true)
         if (r.ok) nagPermissions(a, p)
         onDone()
     }
