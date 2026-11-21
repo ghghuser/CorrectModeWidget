@@ -159,7 +159,15 @@ class MainActivity : Activity() {
 
         val col = Ui.vbox(this).apply { setPadding(dp(12), 0, dp(8), 0) }
         col.addView(Ui.text(this, p.name, 16f, bold = true))
-        col.addView(android.widget.HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(Ui.chipsView(this@MainActivity, p)) }) // scrolls if large text makes it wider
+        // scrolls if large text makes it wider. A scroll view swallows taps and never calls its own click listener, so the
+        // chips (its child) take the tap / long press (before, a tap on this row did nothing and the editor did not open).
+        col.addView(android.widget.HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(Ui.chipsView(this@MainActivity, p).apply {
+                setOnClickListener { edit(p) }
+                setOnLongClickListener { showMenu(p); true }
+            })
+        })
         col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
         val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
         col.addView(Ui.text(this, extra, 12f, secondary = true))
