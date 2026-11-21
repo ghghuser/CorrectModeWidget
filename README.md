@@ -71,7 +71,7 @@ INTERNET権限はありません。データはすべて端末内です。
 
 ## 開発者向け
 
-- **ビルド**: `main` へのpushでGitHub Actionsがデバッグ APKをビルドし、Artifacts に `CorrectModeWidget-build<番号>-debug.apk` を置きます。成果物は直近2つだけ残し、古いものは自動で削除します。バージョン表示はビルド番号Nから `2.0.(N÷100).(N÷100の余り)`(例: #1010 → v2.0.10.10)。`docs/`・`*.md`・`*.txt`・`LICENSE` だけの変更ではビルドしません。
+- **ビルド**: `main` へのpushでGitHub Actionsがデバッグ APKをビルドし、Artifacts に `CorrectModeWidget-build<番号>-debug.apk` を置きます。成果物は直近2つだけ残し、古いものは自動で削除します。バージョン表示はビルド番号Nから `1.0.(N÷100).(N÷100の余り)`(例: #1010 → v1.0.10.10)。`docs/`・`*.md`・`*.txt`・`LICENSE` だけの変更ではビルドしません。
 - **署名**: リポジトリ内の固定デバッグ鍵(`app/debug.keystore`、パスワード `android`)。更新インストールが毎回できます。**公開鍵なので配布・リリースには使わないでください。**
 - **構成**: Kotlin、外部ライブラリなし、画面はコードで構築(XMLレイアウトはウィジェットのみ)。`Engine.kt` が状態機械(変更前に保存 → 消音側を先に変更 → 読み戻して確認 → 失敗なら元に戻す)。`Schedules.kt` がタイマー、`Backup.kt` がエクスポート/インポート。
 - **消音の安全策**: 外部変更は上書きしない、通知チャンネルは無音、Bluetooth切断は即時に除外。詳細と点検結果は [docs/REVIEW.md](docs/REVIEW.md)。
