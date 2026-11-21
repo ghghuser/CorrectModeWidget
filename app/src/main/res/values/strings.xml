@@ -350,4 +350,5 @@
     <string name="leave_unsaved">There are unsaved changes. Save them?</string>
     <string name="widget_open_unsaved">There are changes to the widget settings. Changes not saved with Done are not kept if the app is opened now. Open the app?</string>
     <string name="open_app_anyway">Open</string>
+    <string name="selected_state">Selected</string>
 </resources>

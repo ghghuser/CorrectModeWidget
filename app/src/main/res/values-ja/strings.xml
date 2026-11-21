@@ -350,4 +350,5 @@
     <string name="leave_unsaved">変更が保存されていません。保存しますか?</string>
     <string name="widget_open_unsaved">ウィジェットの設定に変更があります。「決定」で保存していない変更は、このまま開くと反映されません。アプリを開きますか?</string>
     <string name="open_app_anyway">開く</string>
+    <string name="selected_state">選択中</string>
 </resources>

@@ -180,7 +180,9 @@ object Ui {
                     if (on) { setColor(0x331F6FEB); setStroke(ctx.dp(2), 0xFF1F6FEB.toInt()) } else setStroke(ctx.dp(1), 0x55808080)
                 }
                 isClickable = true
+                isSelected = on
                 contentDescription = label
+                stateDescription = if (on) Loc.str(ctx, R.string.selected_state) else null // read out by screen readers
                 setOnClickListener { onPick(i) }
             }
             box.addView(text(ctx, emoji, 22f).apply { gravity = Gravity.CENTER })
