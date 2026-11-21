@@ -24,7 +24,7 @@ object Describe {
     )
 
     fun dnd(ctx: Context, d: Int): String = Loc.str(
-        ctx, when (d) { Dnd.OFF -> R.string.dnd_off; Dnd.PRIORITY -> R.string.dnd_priority; Dnd.ALARMS -> R.string.dnd_alarms; else -> R.string.dnd_none },
+        ctx, when (d) { Dnd.OFF -> R.string.dnd_off; Dnd.PRIORITY -> R.string.dnd_priority; else -> R.string.dnd_none },
     )
 
     fun senders(ctx: Context, s: Int): String = Loc.str(
@@ -59,7 +59,7 @@ object Describe {
 
     enum class Cell(val mark: String, val textRes: Int) {
         ON("✅", R.string.val_on), VIB("📳", R.string.val_vib), NONE("✖", R.string.val_none),
-        BT("🎧", R.string.val_bt), UNKNOWN("❓", R.string.val_unknown),
+        BT("🎧", R.string.val_bt),
     }
 
     class Row(val emoji: String, val labelRes: Int, val cell: Cell)
@@ -68,7 +68,6 @@ object Describe {
      * Which of the usual sources can make a sound / vibrate while the profile is ON.
      * Calls and messages follow the ringer unless DND blocks them; other notifications are blocked by every
      * DND mode; media / alarms / touch sounds are decided by the DND mode and its "allow" ticks.
-     * "Alarms only" and media: not verified on a device, so it is shown as "check".
      */
     fun matrix(p: Profile): List<Row> {
         val byRinger = when (p.ringer) { Ringer.NORMAL -> Cell.ON; Ringer.VIBRATE -> Cell.VIB; else -> Cell.NONE }
@@ -80,11 +79,10 @@ object Describe {
         val media = when {
             off -> Cell.ON
             pri -> if (p.media) Cell.ON else if (p.mediaOnBt) Cell.BT else Cell.NONE
-            p.dnd == Dnd.ALARMS -> Cell.UNKNOWN
             else -> Cell.NONE
         }
         val alarm = when {
-            off || p.dnd == Dnd.ALARMS -> Cell.ON
+            off -> Cell.ON
             pri -> if (p.alarms) Cell.ON else Cell.NONE
             else -> Cell.NONE
         }

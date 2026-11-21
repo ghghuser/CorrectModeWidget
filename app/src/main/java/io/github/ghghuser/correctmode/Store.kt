@@ -72,9 +72,9 @@ object Store {
         val s = sp(ctx).getString("profiles", null) ?: return seed(ctx)
         return try {
             val arr = JSONArray(s)
-            migratePresetNames(ctx, migratePresetIndex(ctx, migratePresets(ctx, migrateIcons(ctx, (0 until arr.length()).mapNotNull { i ->
+            (0 until arr.length()).mapNotNull { i ->
                 try { Profile.fromJson(arr.getJSONObject(i)) } catch (e: Exception) { null }
-            }))))
+            }
         } catch (e: Exception) { emptyList() }
     }
 
@@ -134,16 +134,9 @@ object Store {
     /** Replaces the whole list (import). */
     fun replaceProfiles(ctx: Context, list: List<Profile>) {
         save(ctx, list)
-        sp(ctx).edit().putBoolean("presetNames1", false).putBoolean("presetNames2", false).commit() // an imported older backup gets the new factory names too
     }
 
-    // ---- one-time: the old preset emoji become the new flat icons ---------------------------
-
-    private fun namesBoth(ctx: Context, id: Int): Set<String> = listOf("ja", "en").map {
-        val c = android.content.res.Configuration(ctx.resources.configuration)
-        c.setLocale(Locale.forLanguageTag(it))
-        ctx.createConfigurationContext(c).getString(id)
-    }.toSet()
+    // ---- ready-made profiles ----------------------------------------------------------------
 
     /** The 8 behaviours that really differ, ready-made, for the right tab. */
     private fun patternPresets(ctx: Context): List<Profile> {
@@ -158,86 +151,6 @@ object Store {
         val p = Profile(id, c.getString(Patterns.NAMES[i]), ringer, dnd, iconKey = Patterns.ICONS[i], tab = tab, preset = preset)
         if (i == 6) { p.alarms = true; p.media = true; p.calls = 0; p.messages = 0 } // alarms only
         return p
-    }
-
-    /** One time: ready-made profiles that still carry an old factory name get the new one. */
-    private fun migratePresetNames(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("presetNames1", false)) return migratePresetNames2(ctx, list)
-        val old = mapOf(
-            3 to listOf("音あり + DND優先のみ", "Sound + DND priority only"), 4 to listOf("バイブ + DND優先のみ", "Vibrate + DND priority only"),
-            5 to listOf("ミュート + DND優先のみ", "Mute + DND priority only"), 6 to listOf("DND アラームのみ", "DND alarms only"),
-            7 to listOf("DND すべてブロック", "DND block everything"),
-        )
-        var changed = false
-        for (p in list) {
-            val names = old[p.preset] ?: continue
-            if (p.name in names) { p.name = Loc.wrap(ctx).getString(Patterns.NAMES[p.preset]); changed = true }
-        }
-        if (changed) save(ctx, list)
-        sp(ctx).edit().putBoolean("presetNames1", true).commit()
-        return migratePresetNames2(ctx, list)
-    }
-
-    /** Second renaming: "DND priority only" became "notification filter", "Normal" became "ring". */
-    private fun migratePresetNames2(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("presetNames2", false)) return list
-        val old = mapOf(
-            0 to listOf("通常(音あり)", "Normal (sound on)", "Normal (sound)"),
-            3 to listOf("音あり + DND優先のみ（BT音声）", "Sound + DND priority only (BT audio)"),
-            4 to listOf("バイブ + DND優先のみ（BT音声）", "Vibrate + DND priority only (BT audio)"),
-            5 to listOf("ミュート + DND優先のみ（BT音声）", "Mute + DND priority only (BT audio)"),
-        )
-        var changed = false
-        for (p in list) {
-            val names = old[p.preset] ?: continue
-            if (p.name in names) { p.name = Loc.wrap(ctx).getString(Patterns.NAMES[p.preset]); changed = true }
-        }
-        if (changed) save(ctx, list)
-        sp(ctx).edit().putBoolean("presetNames2", true).commit()
-        return list
-    }
-
-    /** One time: presets made by an earlier version get their pattern number, so they can be reset. */
-    private fun migratePresetIndex(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("presetMig3", false)) return list
-        val taken = HashSet<Int>()
-        var changed = false
-        for (p in list) {
-            if (p.tab != 1 || p.preset >= 0) continue
-            val i = Patterns.ALL.indices.firstOrNull { it !in taken && p.iconKey == Patterns.ICONS[it] &&
-                Patterns.ALL[it].second == p.dnd && (p.dnd >= Dnd.ALARMS || Patterns.ALL[it].first == p.ringer) } ?: continue
-            p.preset = i; taken.add(i); changed = true
-        }
-        if (changed) save(ctx, list)
-        sp(ctx).edit().putBoolean("presetMig3", true).commit()
-        return list
-    }
-
-    /** One time: existing installs get the ready-made patterns in the right tab (mine stays untouched). */
-    private fun migratePresets(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("presetMig2", false)) return list
-        val out = list + patternPresets(ctx)
-        save(ctx, out)
-        sp(ctx).edit().putBoolean("presetMig2", true).commit()
-        return out
-    }
-
-    private fun migrateIcons(ctx: Context, list: List<Profile>): List<Profile> {
-        if (sp(ctx).getBoolean("iconMig1", false)) return list
-        val map = listOf(
-            Triple(R.string.preset_vib_dnd, "🤫", "bell_off"), Triple(R.string.preset_vib, "📳", "vibrate"),
-            Triple(R.string.preset_mute, "🔕", "volume_off"), Triple(R.string.preset_dnd, "🌙", "moon"),
-            Triple(R.string.preset_normal, "🔔", "bell"),
-        )
-        var changed = false
-        for (p in list) {
-            if (p.iconKey != null || p.imageFile != null) continue
-            val hit = map.firstOrNull { (res, emoji, _) -> p.emoji == emoji && p.name in namesBoth(ctx, res) } ?: continue
-            p.iconKey = hit.third; changed = true
-        }
-        if (changed) save(ctx, list)
-        sp(ctx).edit().putBoolean("iconMig1", true).commit()
-        return list
     }
 
     fun newId(): String = UUID.randomUUID().toString().replace("-", "").take(12)
@@ -303,7 +216,6 @@ object Store {
         )
         val all = list + patternPresets(ctx)
         save(ctx, all)
-        sp(ctx).edit().putBoolean("iconMig1", true).putBoolean("presetMig2", true).putBoolean("presetMig3", true).commit()
         return all
     }
 
