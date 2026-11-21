@@ -58,6 +58,7 @@ class ProfileEditActivity : Activity(), BackGuard {
     private lateinit var forcedNote: TextView
     private lateinit var effectBox: LinearLayout
     private lateinit var btCheck: CheckBox
+    private lateinit var btScopeBtn: android.widget.Button
     private lateinit var callsBtn: android.widget.Button
     private lateinit var msgBtn: android.widget.Button
     private lateinit var emojiEdit: EditText
@@ -351,6 +352,12 @@ class ProfileEditActivity : Activity(), BackGuard {
         detailBox.addView(check(R.string.allow_media, { p.media }, { p.media = it }))
         btCheck = check(R.string.allow_media_bt, { p.mediaOnBt }, { p.mediaOnBt = it })
         detailBox.addView(btCheck)
+        // which Bluetooth devices count: a setting of this profile (it used to be one setting for the whole app)
+        val btLabels = listOf(s(R.string.bt_all), s(R.string.bt_earphone))
+        btScopeBtn = Ui.button(this, "") {
+            Ui.choose(this, s(R.string.bt_target), btLabels, p.btScope) { i -> p.btScope = i; refreshBehavior() }
+        }
+        detailBox.addView(btScopeBtn)
         detailBox.addView(check(R.string.allow_alarms, { p.alarms }, { p.alarms = it }))
         detailBox.addView(check(R.string.allow_system, { p.system }, { p.system = it }))
         detailBox.addView(check(R.string.allow_reminders, { p.reminders }, { p.reminders = it }))
@@ -376,6 +383,8 @@ class ProfileEditActivity : Activity(), BackGuard {
         callsBtn.text = "📞 " + s(R.string.allow_calls) + ": " + Describe.senders(this, p.calls)
         msgBtn.text = "💬 " + s(R.string.allow_messages) + ": " + Describe.senders(this, p.messages)
         btCheck.visibility = if (p.media) View.GONE else View.VISIBLE
+        btScopeBtn.visibility = if (p.media || !p.mediaOnBt) View.GONE else View.VISIBLE
+        btScopeBtn.text = s(R.string.bt_target) + ": " + s(if (p.btScope == BtMode.EARPHONE_ONLY) R.string.bt_earphone else R.string.bt_all)
         updateMatrix()
         updatePreview()
     }

@@ -19,8 +19,6 @@ object Store {
     fun language(ctx: Context): String = sp(ctx).getString("language", "system") ?: "system"
     fun setLanguage(ctx: Context, v: String) { sp(ctx).edit().putString("language", v).commit() }
 
-    fun btMode(ctx: Context): Int = sp(ctx).getInt("btMode", BtMode.ALL_AUDIO)
-    fun setBtMode(ctx: Context, v: Int) { sp(ctx).edit().putInt("btMode", v).commit() }
 
     // ---- tab names (null = the default name) ----------------------------------------------
 

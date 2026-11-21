@@ -69,7 +69,7 @@ object Engine {
             prev = Store.state(app)
             val snap = prev.snapshot ?: takeSnapshot(app)
             snapForRollback = snap
-            bt = Bt.audioConnected(app)
+            bt = Bt.audioConnected(app, p.btScope)
             val st = State(p.id, System.currentTimeMillis(), expiresAt, snap, bt)
             Store.saveState(app, st) // 1. save before touching anything
             val problem = applySystem(app, p, bt)
@@ -210,7 +210,7 @@ object Engine {
         val st = Store.state(app)
         val id = st.activeId ?: return
         val p = Store.profile(app, id) ?: return
-        val bt = Bt.audioConnected(app, justDisconnected)
+        val bt = Bt.audioConnected(app, p.btScope, justDisconnected)
         if (bt == st.btMedia) return
         try {
             if (p.dnd == Dnd.PRIORITY && p.mediaOnBt && !p.media) {

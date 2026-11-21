@@ -110,16 +110,6 @@ class SettingsActivity : Activity() {
                 recreate()
             }
         })
-        val btLabels = listOf(s(R.string.bt_all), s(R.string.bt_earphone))
-        val btNow = Store.btMode(this)
-        card.addView(Ui.button(this, s(R.string.bt_target) + ": " + btLabels[btNow]) {
-            Ui.choose(this, s(R.string.bt_target), btLabels, btNow) { i ->
-                Store.setBtMode(this, i)
-                Engine.onBtChanged(this)
-                rebuild()
-            }
-        })
-        card.addView(Ui.text(this, s(R.string.bt_target_hint), 12f, secondary = true))
         content.addView(card)
     }
 
