@@ -119,8 +119,16 @@ class WidgetConfigActivity : Activity() {
             root.addView(Ui.text(this, getString(R.string.wl_items_hint), 11f, secondary = true))
             refreshLook()
         }
+        val look0 = Triple(look.color, look.alpha, look.items)
+        fun changed(): Boolean = order.filter { id -> rows.any { it.first.id == id && it.second.isChecked } } != current.filter { id -> profiles.any { it.id == id } } ||
+            Triple(look.color, look.alpha, look.items) != look0
         root.addView(Ui.button(this, Loc.str(this, R.string.widget_open_app)) {
-            startActivity(Intent(this, MainActivity::class.java))
+            if (!changed()) startActivity(Intent(this, MainActivity::class.java))
+            else android.app.AlertDialog.Builder(this)
+                .setMessage(Loc.str(this, R.string.widget_open_unsaved))
+                .setPositiveButton(Loc.str(this, R.string.open_app_anyway)) { _, _ -> startActivity(Intent(this, MainActivity::class.java)) }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
         })
         val buttons = Ui.hbox(this)
         buttons.addView(Ui.button(this, getString(android.R.string.cancel)) { finish() }, Ui.lp(0, weight = 1f))

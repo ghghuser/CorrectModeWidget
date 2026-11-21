@@ -8,6 +8,7 @@
     <string name="ringer_vibrate">Vibrate</string>
     <string name="ringer_mute">Mute</string>
     <string name="dnd_label">DND</string>
+    <string name="dnd_heading">DND (mode)</string>
     <string name="dnd_off">Off (sound on)</string>
     <string name="dnd_priority">Notification filter (allow some sounds)</string>
     <string name="dnd_alarms">Alarms only</string>
@@ -39,7 +40,7 @@
     <string name="state_off">Off</string>
     <string name="turn_on">Turn on</string>
     <string name="release">Release</string>
-    <string name="add">Add</string>
+    <string name="add">⊕ Add</string>
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="save">Save</string>
@@ -195,7 +196,7 @@
     <string name="val_none">silent</string>
     <string name="val_bt">sounds only with earphones</string>
     <string name="val_unknown">unverified</string>
-    <string name="matrix_title">What makes a sound with this setting</string>
+    <string name="matrix_title">[What makes a sound with the current settings]</string>
     <string name="legend">Upper row: 📞calls 💬messages 📣notification sounds 🎵music/video ⏰alarm 🔧touch sounds\nLower row: ✅sounds 📳vibrate only ✖silent 🎧only with earphones ❓to check</string>
     <string name="pat_1">Normal (ring)</string>
     <string name="pat_2">Vibrate</string>
@@ -227,8 +228,8 @@
     <string name="menu_copy">Make a copy</string>
     <string name="copy_suffix">(copy)</string>
     <string name="add_choose_title">Add a profile</string>
-    <string name="add_wizard">Answer a few questions (recommended)</string>
-    <string name="add_manual">Set it up myself</string>
+    <string name="add_wizard">Create by answering questions</string>
+    <string name="add_manual">Create in detail myself</string>
     <string name="color_transparent">None</string>
     <string name="color_custom">Custom colour</string>
     <string name="picker_title">Choose a colour</string>
@@ -272,7 +273,7 @@
     <string name="wiz_calls_mute_note">No sound and no vibration (muted).</string>
     <string name="wiz_row_apps">App notifications</string>
     <string name="wiz_apps_note">No sound and no vibration.\nAllowed apps are chosen in the system settings (same for all profiles).</string>
-    <string name="apps_open_btn">Choose allowed apps (opens system settings)</string>
+    <string name="apps_open_btn">Open DND (mode) detail settings</string>
     <string name="apps_open_fail">Could not open the settings screen. Look for Do Not Disturb in the system settings.</string>
     <string name="wiz_row_alarm">Alarms</string>
     <string name="wiz_row_media">Media (video, music, games)</string>
@@ -329,8 +330,7 @@
     <string name="released_all_text">Auto release done. Everything is switched off.</string>
     <string name="picker_alpha">Opacity</string>
     <string name="bg_alpha_open">Background opacity %1$d%% (tap to change with the colour)</string>
-    <string name="apps_note">Notifications of apps that are not allowed make no sound and no vibration. Allowed apps are chosen in the system settings (same for all profiles).</string>
-    <string name="bt_open_btn">Open Bluetooth settings</string>
+    <string name="apps_note">Notifications of apps that are not allowed make no sound and no vibration. Allowed apps are chosen in the system settings (same for all profiles). In the screen that opens, go to Do Not Disturb (CorrectMode) > Apps.</string>
     <string name="sample_vib_bt">Calls vibrate + Bluetooth auto media + rest silent</string>
     <string name="sample_mute_all">Silent (everything silent)</string>
     <string name="widget_order_title">Order</string>
@@ -345,4 +345,10 @@
     <string name="margin_hint">The dashed line is the widget area. The margins are inside it.</string>
     <string name="wiz_a_vib_sub">Calls and messages notify by vibration.</string>
     <string name="wiz_a_mute_sub">No sound and no vibration for calls and messages.</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="leave_unsaved">There are unsaved changes. Save them?</string>
+    <string name="widget_open_unsaved">There are changes to the widget settings. Changes not saved with OK are not kept if the app is opened now. Open the app?</string>
+    <string name="open_app_anyway">Open</string>
+    <string name="selected_state">Selected</string>
 </resources>
