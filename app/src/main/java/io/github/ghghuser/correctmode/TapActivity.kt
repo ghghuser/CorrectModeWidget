@@ -38,9 +38,6 @@ class TapActivity : Activity() {
             Scheduler.scheduleRedraw(applicationContext, 5000L) // safety net if the process dies while a dialog is open
             Widgets.updateAll(this)
         } catch (e: Exception) { }
-        // No reconcile here on purpose: it could end the session as "changed from outside" and clear the state, and the
-        // tap below then saw "nothing active" and turned the profile ON again (a tap on an ON widget did not release it).
-        // A tap on an active profile always releases (back to the saved state); the real state is read by Flow / Engine.
         val data = intent?.data
         val key = data?.lastPathSegment
         // "tap/<profile id>" = a button of the switch widget; "cycle/<widget id>" = the toggle widget
@@ -60,7 +57,13 @@ class TapActivity : Activity() {
             finishNow()
             return
         }
-        val i = candidates.indexOfFirst { it.id == st.activeId }
+        val releasing = st.activeId.let { id -> val k = candidates.indexOfFirst { it.id == id }
+            k >= 0 && (data?.host != "cycle" || k == candidates.lastIndex) }
+        // Look at the real device first (volume key, quick settings changed from outside), so a switch starts from the
+        // true state. NOT when this tap releases: reconcile could end the session as "changed from outside", and the
+        // tap then saw "nothing active" and turned the profile ON again (a tap on an ON widget did not release it).
+        if (!releasing) try { Engine.reconcile(this) } catch (e: Exception) { }
+        val i = candidates.indexOfFirst { it.id == Store.state(this).activeId }
         when {
             data?.host != "cycle" -> Flow.toggle(this, candidates[0]) { finishNow() }
             i < 0 -> Flow.start(this, candidates[0]) { finishNow() }
