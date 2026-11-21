@@ -337,14 +337,13 @@ object Engine {
     private fun filterOf(d: Int): Int = when (d) {
         Dnd.OFF -> NotificationManager.INTERRUPTION_FILTER_ALL
         Dnd.PRIORITY -> NotificationManager.INTERRUPTION_FILTER_PRIORITY
-        Dnd.ALARMS -> NotificationManager.INTERRUPTION_FILTER_ALARMS
         else -> NotificationManager.INTERRUPTION_FILTER_NONE
     }
 
     /** Higher = quieter. Unknown counts as "not restricting". */
     /** How quiet a profile is (ringer + DND), only used to compare two profiles. */
     private fun quietRank(p: Profile): Int =
-        (when (p.dnd) { Dnd.NONE -> 3; Dnd.ALARMS -> 2; Dnd.PRIORITY -> 1; else -> 0 }) * 3 +
+        (when (p.dnd) { Dnd.NONE -> 3; Dnd.PRIORITY -> 1; else -> 0 }) * 3 +
             (when (p.ringer) { Ringer.MUTE -> 2; Ringer.VIBRATE -> 1; else -> 0 })
 
     /** Calls / messages: 0 none, 1 anyone, 2 contacts, 3 starred -> how many people may get through. */

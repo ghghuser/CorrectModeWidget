@@ -14,8 +14,7 @@ object Ringer {
 object Dnd {
     const val OFF = 0
     const val PRIORITY = 1
-    const val ALARMS = 2
-    const val NONE = 3
+    const val NONE = 3 // 2 is not used (it was a separate "alarms only" level; that is now a notification filter with alarms and media)
 }
 
 object Dur {
@@ -163,21 +162,7 @@ data class Profile(
     }
 
     companion object {
-        /**
-         * "Alarms only" is not a separate DND level any more: it is "notification filter" with alarms and media allowed.
-         * Older saved profiles / backups are converted here.
-         */
-        fun fromJson(o: JSONObject): Profile {
-            val p = parse(o)
-            if (p.dnd == Dnd.ALARMS) {
-                p.dnd = Dnd.PRIORITY
-                p.alarms = true; p.media = true; p.system = false; p.reminders = false; p.events = false
-                p.calls = 0; p.messages = 0
-            }
-            return p
-        }
-
-        private fun parse(o: JSONObject): Profile = Profile(
+        fun fromJson(o: JSONObject): Profile = Profile(
             id = o.getString("id"),
             name = o.optString("name", ""),
             ringer = o.optInt("ringer", Ringer.VIBRATE).coerceIn(0, 2),

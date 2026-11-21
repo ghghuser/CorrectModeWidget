@@ -10,7 +10,6 @@
     <string name="dnd_label">DND</string>
     <string name="dnd_off">オフ(音あり)</string>
     <string name="dnd_priority">通知フィルタ(音声を許可)</string>
-    <string name="dnd_alarms">アラームのみ</string>
     <string name="dnd_none">オン(すべて音なし)</string>
     <string name="dnd_forced_note">「オン(すべて音なし)」では、Android自身が端末を消音にします。マナーモードの設定は変更しません。</string>
 
@@ -194,7 +193,6 @@
     <string name="val_vib">振動のみ</string>
     <string name="val_none">鳴らない</string>
     <string name="val_bt">イヤホン接続中だけ鳴る</string>
-    <string name="val_unknown">鳴るか要確認</string>
     <string name="matrix_title">この設定で鳴るもの</string>
     <string name="legend">上の段: 📞通話 💬メッセージ 📣通知音 🎵音楽・動画 ⏰アラーム 🔧操作音\n下の段: ✅鳴る 📳振動のみ ✖鳴らない 🎧イヤホン接続中だけ ❓要確認</string>
     <string name="pat_1">通常(着信音)</string>

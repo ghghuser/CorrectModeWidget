@@ -10,7 +10,6 @@
     <string name="dnd_label">DND</string>
     <string name="dnd_off">Off (sound on)</string>
     <string name="dnd_priority">Notification filter (allow some sounds)</string>
-    <string name="dnd_alarms">Alarms only</string>
     <string name="dnd_none">On (no sound at all)</string>
     <string name="dnd_forced_note">With On (no sound at all) Android itself silences the phone. The ringer mode is not changed.</string>
 
@@ -194,7 +193,6 @@
     <string name="val_vib">vibrate only</string>
     <string name="val_none">silent</string>
     <string name="val_bt">sounds only with earphones</string>
-    <string name="val_unknown">unverified</string>
     <string name="matrix_title">What makes a sound with this setting</string>
     <string name="legend">Upper row: 📞calls 💬messages 📣notification sounds 🎵music/video ⏰alarm 🔧touch sounds\nLower row: ✅sounds 📳vibrate only ✖silent 🎧only with earphones ❓to check</string>
     <string name="pat_1">Normal (ring)</string>
