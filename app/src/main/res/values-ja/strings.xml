@@ -133,7 +133,7 @@
     <string name="terms_body">マナーモード = 着信音 / バイブ / ミュートの切替。\nDND = Do Not Disturb(サイレントモード)。通知や通話を絞る機能です。\n\n取り違えを避けるため、このアプリでは「マナーモード」と「DND」とだけ書きます。\nプロファイル = この2つの組み合わせ1つ。</string>
 
     <string name="diag_title">診断</string>
-    <string name="diag_version">バージョン %1$s(ビルド %2$d)</string>
+    <string name="diag_version">CorrectMode v%1$s(ビルド #%2$d)</string>
     <string name="diag_no_error">エラーは記録されていません。</string>
     <string name="diag_last_error">直近のエラー:</string>
     <string name="diag_clear">消去</string>

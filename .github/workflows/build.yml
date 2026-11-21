@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  actions: write # needed only to delete old artifacts
 
 concurrency:
   group: build-${{ github.ref }}
@@ -73,3 +74,18 @@ jobs:
           name: CorrectModeWidget-build${{ github.run_number }}-debug
           path: dist/*.apk
           if-no-files-found: error
+
+      # Keep only the 2 newest artifacts of this repository. Best effort: never fails the build.
+      - name: Delete old artifacts (keep 2)
+        if: success()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | [.created_at, .id] | @tsv' \
+            | sort -r | tail -n +3 | cut -f2 \
+            | while read -r id; do
+                gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id" > /dev/null && echo "deleted artifact $id"
+              done
