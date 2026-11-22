@@ -163,7 +163,8 @@ class WizardActivity : Activity() {
 
     private fun allowText(): String {
         if (mode == MODE_ALL) return s(R.string.wiz_all)
-        if (mode == MODE_NONE || nothingChecked()) return s(R.string.wiz_none)
+        if (mode == MODE_NONE) return s(R.string.wiz_none)
+        if (nothingChecked()) return s(R.string.wiz_h_apps_only)
         val l = ArrayList<String>()
         if (callsOn) l.add(s(R.string.allow_calls) + "(" + Describe.senders(this, callsWho) + ")")
         if (msgsOn) l.add(s(R.string.allow_messages) + "(" + Describe.senders(this, msgsWho) + ")")
@@ -332,7 +333,9 @@ class WizardActivity : Activity() {
             }
             p.mediaOnBt = useBt && !p.media
             p.btScope = btScope
-            val nothing = p.calls == 0 && p.messages == 0 && !p.media && !p.alarms && !p.system && !p.reminders && !p.events
+            // Only the explicit "None" blocks everything. Nothing ticked in the list keeps the filter and the ringer, because
+            // the apps chosen in the phone settings ("only certain apps") can still get through it.
+            val nothing = mode == MODE_NONE
             if (nothing) {
                 // nothing but (maybe) media while Bluetooth audio is connected: the ringer does not matter any more
                 p.ringer = Ringer.MUTE
@@ -342,6 +345,8 @@ class WizardActivity : Activity() {
                 add(prep(p), Patterns.find(r, Dnd.PRIORITY, if (p.mediaOnBt) btScope else Patterns.NO_BT, false))
             }
         }
+        // Several profiles at once: their timers would all start with the same unseen default time, so none is switched on here
+        if (out.size > 1) out.forEach { it.p.schedOn = false }
         return out
     }
 
@@ -385,6 +390,7 @@ class WizardActivity : Activity() {
         if (bt == YES && mode == MODE_ALL) notes.add(s(R.string.wiz_note_bt_all))
         if (bt == YES && mode == MODE_CUSTOM && media) notes.add(s(R.string.wiz_note_bt_media))
         if (mode == MODE_CUSTOM && (callsOn || msgsOn) && Ringer.MUTE in ringers() && ringers().size > 1) notes.add(s(R.string.wiz_note_mute_calls))
+        if (timerOn && made.size > 1) notes.add(s(R.string.wiz_note_timer))
         for (n in notes) body.addView(small("※ $n", 8), Ui.lp())
         body.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(8), 0, 0) }, Ui.lp())
         if (fresh.isEmpty()) {

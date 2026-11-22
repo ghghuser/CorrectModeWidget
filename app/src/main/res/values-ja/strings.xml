@@ -361,4 +361,6 @@
     <string name="wiz_h_bt">Bluetooth音声</string>
     <string name="wiz_h_allow">聞こえてもいい音</string>
     <string name="wiz_h_auto">自動解除</string>
+    <string name="wiz_h_apps_only">選択なし(許可するアプリだけ)</string>
+    <string name="wiz_note_timer">プロファイルが複数のため、予約オンは設定していません。作成後に、それぞれの編集画面で設定してください。</string>
 </resources>

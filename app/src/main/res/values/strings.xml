@@ -361,4 +361,6 @@
     <string name="wiz_h_bt">Bluetooth audio</string>
     <string name="wiz_h_allow">Sounds that may be heard</string>
     <string name="wiz_h_auto">Auto release</string>
+    <string name="wiz_h_apps_only">Nothing chosen (allowed apps only)</string>
+    <string name="wiz_note_timer">Because several profiles are made, the scheduled start is not set. Set it in each profile after creating them.</string>
 </resources>
