@@ -361,8 +361,9 @@ class WizardActivity : Activity() {
     private fun renderDone() {
         title(s(R.string.wiz_q7), s(R.string.wiz_q7_hint))
         val made = buildProfiles()
-        val existing = Store.profiles(this).filter { it.tab == 0 }.map { behaviorKey(it) }.toSet()
-        val fresh = made.filter { behaviorKey(it.p) !in existing }
+        // same sound behaviour AND same auto release time = the same profile (name, look and schedule do not count)
+        val existing = Store.profiles(this).filter { it.tab == 0 }.map { behaviorKey(it) + "|" + it.duration }.toSet()
+        val fresh = made.filter { behaviorKey(it.p) + "|" + it.p.duration !in existing }
         val names = HashSet(Store.profiles(this).map { it.name })
         for (m in made) {
             val isNew = m in fresh
