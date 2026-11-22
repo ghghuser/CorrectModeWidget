@@ -115,10 +115,9 @@
     <string name="settings_title">設定</string>
     <string name="language">言語</string>
     <string name="lang_system">システムに従う</string>
-    <string name="bt_target">「メディア許可」の対象のBluetooth機器</string>
+    <string name="bt_target">Bluetooth音声の対象</string>
     <string name="bt_all">すべてのBluetooth音声機器</string>
-    <string name="bt_earphone">ヘッドセット・ヘッドホンのみ</string>
-    <string name="bt_target_hint">「Bluetooth音声の接続中だけメディアも許可」を選んだプロファイルにだけ関係します。「ヘッドセットのみ」では車載機器やスピーカーは数えません。</string>
+    <string name="bt_earphone">ヘッドセット・ヘッドホン・イヤホンのみ</string>
     <string name="vol_restore">解除時の音量</string>
     <string name="vol_off">音量には触れない</string>
     <string name="vol_saved">オンにする前の音量に戻す</string>

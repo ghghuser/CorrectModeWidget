@@ -69,7 +69,7 @@ object Engine {
             prev = Store.state(app)
             val snap = prev.snapshot ?: takeSnapshot(app)
             snapForRollback = snap
-            bt = Bt.audioConnected(app)
+            bt = Bt.audioConnected(app, p.btScope)
             val st = State(p.id, System.currentTimeMillis(), expiresAt, snap, bt)
             Store.saveState(app, st) // 1. save before touching anything
             val problem = applySystem(app, p, bt)
@@ -210,7 +210,7 @@ object Engine {
         val st = Store.state(app)
         val id = st.activeId ?: return
         val p = Store.profile(app, id) ?: return
-        val bt = Bt.audioConnected(app, justDisconnected)
+        val bt = Bt.audioConnected(app, p.btScope, justDisconnected)
         if (bt == st.btMedia) return
         try {
             if (p.dnd == Dnd.PRIORITY && p.mediaOnBt && !p.media) {
@@ -289,11 +289,13 @@ object Engine {
         Log.w(TAG, "activate failed: $problem")
         val prevProfile = previousContent ?: Store.profile(app, prev.activeId)
         var backToPrevious = false
+        // "is Bluetooth audio connected" depends on the device scope of the profile we go back to, not of the failed one
+        val prevBt = if (prevProfile != null) Bt.audioConnected(app, prevProfile.btScope) else bt
         if (prevProfile != null && prev.snapshot != null) {
-            backToPrevious = try { applySystem(app, prevProfile, bt) == null } catch (e: Exception) { false }
+            backToPrevious = try { applySystem(app, prevProfile, prevBt) == null } catch (e: Exception) { false }
         }
         if (backToPrevious && prevProfile != null) {
-            Store.saveState(app, prev.copy(btMedia = bt))
+            Store.saveState(app, prev.copy(btMedia = prevBt))
             scheduleSafely(app, prev.expiresAt)
             Scheduler.scheduleWatch(app)
             Notifier.showActive(app, prevProfile, Store.state(app))
@@ -358,7 +360,9 @@ object Engine {
         if (next.dnd == Dnd.PRIORITY && now.dnd == Dnd.PRIORITY) {
             if (next.alarms && !now.alarms) return true
             if (next.media && !now.media) return true
-            if (next.mediaOnBt && !now.mediaOnBt && !now.media) return true
+            // media while Bluetooth audio is connected: louder if "now" had none, or only for headsets and "next" takes all devices
+            if (next.mediaOnBt && !now.media &&
+                (!now.mediaOnBt || (next.btScope == BtMode.ALL_AUDIO && now.btScope == BtMode.EARPHONE_ONLY))) return true
             if (next.system && !now.system) return true
             if (next.reminders && !now.reminders) return true
             if (next.events && !now.events) return true

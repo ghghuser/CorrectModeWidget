@@ -35,7 +35,7 @@ object Backup {
         val root = JSONObject()
         root.put("app", APP); root.put("format", FORMAT); root.put("exportedAt", System.currentTimeMillis())
         root.put("settings", JSONObject().apply {
-            put("language", Store.language(ctx)); put("btMode", Store.btMode(ctx))
+            put("language", Store.language(ctx))
             Store.rawTabName(ctx, 0)?.let { put("tab0", it) }
             Store.rawTabName(ctx, 1)?.let { put("tab1", it) }
         })
@@ -105,7 +105,6 @@ object Backup {
             Store.replaceProfiles(app, list)
             root.optJSONObject("settings")?.let { st ->
                 st.optString("language").takeIf { it in listOf("system", "ja", "en") }?.let { Store.setLanguage(app, it) }
-                if (st.has("btMode")) Store.setBtMode(app, st.optInt("btMode").coerceIn(0, 1))
                 Store.setTabName(app, 0, st.optString("tab0", ""))
                 Store.setTabName(app, 1, st.optString("tab1", ""))
             }

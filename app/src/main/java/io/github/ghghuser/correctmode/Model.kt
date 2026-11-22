@@ -90,6 +90,8 @@ data class Profile(
     /** index in Patterns for the ready-made profiles of the right tab (they can be reset); -1 = a normal profile */
     var preset: Int = -1,
     var mediaOnBt: Boolean = true,
+    /** which Bluetooth devices count for [mediaOnBt]: BtMode.ALL_AUDIO or BtMode.EARPHONE_ONLY */
+    var btScope: Int = BtMode.ALL_AUDIO,
     /** Dur.ASK, Dur.NONE or minutes */
     var duration: Int = Dur.ASK,
     var emoji: String = "🔕",
@@ -143,7 +145,7 @@ data class Profile(
         put("ringer", ringer); put("dnd", dnd)
         put("calls", calls); put("messages", messages)
         put("media", media); put("alarms", alarms); put("system", system); put("rem", reminders); put("evt", events)
-        put("mediaOnBt", mediaOnBt); put("duration", duration)
+        put("mediaOnBt", mediaOnBt); put("bts", btScope); put("duration", duration)
         put("emoji", emoji)
         if (imageFile != null) put("imageFile", imageFile)
         if (imageFileOn != null) put("imageFileOn", imageFileOn)
@@ -176,6 +178,7 @@ data class Profile(
             events = o.optBoolean("evt", false),
             preset = o.optInt("pre", -1).coerceIn(-1, Patterns.ALL.size - 1),
             mediaOnBt = o.optBoolean("mediaOnBt", true),
+            btScope = o.optInt("bts", BtMode.ALL_AUDIO).coerceIn(BtMode.ALL_AUDIO, BtMode.EARPHONE_ONLY),
             duration = o.optInt("duration", Dur.ASK),
             emoji = o.optString("emoji", "🔕"),
             imageFile = if (o.has("imageFile")) o.optString("imageFile") else null,

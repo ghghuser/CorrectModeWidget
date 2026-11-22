@@ -115,10 +115,9 @@
     <string name="settings_title">Settings</string>
     <string name="language">Language</string>
     <string name="lang_system">System default</string>
-    <string name="bt_target">Bluetooth devices for “media”</string>
+    <string name="bt_target">Bluetooth audio devices counted</string>
     <string name="bt_all">All Bluetooth audio devices</string>
     <string name="bt_earphone">Headsets / headphones only</string>
-    <string name="bt_target_hint">Only matters for profiles that allow media while Bluetooth audio is connected. Car kits and speakers are not counted in “headsets only”.</string>
     <string name="vol_restore">Volume on release</string>
     <string name="vol_off">Do not touch volumes</string>
     <string name="vol_saved">Back to the volumes from before</string>
