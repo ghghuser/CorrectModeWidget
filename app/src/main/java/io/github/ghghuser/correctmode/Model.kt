@@ -36,25 +36,47 @@ object IconSize {
 }
 
 /**
- * The behaviours that really differ: ringer (3) x DND (4) = 12 combinations, but with DND "alarms only" /
- * "block everything" Android overrides the ringer, so only 8 are distinct. ("Priority only" has further
- * choices: who may call / message, media, alarms, touch sounds.)
+ * The ready-made profiles (templates), also the names the wizard gives to the profiles it creates.
+ * Ringer (3) x DND: off / notification filter (details are not part of the name) / block all, and for the filter and
+ * block-all a Bluetooth part: none / all Bluetooth audio devices / headsets only.
+ * With "block all" Android overrides the ringer, so the ringer is not part of those names.
+ * The last one, "alarms only", is a filter with alarms + media allowed (not made by the wizard).
  */
 object Patterns {
-    val ALL: List<Pair<Int, Int>> = listOf(
-        Ringer.NORMAL to Dnd.OFF, Ringer.VIBRATE to Dnd.OFF, Ringer.MUTE to Dnd.OFF,
-        Ringer.NORMAL to Dnd.PRIORITY, Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.PRIORITY,
-        Ringer.VIBRATE to Dnd.PRIORITY, Ringer.MUTE to Dnd.NONE, // [6]: "alarms only" = priority with alarms + media (see Store.freshPreset)
-    )
-    val NAMES = listOf(
-        R.string.pat_1, R.string.pat_2, R.string.pat_3, R.string.pat_4,
-        R.string.pat_5, R.string.pat_6, R.string.pat_7, R.string.pat_8,
-    )
-    val ICONS = listOf("bell", "vibrate", "volume_off", "moon", "bell_off", "dnd", "bed", "flight")
+    const val NO_BT = -1
 
-    /** Pattern number of a profile by ringer + DND (the first one: pattern 6 shares them with 4). */
-    fun indexOf(p: Profile): Int =
-        if (p.dnd == Dnd.NONE) ALL.size - 1 else ALL.indexOfFirst { it.second == p.dnd && it.first == p.ringer }
+    /** [bt]: NO_BT, BtMode.ALL_AUDIO or BtMode.EARPHONE_ONLY. [btOnly]: nothing but media while Bluetooth audio is connected. */
+    class Pat(val ringer: Int, val dnd: Int, val bt: Int, val nameRes: Int, val icon: String, val btOnly: Boolean = false)
+
+    val LIST: List<Pat> = listOf(
+        Pat(Ringer.NORMAL, Dnd.OFF, NO_BT, R.string.pat_1, "bell"),
+        Pat(Ringer.VIBRATE, Dnd.OFF, NO_BT, R.string.pat_2, "vibrate"),
+        Pat(Ringer.MUTE, Dnd.OFF, NO_BT, R.string.pat_3, "volume_off"),
+        Pat(Ringer.NORMAL, Dnd.PRIORITY, NO_BT, R.string.pat_4, "moon"),
+        Pat(Ringer.NORMAL, Dnd.PRIORITY, BtMode.ALL_AUDIO, R.string.pat_5, "headphones"),
+        Pat(Ringer.NORMAL, Dnd.PRIORITY, BtMode.EARPHONE_ONLY, R.string.pat_6, "music"),
+        Pat(Ringer.VIBRATE, Dnd.PRIORITY, NO_BT, R.string.pat_7, "bell_off"),
+        Pat(Ringer.VIBRATE, Dnd.PRIORITY, BtMode.ALL_AUDIO, R.string.pat_8, "headphones"),
+        Pat(Ringer.VIBRATE, Dnd.PRIORITY, BtMode.EARPHONE_ONLY, R.string.pat_9, "music"),
+        Pat(Ringer.MUTE, Dnd.PRIORITY, NO_BT, R.string.pat_10, "dnd"),
+        Pat(Ringer.MUTE, Dnd.PRIORITY, BtMode.ALL_AUDIO, R.string.pat_11, "headphones"),
+        Pat(Ringer.MUTE, Dnd.PRIORITY, BtMode.EARPHONE_ONLY, R.string.pat_12, "music"),
+        Pat(Ringer.MUTE, Dnd.NONE, NO_BT, R.string.pat_13, "flight"),
+        Pat(Ringer.MUTE, Dnd.PRIORITY, BtMode.ALL_AUDIO, R.string.pat_14, "car", btOnly = true),
+        Pat(Ringer.MUTE, Dnd.PRIORITY, BtMode.EARPHONE_ONLY, R.string.pat_15, "headphones", btOnly = true),
+        Pat(Ringer.VIBRATE, Dnd.PRIORITY, NO_BT, R.string.pat_16, "bed"),
+    )
+    const val ALARMS_ONLY = 15
+
+    val COUNT: Int get() = LIST.size
+    val NAMES: List<Int> = LIST.map { it.nameRes }
+
+    /** The pattern of a wizard result (never the "alarms only" one); -1 = none fits. */
+    fun find(ringer: Int, dnd: Int, bt: Int, btOnly: Boolean): Int =
+        LIST.indices.firstOrNull { i ->
+            val t = LIST[i]
+            i != ALARMS_ONLY && t.ringer == ringer && t.dnd == dnd && t.bt == bt && t.btOnly == btOnly
+        } ?: -1
 }
 
 /** Stored colour value 0 = "no background" (a real colour always has the alpha bits set). */
@@ -176,7 +198,7 @@ data class Profile(
             system = o.optBoolean("system", false),
             reminders = o.optBoolean("rem", false),
             events = o.optBoolean("evt", false),
-            preset = o.optInt("pre", -1).coerceIn(-1, Patterns.ALL.size - 1),
+            preset = o.optInt("pre", -1).coerceIn(-1, Patterns.COUNT - 1),
             mediaOnBt = o.optBoolean("mediaOnBt", true),
             btScope = o.optInt("bts", BtMode.ALL_AUDIO).coerceIn(BtMode.ALL_AUDIO, BtMode.EARPHONE_ONLY),
             duration = o.optInt("duration", Dur.ASK),
