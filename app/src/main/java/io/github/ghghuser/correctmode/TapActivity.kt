@@ -22,6 +22,7 @@ class TapActivity : Activity() {
     private companion object {
         @Volatile var lastDone = 0L
         const val DEBOUNCE_MS = 700L
+        const val ON_GUARD_MS = 1500L
     }
 
     private var done = false
@@ -50,9 +51,10 @@ class TapActivity : Activity() {
             return
         }
         // A double tap must not turn it on and straight off again (that would put the loud state back).
+        // A tap inside this window after turning on is ignored (it was 2 s, 1.5 s on request; to be tried on the device).
         val st = Store.state(this)
         if (st.activeId != null && candidates.any { it.id == st.activeId } &&
-            System.currentTimeMillis() - st.startedAt < 2000L
+            System.currentTimeMillis() - st.startedAt < ON_GUARD_MS
         ) {
             finishNow()
             return
