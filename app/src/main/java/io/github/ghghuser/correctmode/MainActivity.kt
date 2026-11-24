@@ -120,8 +120,12 @@ class MainActivity : Activity() {
     private fun addProfiles() {
         val head = Ui.hbox(this)
         head.addView(Ui.text(this, s(R.string.profiles_title), 18f, bold = true), Ui.lp(0, weight = 1f))
-        // the templates tab is read-only: new profiles always go to the left tab, so the button is greyed there
-        head.addView(Ui.button(this, s(R.string.add)) { chooseHowToAdd() }.apply { isEnabled = tab != 1 })
+        // the templates tab is read-only: new profiles always go to the left tab, so the button is greyed there.
+        // The app button background / text colour have no disabled state, so the grey look is set by alpha (same 0.4 as the wizard).
+        head.addView(Ui.button(this, s(R.string.add)) { chooseHowToAdd() }.apply {
+            isEnabled = tab != 1
+            alpha = if (isEnabled) 1f else 0.4f
+        })
         content.addView(head)
         content.addView(Ui.text(this, s(R.string.profiles_hint), 12f, secondary = true))
 
