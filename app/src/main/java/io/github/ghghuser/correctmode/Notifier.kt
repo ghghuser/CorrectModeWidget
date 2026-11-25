@@ -8,8 +8,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Icon
-import java.text.DateFormat
-import java.util.Date
 
 /** Expiry alarm. Exact when the user allowed it, otherwise a (slightly late) inexact one. */
 object Scheduler {
@@ -149,7 +147,7 @@ object Notifier {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
             val until = if (st.expiresAt > 0) {
-                c.getString(R.string.until_time, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(st.expiresAt)))
+                Ui.untilText(c, st.expiresAt)
             } else c.getString(R.string.no_limit)
             val title = p.titlePrefix() + p.name
             val b = Notification.Builder(ctx, CH_ACTIVE)

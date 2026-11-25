@@ -20,6 +20,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import java.util.Calendar
+import java.util.Date
 import kotlin.math.roundToInt
 
 fun Context.dp(v: Int): Int = (v * resources.displayMetrics.density).roundToInt()
@@ -251,6 +252,18 @@ object Ui {
         }
     }
 
+    /** "Until ..." time of a release: the clock time today, the date and the time on another day. */
+    fun untilText(ctx: Context, millis: Long): String {
+        val d = Date(millis)
+        val sameDay = Calendar.getInstance().apply { timeInMillis = millis }.let { t ->
+            val n = Calendar.getInstance()
+            t.get(Calendar.YEAR) == n.get(Calendar.YEAR) && t.get(Calendar.DAY_OF_YEAR) == n.get(Calendar.DAY_OF_YEAR)
+        }
+        val f = if (sameDay) java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+        else java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
+        return Loc.str(ctx, R.string.until_time, f.format(d))
+    }
+
     fun durationLabel(ctx: Context, d: Int): String = when (d) {
         Dur.ASK -> Loc.str(ctx, R.string.duration_ask)
         Dur.NONE -> Loc.str(ctx, R.string.duration_none)
@@ -395,7 +408,14 @@ object Flow {
                 val c = Calendar.getInstance().apply {
                     set(y, mo, d, h, m, 0); set(Calendar.MILLISECOND, 0)
                 }
-                if (c.timeInMillis <= System.currentTimeMillis() + 1000) {
+                // a time that does not exist (the hour skipped when the clock goes forward) is moved by Calendar to another
+                // time: do not turn on with a deadline the user did not pick
+                if (c.get(Calendar.YEAR) != y || c.get(Calendar.MONTH) != mo || c.get(Calendar.DAY_OF_MONTH) != d ||
+                    c.get(Calendar.HOUR_OF_DAY) != h || c.get(Calendar.MINUTE) != m
+                ) {
+                    Ui.toast(a, Loc.str(a, R.string.duration_datetime_invalid), true)
+                    onDone()
+                } else if (c.timeInMillis <= System.currentTimeMillis() + 1000) {
                     Ui.toast(a, Loc.str(a, R.string.duration_datetime_past), true)
                     onDone()
                 } else go(a, p, c.timeInMillis, onDone)

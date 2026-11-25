@@ -11,8 +11,6 @@ import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
-import java.text.DateFormat
-import java.util.Date
 
 /** Main screen = the profiles (two tabs). Everything else lives behind the gear icon (SettingsActivity). */
 class MainActivity : Activity() {
@@ -115,7 +113,7 @@ class MainActivity : Activity() {
             head.addView(Widgets.preview(this, p, true, 48))
             val col = Ui.vbox(this).apply { setPadding(dp(12), 0, 0, 0) }
             col.addView(Ui.text(this, p.name, 18f, bold = true))
-            val until = if (st.expiresAt > 0) s(R.string.until_time, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(st.expiresAt))) else s(R.string.no_limit)
+            val until = if (st.expiresAt > 0) Ui.untilText(this, st.expiresAt) else s(R.string.no_limit)
             col.addView(Ui.text(this, until, 14f))
             head.addView(col)
             card.addView(head)

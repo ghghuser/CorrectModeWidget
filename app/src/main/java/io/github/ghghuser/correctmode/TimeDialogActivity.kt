@@ -30,12 +30,11 @@ class TimeDialogActivity : Activity() {
         sessionStart = st.startedAt
         val root = Ui.vbox(this).apply { setPadding(dp(20), dp(12), dp(20), dp(12)) }
         root.addView(Ui.text(this, getString(R.string.time_dialog_title), 17f, bold = true))
-        val tf = DateFormat.getTimeInstance(DateFormat.SHORT)
         val now = System.currentTimeMillis()
 
         // 1) time until release
         root.addView(Ui.text(this, p.titlePrefix() + p.name, 15f, bold = true))
-        root.addView(Ui.text(this, if (st.expiresAt > 0) getString(R.string.until_time, tf.format(Date(st.expiresAt))) else getString(R.string.no_limit), 13f, secondary = true))
+        root.addView(Ui.text(this, if (st.expiresAt > 0) Ui.untilText(this, st.expiresAt) else getString(R.string.no_limit), 13f, secondary = true))
         root.addView(Ui.text(this, getString(R.string.time_release_in), 13f).apply { setPadding(0, dp(8), 0, 0) })
         val presets = Ui.hbox(this)
         for (m in intArrayOf(15, 30, 60, 120)) {
