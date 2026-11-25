@@ -106,6 +106,7 @@ object Store {
         val list = profiles(ctx)
         list.firstOrNull { it.id == id }?.imageFiles()?.forEach { imageFile(ctx, it).delete() }
         save(ctx, list.filter { it.id != id })
+        Schedules.cancelOnce(ctx, id) // a planned turn-on of a deleted profile
         // drop it from every widget
         val w = widgets(ctx)
         w.keys().asSequence().toList().forEach { k ->

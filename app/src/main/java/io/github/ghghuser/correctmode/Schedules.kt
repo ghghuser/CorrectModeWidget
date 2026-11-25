@@ -69,6 +69,59 @@ object Schedules {
 
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("sched", Context.MODE_PRIVATE)
 
+    /** A one-shot planned start ("30 minutes later", from the tap): [at] = start, [expires] = absolute release time (0 = none). */
+    data class Once(val id: String, val at: Long, val expires: Long)
+
+    private const val ONCE_WINDOW_MS = 30 * 60_000L
+
+    fun onceList(ctx: Context): List<Once> = prefs(ctx).all.entries.mapNotNull { e ->
+        if (!e.key.startsWith("once_")) return@mapNotNull null
+        val v = (e.value as? String)?.split(",") ?: return@mapNotNull null
+        val at = v.getOrNull(0)?.toLongOrNull() ?: return@mapNotNull null
+        val ex = v.getOrNull(1)?.toLongOrNull() ?: return@mapNotNull null
+        Once(e.key.removePrefix("once_"), at, ex)
+    }.sortedBy { it.at }
+
+    fun onceFor(ctx: Context, id: String): Once? = onceList(ctx).firstOrNull { it.id == id }
+
+    fun planOnce(ctx: Context, id: String, at: Long, expires: Long) {
+        prefs(ctx).edit().putString("once_$id", "$at,$expires").commit()
+        reschedule(ctx)
+    }
+
+    fun cancelOnce(ctx: Context, id: String) {
+        prefs(ctx).edit().remove("once_$id").commit()
+        reschedule(ctx)
+    }
+
+    /** Starts the planned turn-ons whose time has come. One that is too late (phone was off) is dropped with a note. */
+    private fun runOnceDue(app: Context, now: Long) {
+        for (o in onceList(app)) {
+            if (o.at > now) continue
+            prefs(app).edit().remove("once_" + o.id).commit() // handled now, whatever happens next
+            val p = Store.profile(app, o.id) ?: continue
+            if (now - o.at > ONCE_WINDOW_MS) {
+                Notifier.info(app, Loc.str(app, R.string.start_missed, p.name))
+            } else if (o.expires > 0 && o.expires <= now) {
+                continue // its release time has already passed
+            } else {
+                startChecked(app, p, o.expires)
+            }
+        }
+    }
+
+    /** Turns [p] on unless that would make the phone louder than the profile that is on. */
+    private fun startChecked(app: Context, p: Profile, expires: Long) {
+        val active = Store.state(app).activeId?.let { Store.profile(app, it) }
+        if (active != null && active.id != p.id && Engine.wouldBeLouder(p, active)) {
+            // never louder by itself: the profile that is on is quieter than the timer wants
+            Notifier.info(app, Loc.str(app, R.string.sched_skipped, p.name, active.name))
+        } else if (active?.id != p.id) {
+            val r = Engine.activate(app, p, expires)
+            if (!r.ok) Notifier.info(app, r.message ?: Loc.str(app, R.string.err_apply_failed, ""))
+        }
+    }
+
     /** Starts what is due. Safe to call at any time (alarm, boot, update). */
     @Synchronized
     fun runDue(ctx: Context) {
@@ -92,16 +145,9 @@ object Schedules {
             val pick = due.maxByOrNull { it.second }
             if (pick != null) {
                 val (p, _, end) = pick
-                val active = Store.state(app).activeId?.let { Store.profile(app, it) }
-                if (active != null && active.id != p.id && Engine.wouldBeLouder(p, active)) {
-                    // never louder by itself: the profile that is on is quieter than the timer wants
-                    Notifier.info(app, Loc.str(app, R.string.sched_skipped, p.name, active.name))
-                } else if (active?.id != p.id) {
-                    val expires = end ?: if (p.duration > 0) now + p.duration * 60_000L else 0L
-                    val r = Engine.activate(app, p, expires)
-                    if (!r.ok) Notifier.info(app, r.message ?: Loc.str(app, R.string.err_apply_failed, ""))
-                }
+                startChecked(app, p, end ?: if (p.duration > 0) now + p.duration * 60_000L else 0L)
             }
+            runOnceDue(app, now)
         } catch (e: Exception) {
             Log.w(TAG, "runDue", e)
             Store.setLastError(app, Loc.str(app, R.string.err_timer, e.javaClass.simpleName + ": " + (e.message ?: "")))
@@ -116,7 +162,9 @@ object Schedules {
         val am = app.getSystemService(AlarmManager::class.java)
         try {
             val now = System.currentTimeMillis()
-            val next = Store.profiles(app).filter { it.schedOn }.mapNotNull { nextStart(it, now) }.minOrNull()
+            val daily = Store.profiles(app).filter { it.schedOn }.mapNotNull { nextStart(it, now) }.minOrNull()
+            val once = onceList(app).minOfOrNull { maxOf(it.at, now + 1000L) } // an overdue one fires at once
+            val next = listOfNotNull(daily, once).minOrNull()
             if (next == null) { am.cancel(pi(app)); return }
             try {
                 if (am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi(app))

@@ -252,8 +252,8 @@ object Ui {
         }
     }
 
-    /** "Until ..." time of a release: the clock time today, the date and the time on another day. */
-    fun untilText(ctx: Context, millis: Long): String {
+    /** A time for display: the clock time today, the date and the time on another day. */
+    fun clockText(ctx: Context, millis: Long): String {
         val d = Date(millis)
         val sameDay = Calendar.getInstance().apply { timeInMillis = millis }.let { t ->
             val n = Calendar.getInstance()
@@ -261,7 +261,22 @@ object Ui {
         }
         val f = if (sameDay) java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
         else java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
-        return Loc.str(ctx, R.string.until_time, f.format(d))
+        return f.format(d)
+    }
+
+    /** "Until ..." time of a release. */
+    fun untilText(ctx: Context, millis: Long): String = Loc.str(ctx, R.string.until_time, clockText(ctx, millis))
+
+    /** Label of a "turn on when" setting (Profile.startDelay). */
+    fun startLabel(ctx: Context, d: Int): String = when (d) {
+        Dur.NONE -> Loc.str(ctx, R.string.start_now)
+        Dur.ASK -> Loc.str(ctx, R.string.start_ask)
+        Dur.ASK_TIME -> Loc.str(ctx, R.string.start_time_every)
+        Dur.ASK_DATETIME -> Loc.str(ctx, R.string.start_datetime_every)
+        30 -> Loc.str(ctx, R.string.start_30)
+        60 -> Loc.str(ctx, R.string.start_60)
+        120 -> Loc.str(ctx, R.string.start_120)
+        else -> Loc.str(ctx, R.string.start_minutes, d)
     }
 
     fun durationLabel(ctx: Context, d: Int): String = when (d) {
@@ -284,6 +299,11 @@ object Flow {
     /** true while a tap on a widget / on a profile icon is handled: a successful switch then gives the profile's vibration. */
     @Volatile var vibrateOnSwitch = false
 
+    /** while a "turn on later" tap is handled: the planned start time. The release length is counted from it, not from the tap. */
+    @Volatile private var plannedStart = 0L
+
+    private fun rel(minutes: Int): Long = (if (plannedStart > 0L) plannedStart else System.currentTimeMillis()) + minutes * 60_000L
+
     fun toggle(a: Activity, p: Profile, onDone: () -> Unit) {
         if (Store.state(a).activeId == p.id) {
             val r = Engine.release(a, Reason.USER)
@@ -300,13 +320,51 @@ object Flow {
             onDone()
             return
         }
+        // a planned turn-on of this profile is waiting: tapping it again cancels the plan
+        if (Schedules.onceFor(a, p.id) != null) {
+            Schedules.cancelOnce(a, p.id)
+            Ui.toast(a, Loc.str(a, R.string.start_cancelled, p.name), true)
+            onDone()
+            return
+        }
+        val done = { plannedStart = 0L; onDone() }
+        if (p.startDelay == Dur.NONE) chooseRelease(a, p, done)
+        else chooseStart(a, p, done) { at -> plannedStart = at; chooseRelease(a, p, done) } // at = 0: right away
+    }
+
+    private fun chooseRelease(a: Activity, p: Profile, onDone: () -> Unit) {
         when (p.duration) {
             Dur.ASK -> ask(a, p, onDone)
             Dur.NONE -> go(a, p, 0L, onDone)
             Dur.ASK_TIME -> pickTime(a, p, onDone)
             Dur.ASK_DATETIME -> pickDateTime(a, p, onDone)
-            else -> go(a, p, System.currentTimeMillis() + p.duration * 60_000L, onDone)
+            else -> go(a, p, rel(p.duration), onDone)
         }
+    }
+
+    /** When to turn on: [onPick] gets the start time, 0 = right away. */
+    private fun chooseStart(a: Activity, p: Profile, onDone: () -> Unit, onPick: (Long) -> Unit) {
+        when (p.startDelay) {
+            Dur.ASK -> askStart(a, onDone, onPick)
+            Dur.ASK_TIME -> pickTimeAt(a, onDone, onPick)
+            Dur.ASK_DATETIME -> pickDateTimeAt(a, onDone, onPick)
+            else -> onPick(System.currentTimeMillis() + p.startDelay * 60_000L)
+        }
+    }
+
+    private fun askStart(a: Activity, onDone: () -> Unit, onPick: (Long) -> Unit) {
+        val box = Ui.vbox(a).apply { setPadding(a.dp(16), a.dp(8), a.dp(16), 0) }
+        var dialog: AlertDialog? = null
+        fun row(label: String, onClick: () -> Unit) { box.addView(Ui.button(a, label) { dialog?.dismiss(); onClick() }) }
+        row(Loc.str(a, R.string.start_now)) { onPick(0L) }
+        for (m in listOf(30, 60, 120)) row(Ui.startLabel(a, m)) { onPick(System.currentTimeMillis() + m * 60_000L) }
+        row(Loc.str(a, R.string.duration_time)) { pickTimeAt(a, onDone, onPick) }
+        row(Loc.str(a, R.string.duration_datetime_row)) { pickDateTimeAt(a, onDone, onPick) }
+        dialog = AlertDialog.Builder(a)
+            .setTitle(Loc.str(a, R.string.start_ask_title))
+            .setView(android.widget.ScrollView(a).apply { addView(box) })
+            .setOnCancelListener { onDone() }
+            .show()
     }
 
     /** "5", "90" = minutes, "1:30" = 1 h 30 min. null = not a usable number (1 minute .. 24 hours). */
@@ -330,14 +388,14 @@ object Flow {
         // a fixed length (minutes, 0 = no limit): with the tick, it is kept for next time after one more confirmation
         fun pickDuration(minutes: Int) {
             dialog?.dismiss()
-            if (!remember.isChecked) { go(a, p, if (minutes == 0) 0L else System.currentTimeMillis() + minutes * 60_000L, onDone); return }
+            if (!remember.isChecked) { go(a, p, if (minutes == 0) 0L else rel(minutes), onDone); return }
             val label = if (minutes == 0) Ui.durationLabel(a, Dur.NONE) else Ui.durationLabel(a, minutes)
             AlertDialog.Builder(a)
                 .setMessage(Loc.str(a, R.string.ask_dont_again_confirm, label))
                 .setPositiveButton(android.R.string.ok) { _, _ ->
                     Store.upsert(a, p.copy(duration = if (minutes == 0) Dur.NONE else minutes))
                     Widgets.updateAll(a)
-                    go(a, p, if (minutes == 0) 0L else System.currentTimeMillis() + minutes * 60_000L, onDone)
+                    go(a, p, if (minutes == 0) 0L else rel(minutes), onDone)
                 }
                 .setNegativeButton(android.R.string.cancel) { _, _ -> ask(a, p, onDone) } // back to the question
                 .setOnCancelListener { ask(a, p, onDone) }
@@ -355,7 +413,7 @@ object Flow {
             Ui.promptText(a, Loc.str(a, R.string.duration_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
                 val m = parseMinutes(text)
                 if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
-                else if (remember.isChecked) pickDuration(m) else go(a, p, System.currentTimeMillis() + m * 60_000L, onDone)
+                else if (remember.isChecked) pickDuration(m) else go(a, p, rel(m), onDone)
             }
         }
         row(Loc.str(a, R.string.duration_time)) {
@@ -378,7 +436,9 @@ object Flow {
             .show()
     }
 
-    private fun pickTime(a: Activity, p: Profile, onDone: () -> Unit) {
+    private fun pickTime(a: Activity, p: Profile, onDone: () -> Unit) = pickTimeAt(a, onDone) { go(a, p, it, onDone) }
+
+    private fun pickTimeAt(a: Activity, onDone: () -> Unit, onPick: (Long) -> Unit) {
         val now = Calendar.getInstance()
         var chosen = false
         val dlg = TimePickerDialog(
@@ -398,7 +458,7 @@ object Flow {
                 if (c == null) {
                     Ui.toast(a, Loc.str(a, R.string.duration_datetime_invalid), true)
                     onDone()
-                } else go(a, p, c.timeInMillis, onDone)
+                } else onPick(c.timeInMillis)
             },
             (now.get(Calendar.HOUR_OF_DAY) + 1) % 24, 0,
             android.text.format.DateFormat.is24HourFormat(a),
@@ -408,7 +468,9 @@ object Flow {
     }
 
     /** Date, then time of day: the auto release happens then. A date and time in the past is refused. */
-    private fun pickDateTime(a: Activity, p: Profile, onDone: () -> Unit) {
+    private fun pickDateTime(a: Activity, p: Profile, onDone: () -> Unit) = pickDateTimeAt(a, onDone) { go(a, p, it, onDone) }
+
+    private fun pickDateTimeAt(a: Activity, onDone: () -> Unit, onPick: (Long) -> Unit) {
         val now = Calendar.getInstance()
         var chosen = false
         val date = DatePickerDialog(a, { _, y, mo, d ->
@@ -429,7 +491,7 @@ object Flow {
                 } else if (c.timeInMillis <= System.currentTimeMillis() + 1000) {
                     Ui.toast(a, Loc.str(a, R.string.duration_datetime_past), true)
                     onDone()
-                } else go(a, p, c.timeInMillis, onDone)
+                } else onPick(c.timeInMillis)
             }, (now.get(Calendar.HOUR_OF_DAY) + 1) % 24, 0, android.text.format.DateFormat.is24HourFormat(a))
             dlg.setOnDismissListener { if (!timeChosen) onDone() }
             dlg.show()
@@ -440,6 +502,15 @@ object Flow {
     }
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
+        // "turn on later": only the plan is saved now; Schedules turns the profile on at that time
+        val at = plannedStart
+        if (at > 0L) {
+            plannedStart = 0L
+            Schedules.planOnce(a, p.id, at, expiresAt)
+            Ui.toast(a, Loc.str(a, R.string.start_planned, p.name, Ui.clockText(a, at)), true)
+            onDone()
+            return
+        }
         // The tick is given when the device has settled (Settle), not after a fixed time. Unverified guess for the old
         // "no tick when switching from one profile to another": the system applies the change asynchronously and cancels
         // a vibration that is running meanwhile.

@@ -120,6 +120,8 @@ data class Profile(
     var btScope: Int = BtMode.ALL_AUDIO,
     /** Dur.ASK, Dur.NONE, Dur.ASK_TIME, Dur.ASK_DATETIME or minutes */
     var duration: Int = Dur.ASK,
+    /** when to turn on after the tap: Dur.NONE = right away, Dur.ASK, Dur.ASK_TIME, Dur.ASK_DATETIME or minutes later */
+    var startDelay: Int = Dur.NONE,
     var emoji: String = "🔕",
     var imageFile: String? = null,
     /** own picture for the "on" look (only used when onSep is set) */
@@ -171,7 +173,7 @@ data class Profile(
         put("ringer", ringer); put("dnd", dnd)
         put("calls", calls); put("messages", messages)
         put("media", media); put("alarms", alarms); put("system", system); put("rem", reminders); put("evt", events)
-        put("mediaOnBt", mediaOnBt); put("bts", btScope); put("duration", duration)
+        put("mediaOnBt", mediaOnBt); put("bts", btScope); put("duration", duration); put("sdl", startDelay)
         put("emoji", emoji)
         if (imageFile != null) put("imageFile", imageFile)
         if (imageFileOn != null) put("imageFileOn", imageFileOn)
@@ -206,6 +208,7 @@ data class Profile(
             mediaOnBt = o.optBoolean("mediaOnBt", true),
             btScope = o.optInt("bts", BtMode.ALL_AUDIO).coerceIn(BtMode.ALL_AUDIO, BtMode.EARPHONE_ONLY),
             duration = o.optInt("duration", Dur.ASK),
+            startDelay = o.optInt("sdl", Dur.NONE),
             emoji = o.optString("emoji", "🔕"),
             imageFile = if (o.has("imageFile")) o.optString("imageFile") else null,
             imageFileOn = if (o.has("imageFileOn")) o.optString("imageFileOn") else null,

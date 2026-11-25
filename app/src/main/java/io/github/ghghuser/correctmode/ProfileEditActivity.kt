@@ -42,6 +42,7 @@ class ProfileEditActivity : Activity(), BackGuard {
             0xFF1F6FEBL, 0xFF0F9D8AL, 0xFF2E7D32L, 0xFFF9A825L, 0xFFEF6C00L, 0xFFD32F2FL, 0xFFC2185BL,
             0xFF7B1FA2L, 0xFF455A64L, 0xFF000000L, 0xFFFFFFFFL, 0xFFE3E6EAL, 0xFF30343AL, 0xFF8AB4FFL,
         ).map { it.toInt() }
+        val START_DELAYS = listOf(Dur.NONE, Dur.ASK, 30, 60, 120, Dur.ASK_TIME, Dur.ASK_DATETIME)
         val DURATIONS = listOf(Dur.ASK, Dur.ASK_TIME, Dur.ASK_DATETIME, Dur.NONE, 15, 30, 60, 120, 180, 240)
     }
 
@@ -195,6 +196,16 @@ class ProfileEditActivity : Activity(), BackGuard {
 
         effectBox = Ui.vbox(this).apply { setPadding(0, dp(8), 0, dp(4)) }
         card.addView(effectBox)
+
+        val startBtn = Ui.button(this, "") {}
+        fun setStartText() { startBtn.text = s(R.string.start_label) + ": " + Ui.startLabel(this, p.startDelay) }
+        startBtn.setOnClickListener {
+            Ui.choose(this, s(R.string.start_label), START_DELAYS.map { Ui.startLabel(this, it) }, START_DELAYS.indexOf(p.startDelay)) { i ->
+                p.startDelay = START_DELAYS[i]; setStartText()
+            }
+        }
+        setStartText()
+        card.addView(startBtn)
 
         val durLabels = DURATIONS.map { Ui.durationLabel(this, it) } + s(R.string.duration_free)
         val durBtn = Ui.button(this, "") {}

@@ -85,6 +85,7 @@ object Backup {
                     name = p.name.trim().take(30).ifEmpty { "?" },
                     emoji = p.emoji.take(8).ifEmpty { "🔕" },
                     duration = if (p.duration == Dur.ASK || p.duration == Dur.NONE || p.duration == Dur.ASK_DATETIME || p.duration == Dur.ASK_TIME) p.duration else p.duration.coerceIn(1, 1440),
+                    startDelay = if (p.startDelay <= 0) p.startDelay.coerceIn(Dur.ASK_TIME, Dur.NONE) else p.startDelay.coerceIn(1, 1440),
                     imageFile = null, imageFileOn = null,
                 )
                 val data = o.optString("imageData", "")
