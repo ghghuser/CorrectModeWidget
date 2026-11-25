@@ -294,8 +294,9 @@
     <string name="picker_alpha">不透明度</string>
     <string name="bg_alpha_open">背景の不透明度 %1$d%%(タップして色と一緒に変更)</string>
     <string name="apps_note">許可しないアプリの通知は、音も振動も止まります。許可するアプリは端末の設定で選びます(全プロファイル共通)。開いた画面で「サイレントモード(CorrectMode)→アプリ」の順に進みます。</string>
-    <string name="sample_vib_bt">着信バイブ+Bluetooth自動モード変更+それ以外消音</string>
-    <string name="sample_mute_all">消音(すべて消音)</string>
+    <string name="sample_vib_bt">汎用サンプル</string>
+    <string name="sample_mute_all">常に無音</string>
+    <string name="sample_sleep">おやすみ中(+緊急)</string>
     <string name="widget_order_title">並び順</string>
     <string name="widget_order_hint">チェックした順に並びます。▲▼で入れ替えます。</string>
     <string name="look_hint">ウィジェットのボタンの見た目(アイコン・色・形・余白)を設定します。</string>

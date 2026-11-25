@@ -294,8 +294,9 @@
     <string name="picker_alpha">Opacity</string>
     <string name="bg_alpha_open">Background opacity %1$d%% (tap to change with the colour)</string>
     <string name="apps_note">Notifications of apps that are not allowed make no sound and no vibration. Allowed apps are chosen in the system settings (same for all profiles). In the screen that opens, go to Do Not Disturb (CorrectMode) > Apps.</string>
-    <string name="sample_vib_bt">Calls vibrate + Bluetooth auto media + rest silent</string>
-    <string name="sample_mute_all">Silent (everything silent)</string>
+    <string name="sample_vib_bt">General sample</string>
+    <string name="sample_mute_all">Always silent</string>
+    <string name="sample_sleep">Sleeping (+ emergency)</string>
     <string name="widget_order_title">Order</string>
     <string name="widget_order_hint">In the order they were ticked. Change it with the arrows.</string>
     <string name="look_hint">Icon, colours, shape and margins of the widget button.</string>
