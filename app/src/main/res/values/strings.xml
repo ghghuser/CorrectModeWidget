@@ -66,6 +66,9 @@
     <string name="duration_120">2 hours</string>
     <string name="duration_minutes">%1$d minutes</string>
     <string name="duration_time">At a set time…</string>
+    <string name="duration_datetime">Pick a date and time (every time)</string>
+    <string name="duration_datetime_row">Date and time…</string>
+    <string name="duration_datetime_past">That date and time has already passed.</string>
 
     <string name="perm_title">Permissions</string>
     <string name="perm_dnd">DND access</string>

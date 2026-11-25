@@ -66,6 +66,9 @@
     <string name="duration_120">2時間</string>
     <string name="duration_minutes">%1$d分</string>
     <string name="duration_time">時刻を指定…</string>
+    <string name="duration_datetime">毎回 日時を指定</string>
+    <string name="duration_datetime_row">日時を指定…</string>
+    <string name="duration_datetime_past">その日時はすでに過ぎています。</string>
 
     <string name="perm_title">許可</string>
     <string name="perm_dnd">サイレントモード(DND)へのアクセス</string>

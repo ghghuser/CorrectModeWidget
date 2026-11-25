@@ -2,6 +2,7 @@ package io.github.ghghuser.correctmode
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -253,6 +254,7 @@ object Ui {
     fun durationLabel(ctx: Context, d: Int): String = when (d) {
         Dur.ASK -> Loc.str(ctx, R.string.duration_ask)
         Dur.NONE -> Loc.str(ctx, R.string.duration_none)
+        Dur.ASK_DATETIME -> Loc.str(ctx, R.string.duration_datetime)
         30 -> Loc.str(ctx, R.string.duration_30)
         60 -> Loc.str(ctx, R.string.duration_60)
         120 -> Loc.str(ctx, R.string.duration_120)
@@ -287,6 +289,7 @@ object Flow {
         when (p.duration) {
             Dur.ASK -> ask(a, p, onDone)
             Dur.NONE -> go(a, p, 0L, onDone)
+            Dur.ASK_DATETIME -> pickDateTime(a, p, onDone)
             else -> go(a, p, System.currentTimeMillis() + p.duration * 60_000L, onDone)
         }
     }
@@ -344,6 +347,10 @@ object Flow {
             if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
             dialog?.dismiss(); pickTime(a, p, onDone)
         }
+        row(Loc.str(a, R.string.duration_datetime_row)) {
+            if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
+            dialog?.dismiss(); pickDateTime(a, p, onDone)
+        }
         row(Ui.durationLabel(a, Dur.NONE)) { pickDuration(0) }
         // bottom right: "do not ask again"
         box.addView(remember, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
@@ -374,6 +381,31 @@ object Flow {
         )
         dlg.setOnDismissListener { if (!chosen) onDone() }
         dlg.show()
+    }
+
+    /** Date, then time of day: the auto release happens then. A date and time in the past is refused. */
+    private fun pickDateTime(a: Activity, p: Profile, onDone: () -> Unit) {
+        val now = Calendar.getInstance()
+        var chosen = false
+        val date = DatePickerDialog(a, { _, y, mo, d ->
+            chosen = true
+            var timeChosen = false
+            val dlg = TimePickerDialog(a, { _, h, m ->
+                timeChosen = true
+                val c = Calendar.getInstance().apply {
+                    set(y, mo, d, h, m, 0); set(Calendar.MILLISECOND, 0)
+                }
+                if (c.timeInMillis <= System.currentTimeMillis() + 1000) {
+                    Ui.toast(a, Loc.str(a, R.string.duration_datetime_past), true)
+                    onDone()
+                } else go(a, p, c.timeInMillis, onDone)
+            }, (now.get(Calendar.HOUR_OF_DAY) + 1) % 24, 0, android.text.format.DateFormat.is24HourFormat(a))
+            dlg.setOnDismissListener { if (!timeChosen) onDone() }
+            dlg.show()
+        }, now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH))
+        date.datePicker.minDate = now.timeInMillis - 1000
+        date.setOnDismissListener { if (!chosen) onDone() }
+        date.show()
     }
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
