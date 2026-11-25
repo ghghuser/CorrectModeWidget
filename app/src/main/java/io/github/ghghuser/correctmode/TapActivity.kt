@@ -7,6 +7,14 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 
+/** The two "ignore this tap" windows; shared so the diagnostics text in Settings always shows the real numbers. */
+object TapLimits {
+    /** a tap this soon after the previous tap finished is ignored (double tap) */
+    const val DEBOUNCE_MS = 700L
+    /** a tap this soon after turning on is ignored (it would turn it straight off again) */
+    const val ON_GUARD_MS = 1500L
+}
+
 /**
  * Target of every widget tap. It looks at the REAL state at the moment of the tap (so a widget that has
  * not been redrawn yet can never do the wrong thing), then turns on / off. Own task, no history, not in
@@ -21,8 +29,8 @@ class TapActivity : Activity() {
 
     private companion object {
         @Volatile var lastDone = 0L
-        const val DEBOUNCE_MS = 700L
-        const val ON_GUARD_MS = 1500L
+        const val DEBOUNCE_MS = TapLimits.DEBOUNCE_MS
+        const val ON_GUARD_MS = TapLimits.ON_GUARD_MS
     }
 
     private var done = false
@@ -31,7 +39,13 @@ class TapActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         t0 = SystemClock.elapsedRealtime()
-        if (t0 - lastDone < DEBOUNCE_MS) { done = true; finishAndRemoveTask(); return }
+        if (t0 - lastDone < DEBOUNCE_MS) {
+            try {
+                Store.setTapOutcome(this, 1, t0 - lastDone)
+                Store.setLastTapMs(this, SystemClock.elapsedRealtime() - t0) // lastDone stays as it is
+            } catch (e: Exception) { }
+            done = true; finishAndRemoveTask(); return
+        }
         Flow.fromWidget = true
         // grey the buttons while this tap is handled and a moment after it (taps are ignored then)
         try {
@@ -46,6 +60,7 @@ class TapActivity : Activity() {
             Store.widgetProfiles(this, key?.toIntOrNull() ?: -1)?.mapNotNull { Store.profile(this, it) }.orEmpty()
         } else listOfNotNull(Store.profile(this, key))
         if (candidates.isEmpty()) {
+            try { Store.setTapOutcome(this, 3, 0L) } catch (e: Exception) { } // so Settings does not show an older tap
             Ui.toast(this, Loc.str(this, R.string.err_profile_missing), true)
             finishNow()
             return
@@ -53,12 +68,13 @@ class TapActivity : Activity() {
         // A double tap must not turn it on and straight off again (that would put the loud state back).
         // A tap inside this window after turning on is ignored (it was 2 s, 1.5 s on request; to be tried on the device).
         val st = Store.state(this)
-        if (st.activeId != null && candidates.any { it.id == st.activeId } &&
-            System.currentTimeMillis() - st.startedAt < ON_GUARD_MS
-        ) {
+        val sinceOn = System.currentTimeMillis() - st.startedAt // read once: the same number decides and is recorded
+        if (st.activeId != null && candidates.any { it.id == st.activeId } && sinceOn < ON_GUARD_MS) {
+            try { Store.setTapOutcome(this, 2, sinceOn) } catch (e: Exception) { }
             finishNow()
             return
         }
+        try { Store.setTapOutcome(this, 0, 0L) } catch (e: Exception) { }
         val releasing = st.activeId.let { id -> val k = candidates.indexOfFirst { it.id == id }
             k >= 0 && (data?.host != "cycle" || k == candidates.lastIndex) }
         // Look at the real device first (volume key, quick settings changed from outside), so a switch starts from the
