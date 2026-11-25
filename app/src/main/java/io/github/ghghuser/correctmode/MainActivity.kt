@@ -110,7 +110,11 @@ class MainActivity : Activity() {
             card.addView(Ui.text(this, s(R.string.pending_title), 13f, secondary = true))
             card.addView(Ui.text(this, p.name, 16f, bold = true))
             card.addView(Ui.text(this, s(R.string.pending_at, Ui.clockText(this, o.at)), 14f))
-            card.addView(Ui.button(this, s(R.string.pending_cancel)) { Schedules.cancelOnce(this, o.id); rebuild() })
+            card.addView(Ui.button(this, s(R.string.pending_cancel)) {
+                // it may have been carried out meanwhile: then there is nothing to cancel, just show the current state
+                if (Schedules.onceFor(this, o.id) != null) Schedules.cancelOnce(this, o.id)
+                rebuild()
+            })
             content.addView(card)
         }
     }

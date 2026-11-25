@@ -4,6 +4,8 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import java.util.Calendar
 
@@ -96,6 +98,11 @@ object Schedules {
 
     /** Starts the planned turn-ons whose time has come. One that is too late (phone was off) is dropped with a note. */
     private fun runOnceDue(app: Context, now: Long) {
+        val due = onceList(app).filter { it.at <= now }
+        if (due.isNotEmpty()) {
+            // an open main screen shows these as planned: redraw it once they are handled
+            Handler(Looper.getMainLooper()).postDelayed({ Settle.listener?.invoke() }, 1500L)
+        }
         for (o in onceList(app)) {
             if (o.at > now) continue
             prefs(app).edit().remove("once_" + o.id).commit() // handled now, whatever happens next
