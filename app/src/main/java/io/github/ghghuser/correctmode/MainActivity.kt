@@ -174,6 +174,8 @@ class MainActivity : Activity() {
         col.addView(android.widget.HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             addView(Ui.chipsView(this@MainActivity, p).apply {
+                // the chips take the touch (not col), so they need their own pressed state
+                setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener { edit(p) }
                 setOnLongClickListener { showMenu(p); true }
             })
