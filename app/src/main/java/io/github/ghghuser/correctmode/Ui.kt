@@ -515,6 +515,12 @@ object Flow {
         // "turn on later": only the plan is saved now; Schedules turns the profile on at that time
         val at = plannedStart.remove(p.id) ?: 0L
         if (at > 0L) {
+            // last check: a release that is not after the planned start would silently cancel the plan
+            if (expiresAt != 0L && expiresAt <= at) {
+                Ui.toast(a, Loc.str(a, R.string.duration_datetime_past), true)
+                onDone()
+                return
+            }
             Schedules.planOnce(a, p.id, at, expiresAt)
             Ui.toast(a, Loc.str(a, R.string.start_planned, p.name, Ui.clockText(a, at)), true)
             onDone()
