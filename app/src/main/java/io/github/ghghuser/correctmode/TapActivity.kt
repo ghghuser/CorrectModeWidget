@@ -7,6 +7,14 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 
+/** The two "ignore this tap" windows; shared so the diagnostics text in Settings always shows the real numbers. */
+object TapLimits {
+    /** a tap this soon after the previous tap finished is ignored (double tap) */
+    const val DEBOUNCE_MS = 700L
+    /** a tap this soon after turning on is ignored (it would turn it straight off again) */
+    const val ON_GUARD_MS = 1500L
+}
+
 /**
  * Target of every widget tap. It looks at the REAL state at the moment of the tap (so a widget that has
  * not been redrawn yet can never do the wrong thing), then turns on / off. Own task, no history, not in
@@ -21,8 +29,8 @@ class TapActivity : Activity() {
 
     private companion object {
         @Volatile var lastDone = 0L
-        const val DEBOUNCE_MS = 700L
-        const val ON_GUARD_MS = 1500L
+        const val DEBOUNCE_MS = TapLimits.DEBOUNCE_MS
+        const val ON_GUARD_MS = TapLimits.ON_GUARD_MS
     }
 
     private var done = false
@@ -31,7 +39,10 @@ class TapActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         t0 = SystemClock.elapsedRealtime()
-        if (t0 - lastDone < DEBOUNCE_MS) { done = true; finishAndRemoveTask(); return }
+        if (t0 - lastDone < DEBOUNCE_MS) {
+            try { Store.setTapOutcome(this, 1, t0 - lastDone) } catch (e: Exception) { }
+            done = true; finishAndRemoveTask(); return
+        }
         Flow.fromWidget = true
         // grey the buttons while this tap is handled and a moment after it (taps are ignored then)
         try {
@@ -56,9 +67,11 @@ class TapActivity : Activity() {
         if (st.activeId != null && candidates.any { it.id == st.activeId } &&
             System.currentTimeMillis() - st.startedAt < ON_GUARD_MS
         ) {
+            try { Store.setTapOutcome(this, 2, System.currentTimeMillis() - st.startedAt) } catch (e: Exception) { }
             finishNow()
             return
         }
+        try { Store.setTapOutcome(this, 0, 0L) } catch (e: Exception) { }
         val releasing = st.activeId.let { id -> val k = candidates.indexOfFirst { it.id == id }
             k >= 0 && (data?.host != "cycle" || k == candidates.lastIndex) }
         // Look at the real device first (volume key, quick settings changed from outside), so a switch starts from the

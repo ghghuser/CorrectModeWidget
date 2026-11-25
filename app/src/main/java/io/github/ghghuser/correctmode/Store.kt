@@ -41,6 +41,13 @@ object Store {
     fun perf(ctx: Context, key: String): Long = sp(ctx).getLong("perf_$key", -1L)
     fun setPerf(ctx: Context, key: String, ms: Long) { sp(ctx).edit().putLong("perf_$key", ms).apply() }
 
+    /**
+     * Diagnostics: what the last widget tap did. 0 = handled, 1 = ignored (too soon after the previous tap finished),
+     * 2 = ignored (too soon after turn-on). [ms] = the time since that event.
+     */
+    fun tapOutcome(ctx: Context): Pair<Int, Long> = sp(ctx).getInt("tapOut", -1) to sp(ctx).getLong("tapOutMs", 0L)
+    fun setTapOutcome(ctx: Context, code: Int, ms: Long) { sp(ctx).edit().putInt("tapOut", code).putLong("tapOutMs", ms).apply() }
+
     /** Until this time (wall clock) the widget buttons are drawn greyed: a tap is being handled / ignored. */
     fun busyUntil(ctx: Context): Long = sp(ctx).getLong("busyUntil", 0L)
     fun setBusyUntil(ctx: Context, t: Long) { sp(ctx).edit().putLong("busyUntil", t).apply() }
