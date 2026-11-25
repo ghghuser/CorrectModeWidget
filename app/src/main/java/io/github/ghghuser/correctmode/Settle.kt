@@ -23,6 +23,9 @@ object Settle {
     /** Called on the main thread when a settle has ended, so an open screen can redraw. */
     @Volatile var listener: (() -> Unit)? = null
 
+    /** Number of the newest [begin]: an older one (e.g. after a duration dialog that stayed open) stops without ending anything. */
+    private var generation = 0
+
     /** true from [begin] until the state has settled */
     @Volatile var pending = false
         private set
@@ -32,6 +35,7 @@ object Settle {
         val handler = Handler(Looper.getMainLooper())
         val start = SystemClock.elapsedRealtime()
         pending = true
+        val mine = ++generation
         // grey and "taps ignored" until settled; this is the longest it can last (plus a margin)
         Store.setBusyUntil(app, System.currentTimeMillis() + MAX_MS + 500L)
         Scheduler.scheduleRedraw(app, MAX_MS + 1500L) // safety net: the widgets cannot stay grey if the process dies meanwhile
@@ -39,6 +43,7 @@ object Settle {
         var same = 0
         val step = object : Runnable {
             override fun run() {
+                if (mine != generation) return // a newer switch took over: it ends the busy look
                 val now = signature(app)
                 same = if (now == last) same + 1 else 0
                 last = now
