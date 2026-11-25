@@ -3,17 +3,7 @@ package io.github.ghghuser.correctmode
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
-
-/** The two "ignore this tap" windows; shared so the diagnostics text in Settings always shows the real numbers. */
-object TapLimits {
-    /** a tap this soon after the previous tap finished is ignored (double tap) */
-    const val DEBOUNCE_MS = 700L
-    /** a tap this soon after turning on is ignored (it would turn it straight off again) */
-    const val ON_GUARD_MS = 1500L
-}
 
 /**
  * Target of every widget tap. It looks at the REAL state at the moment of the tap (so a widget that has
@@ -22,16 +12,10 @@ object TapLimits {
  *
  * Rapid taps: every tap starts its own TapActivity and they are processed one after the other, so three
  * quick taps used to mean three switches. A tap that arrives right after the previous one finished is
- * ignored (see lastDone).
+ * ignored (see the busy look: it lasts until the change has settled, see Settle).
  */
 class TapActivity : Activity() {
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(Loc.wrap(newBase))
-
-    private companion object {
-        @Volatile var lastDone = 0L
-        const val DEBOUNCE_MS = TapLimits.DEBOUNCE_MS
-        const val ON_GUARD_MS = TapLimits.ON_GUARD_MS
-    }
 
     private var done = false
     private var t0 = 0L
@@ -39,14 +23,18 @@ class TapActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         t0 = SystemClock.elapsedRealtime()
-        if (t0 - lastDone < DEBOUNCE_MS) {
+        val busyLeft = Store.busyUntil(this) - System.currentTimeMillis()
+        if (busyLeft > 0) {
+            // the previous switch is still being applied (greyed look): this tap is ignored
             try {
-                Store.setTapOutcome(this, 1, t0 - lastDone)
-                Store.setLastTapMs(this, SystemClock.elapsedRealtime() - t0) // lastDone stays as it is
-            } catch (e: Exception) { }
+                Store.setTapOutcome(this, 1, busyLeft)
+                Store.setLastTapMs(this, SystemClock.elapsedRealtime() - t0)
+            } catch (e: Exception) {
+                // diagnostics must never break a tap
+            }
             done = true; finishAndRemoveTask(); return
         }
-        Flow.fromWidget = true
+        Flow.vibrateOnSwitch = true
         // grey the buttons while this tap is handled and a moment after it (taps are ignored then)
         try {
             Store.setBusyUntil(this, System.currentTimeMillis() + 4000L)
@@ -65,15 +53,7 @@ class TapActivity : Activity() {
             finishNow()
             return
         }
-        // A double tap must not turn it on and straight off again (that would put the loud state back).
-        // A tap inside this window after turning on is ignored (it was 2 s, 1.5 s on request; to be tried on the device).
         val st = Store.state(this)
-        val sinceOn = System.currentTimeMillis() - st.startedAt // read once: the same number decides and is recorded
-        if (st.activeId != null && candidates.any { it.id == st.activeId } && sinceOn < ON_GUARD_MS) {
-            try { Store.setTapOutcome(this, 2, sinceOn) } catch (e: Exception) { }
-            finishNow()
-            return
-        }
         try { Store.setTapOutcome(this, 0, 0L) } catch (e: Exception) { }
         val releasing = st.activeId.let { id -> val k = candidates.indexOfFirst { it.id == id }
             k >= 0 && (data?.host != "cycle" || k == candidates.lastIndex) }
@@ -92,29 +72,12 @@ class TapActivity : Activity() {
         }
     }
 
-    /**
-     * The greyed look ends DEBOUNCE_MS after the tap was handled. If the process is gone before that, the
-     * recheck alarm redraws the widgets (Engine.reconcile ends in Widgets.updateAll), so they cannot stay grey.
-     */
-    private fun endBusy() {
-        val app = applicationContext
-        try {
-            Store.setBusyUntil(app, System.currentTimeMillis() + DEBOUNCE_MS)
-            Scheduler.scheduleRedraw(app, 2500L)
-            Handler(Looper.getMainLooper()).postDelayed({
-                try { Store.setBusyUntil(app, 0L); Widgets.updateAll(app) } catch (e: Exception) { }
-            }, DEBOUNCE_MS + 50L)
-        } catch (e: Exception) { }
-    }
-
     private fun finishNow() {
         if (done) return
         done = true
-        Flow.fromWidget = false
-        val now = SystemClock.elapsedRealtime()
-        lastDone = now
-        try { Store.setLastTapMs(this, now - t0) } catch (e: Exception) { }
-        endBusy()
+        Flow.vibrateOnSwitch = false
+        try { Store.setLastTapMs(this, SystemClock.elapsedRealtime() - t0) } catch (e: Exception) { }
+        Settle.endIfIdle(this) // a switch that started a settle ends the greyed look itself, when the device has settled
         if (!isFinishing) finishAndRemoveTask()
     }
 }
