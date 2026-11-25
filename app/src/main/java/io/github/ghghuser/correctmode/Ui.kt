@@ -385,12 +385,14 @@ object Flow {
             a,
             { _, h, m ->
                 chosen = true
-                val c = Calendar.getInstance().apply {
+                // today if that time is still ahead, otherwise tomorrow. A time that does not exist on a day (the hour skipped
+                // when the clock goes forward) is moved by Calendar, so it is checked for each day and that day is skipped
+                fun candidate(dayOffset: Int): Calendar? = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, dayOffset)
                     set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-                }
-                if (c.timeInMillis <= System.currentTimeMillis() + 1000) c.add(Calendar.DAY_OF_YEAR, 1)
-                // a time that does not exist (the hour skipped when the clock goes forward) is moved by Calendar: refuse it
-                if (c.get(Calendar.HOUR_OF_DAY) != h || c.get(Calendar.MINUTE) != m) {
+                }.takeIf { it.get(Calendar.HOUR_OF_DAY) == h && it.get(Calendar.MINUTE) == m }
+                val c = candidate(0)?.takeIf { it.timeInMillis > System.currentTimeMillis() + 1000 } ?: candidate(1)
+                if (c == null) {
                     Ui.toast(a, Loc.str(a, R.string.duration_datetime_invalid), true)
                     onDone()
                 } else go(a, p, c.timeInMillis, onDone)
