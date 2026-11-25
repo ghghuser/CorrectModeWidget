@@ -213,11 +213,17 @@ object Store {
 
     private fun seed(ctx: Context): List<Profile> {
         val c = Loc.wrap(ctx)
-        // two profiles of your own to start with
+        // three profiles of your own to start with
         val list = listOf(
+            // calls vibrate, Bluetooth headphones only, everything else silent; no automatic release
             Profile(newId(), c.getString(R.string.sample_vib_bt), Ringer.VIBRATE, Dnd.PRIORITY, iconKey = "vibrate",
-                calls = 1, messages = 0, mediaOnBt = true),
+                calls = 1, messages = 0, mediaOnBt = true, btScope = BtMode.EARPHONE_ONLY, duration = Dur.NONE),
+            // everything silent
             Profile(newId(), c.getString(R.string.sample_mute_all), Ringer.MUTE, Dnd.NONE, iconKey = "volume_off", mediaOnBt = false),
+            // alarms, calls from starred contacts, all Bluetooth audio, reminders. The ringer is VIBRATE (not mute): a muted
+            // ringer would keep even the allowed starred calls from ringing / vibrating
+            Profile(newId(), c.getString(R.string.sample_sleep), Ringer.VIBRATE, Dnd.PRIORITY, iconKey = "bed",
+                calls = 3, messages = 0, alarms = true, reminders = true, mediaOnBt = true, btScope = BtMode.ALL_AUDIO),
         )
         val all = list + patternPresets(ctx)
         save(ctx, all)
