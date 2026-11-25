@@ -168,7 +168,9 @@ class MainActivity : Activity() {
         if (Store.busyUntil(this) > System.currentTimeMillis()) return // the previous switch is still being applied
         Store.setBusyUntil(this, System.currentTimeMillis() + 4000L) // cut short by Settle when it has settled
         Flow.vibrateOnSwitch = true
+        Scheduler.scheduleRedraw(applicationContext, 5000L) // safety net if the process dies while a dialog is open
         Widgets.updateAll(this)
+        rebuild() // the icons of this screen are greyed too (also while a duration dialog is open)
         Flow.toggle(this, p) {
             Flow.vibrateOnSwitch = false
             Settle.endIfIdle(this)
