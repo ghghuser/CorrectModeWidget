@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
@@ -34,8 +35,11 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         tab = try { getSharedPreferences("ui", MODE_PRIVATE).getInt("tab", tab).coerceIn(0, 1) } catch (e: Exception) { tab }
+        val t0 = SystemClock.elapsedRealtime()
         Engine.reconcile(this)
         Schedules.reschedule(this) // safety net: keeps the timer alarm in step with the profiles
+        // diagnostics only (Settings): where the time goes when this screen comes back
+        Store.setPerf(this, "check", SystemClock.elapsedRealtime() - t0)
         rebuild()
     }
 
@@ -76,10 +80,13 @@ class MainActivity : Activity() {
     // ---- screen ---------------------------------------------------------------------------
 
     private fun rebuild() {
+        val t0 = SystemClock.elapsedRealtime()
         content.removeAllViews()
         addNoAccessBanner()
         addStatus()
         addProfiles()
+        // diagnostics only: every rebuild (coming back, switching the tab, ...) is measured, the last one is shown in Settings
+        Store.setPerf(this, "list", SystemClock.elapsedRealtime() - t0)
     }
 
     private fun addNoAccessBanner() {
@@ -168,6 +175,8 @@ class MainActivity : Activity() {
         col.addView(android.widget.HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
             addView(Ui.chipsView(this@MainActivity, p).apply {
+                // the chips take the touch (not col), so they need their own pressed state
+                setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener { edit(p) }
                 setOnLongClickListener { showMenu(p); true }
             })
@@ -175,6 +184,8 @@ class MainActivity : Activity() {
         col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
         val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
         col.addView(Ui.text(this, extra, 12f, secondary = true))
+        // pressed feedback right away (the tap used to show nothing until the editor appeared)
+        col.setBackgroundResource(android.R.drawable.list_selector_background)
         col.setOnClickListener { edit(p) }
         col.setOnLongClickListener { showMenu(p); true }
         row.addView(col, Ui.lp(0, weight = 1f))
