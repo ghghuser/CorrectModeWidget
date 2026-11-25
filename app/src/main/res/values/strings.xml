@@ -230,6 +230,7 @@
     <string name="diag_tap_handled">Last widget tap: handled</string>
     <string name="diag_tap_ignored_soon">Last widget tap: ignored, %1$d ms after the previous tap (limit %2$d ms)</string>
     <string name="diag_tap_ignored_on">Last widget tap: ignored, %1$d ms after turn-on (limit %2$d ms)</string>
+    <string name="diag_tap_missing">Last widget tap: the profile of this widget no longer exists</string>
     <string name="diag_perf_edit">Last time to open the editor (rough): %1$d ms</string>
     <string name="diag_perf_check">Last main screen, state check: %1$d ms</string>
     <string name="diag_perf_list">Last main screen, building the list: %1$d ms</string>

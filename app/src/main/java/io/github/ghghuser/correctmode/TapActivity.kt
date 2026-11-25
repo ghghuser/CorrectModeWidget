@@ -40,7 +40,10 @@ class TapActivity : Activity() {
         super.onCreate(savedInstanceState)
         t0 = SystemClock.elapsedRealtime()
         if (t0 - lastDone < DEBOUNCE_MS) {
-            try { Store.setTapOutcome(this, 1, t0 - lastDone) } catch (e: Exception) { }
+            try {
+                Store.setTapOutcome(this, 1, t0 - lastDone)
+                Store.setLastTapMs(this, SystemClock.elapsedRealtime() - t0) // lastDone stays as it is
+            } catch (e: Exception) { }
             done = true; finishAndRemoveTask(); return
         }
         Flow.fromWidget = true
@@ -57,6 +60,7 @@ class TapActivity : Activity() {
             Store.widgetProfiles(this, key?.toIntOrNull() ?: -1)?.mapNotNull { Store.profile(this, it) }.orEmpty()
         } else listOfNotNull(Store.profile(this, key))
         if (candidates.isEmpty()) {
+            try { Store.setTapOutcome(this, 3, 0L) } catch (e: Exception) { } // so Settings does not show an older tap
             Ui.toast(this, Loc.str(this, R.string.err_profile_missing), true)
             finishNow()
             return
@@ -64,10 +68,9 @@ class TapActivity : Activity() {
         // A double tap must not turn it on and straight off again (that would put the loud state back).
         // A tap inside this window after turning on is ignored (it was 2 s, 1.5 s on request; to be tried on the device).
         val st = Store.state(this)
-        if (st.activeId != null && candidates.any { it.id == st.activeId } &&
-            System.currentTimeMillis() - st.startedAt < ON_GUARD_MS
-        ) {
-            try { Store.setTapOutcome(this, 2, System.currentTimeMillis() - st.startedAt) } catch (e: Exception) { }
+        val sinceOn = System.currentTimeMillis() - st.startedAt // read once: the same number decides and is recorded
+        if (st.activeId != null && candidates.any { it.id == st.activeId } && sinceOn < ON_GUARD_MS) {
+            try { Store.setTapOutcome(this, 2, sinceOn) } catch (e: Exception) { }
             finishNow()
             return
         }

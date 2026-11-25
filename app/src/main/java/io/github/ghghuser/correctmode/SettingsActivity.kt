@@ -197,6 +197,7 @@ class SettingsActivity : Activity() {
             0 -> card.addView(Ui.text(this, s(R.string.diag_tap_handled), 13f, secondary = true))
             1 -> card.addView(Ui.text(this, s(R.string.diag_tap_ignored_soon, outMs, TapLimits.DEBOUNCE_MS), 13f, secondary = true))
             2 -> card.addView(Ui.text(this, s(R.string.diag_tap_ignored_on, outMs, TapLimits.ON_GUARD_MS), 13f, secondary = true))
+            3 -> card.addView(Ui.text(this, s(R.string.diag_tap_missing), 13f, secondary = true))
         }
         for ((key, res) in listOf("edit" to R.string.diag_perf_edit, "check" to R.string.diag_perf_check, "list" to R.string.diag_perf_list)) {
             val ms = Store.perf(this, key)

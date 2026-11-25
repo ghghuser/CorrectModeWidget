@@ -230,6 +230,7 @@
     <string name="diag_tap_handled">直近のウィジェットタップ: 処理した</string>
     <string name="diag_tap_ignored_soon">直近のウィジェットタップ: 無視(前のタップの %1$d ms 後。%2$d ms 以内は無視)</string>
     <string name="diag_tap_ignored_on">直近のウィジェットタップ: 無視(オンの %1$d ms 後。%2$d ms 以内は無視)</string>
+    <string name="diag_tap_missing">直近のウィジェットタップ: このウィジェットのプロファイルが存在しない</string>
     <string name="diag_perf_edit">直近の編集画面の表示時間(概算): %1$d ms</string>
     <string name="diag_perf_check">直近の一覧画面、状態確認: %1$d ms</string>
     <string name="diag_perf_list">直近の一覧画面、一覧の作成: %1$d ms</string>
