@@ -37,6 +37,10 @@ object Store {
     /** Diagnostics: how long the last widget tap took inside the app (ms), see TapActivity. */
     fun lastTapMs(ctx: Context): Long = sp(ctx).getLong("tapMs", -1L)
 
+    /** Diagnostics: rough screen timings in ms ("edit" = opening the editor, "check" / "list" = main screen), -1 = never measured. */
+    fun perf(ctx: Context, key: String): Long = sp(ctx).getLong("perf_$key", -1L)
+    fun setPerf(ctx: Context, key: String, ms: Long) { sp(ctx).edit().putLong("perf_$key", ms).apply() }
+
     /** Until this time (wall clock) the widget buttons are drawn greyed: a tap is being handled / ignored. */
     fun busyUntil(ctx: Context): Long = sp(ctx).getLong("busyUntil", 0L)
     fun setBusyUntil(ctx: Context, t: Long) { sp(ctx).edit().putLong("busyUntil", t).apply() }

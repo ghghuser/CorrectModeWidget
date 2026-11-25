@@ -76,6 +76,7 @@ class ProfileEditActivity : Activity(), BackGuard {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val tStart = android.os.SystemClock.elapsedRealtime()
         val ex = Store.profile(this, intent?.getStringExtra("id"))
         isNew = ex == null
         val fromPattern = intent?.getIntExtra("pattern", -1) ?: -1
@@ -106,6 +107,8 @@ class ProfileEditActivity : Activity(), BackGuard {
         setContentView(screen)
         refreshBehavior()
         refreshLook()
+        // diagnostics only (Settings): from the start of onCreate to the first drawn frame (rough)
+        window.decorView.post { Store.setPerf(this, "edit", android.os.SystemClock.elapsedRealtime() - tStart) }
         // swipe / back button: ask first when something was changed (target 36 does not call onBackPressed any more)
         onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { leave() }
     }

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
@@ -34,9 +35,14 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         tab = try { getSharedPreferences("ui", MODE_PRIVATE).getInt("tab", tab).coerceIn(0, 1) } catch (e: Exception) { tab }
+        val t0 = SystemClock.elapsedRealtime()
         Engine.reconcile(this)
         Schedules.reschedule(this) // safety net: keeps the timer alarm in step with the profiles
+        val t1 = SystemClock.elapsedRealtime()
         rebuild()
+        // diagnostics only (Settings): where the time goes when this screen comes back
+        Store.setPerf(this, "check", t1 - t0)
+        Store.setPerf(this, "list", SystemClock.elapsedRealtime() - t1)
     }
 
     private fun s(id: Int, vararg a: Any): String = getString(id, *a)
@@ -175,6 +181,8 @@ class MainActivity : Activity() {
         col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
         val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
         col.addView(Ui.text(this, extra, 12f, secondary = true))
+        // pressed feedback right away (the tap used to show nothing until the editor appeared)
+        col.setBackgroundResource(android.R.drawable.list_selector_background)
         col.setOnClickListener { edit(p) }
         col.setOnLongClickListener { showMenu(p); true }
         row.addView(col, Ui.lp(0, weight = 1f))
