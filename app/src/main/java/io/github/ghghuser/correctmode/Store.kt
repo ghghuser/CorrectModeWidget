@@ -227,9 +227,9 @@ object Store {
                 calls = 1, messages = 0, mediaOnBt = true, btScope = BtMode.EARPHONE_ONLY, duration = Dur.NONE),
             // everything silent
             Profile(newId(), c.getString(R.string.sample_mute_all), Ringer.MUTE, Dnd.NONE, iconKey = "volume_off", mediaOnBt = false),
-            // alarms, calls from starred contacts, all Bluetooth audio, reminders. The ringer is VIBRATE (not mute): a muted
-            // ringer would keep even the allowed starred calls from ringing / vibrating
-            Profile(newId(), c.getString(R.string.sample_sleep), Ringer.VIBRATE, Dnd.PRIORITY, iconKey = "bed",
+            // alarms, calls from starred contacts, all Bluetooth audio, reminders. The ringer stays NORMAL (not vibrate, not mute):
+            // a starred call has to ring; everything else is blocked by the DND filter
+            Profile(newId(), c.getString(R.string.sample_sleep), Ringer.NORMAL, Dnd.PRIORITY, iconKey = "bed",
                 calls = 3, messages = 0, alarms = true, reminders = true, mediaOnBt = true, btScope = BtMode.ALL_AUDIO),
         )
         val all = list + patternPresets(ctx)
