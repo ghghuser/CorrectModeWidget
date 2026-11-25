@@ -334,11 +334,11 @@ object Widgets {
     }
 
     /** Preview for the editor: the same RemoteViews code path as the real widget. */
-    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int, outline: Boolean = false, margins: Margins = Margins.NONE): View {
+    fun preview(ctx: Context, p: Profile, active: Boolean, sizeDp: Int, outline: Boolean = false, margins: Margins = Margins.NONE, dim: Boolean = false): View {
         val holder = FrameLayout(ctx)
         if (outline) holder.setBackgroundResource(R.drawable.widget_cell_outline)
         val rv = RemoteViews(ctx.packageName, R.layout.widget_toggle)
-        bindItem(ctx, rv, p, active, null, margins = margins)
+        bindItem(ctx, rv, p, active, null, dim = dim, margins = margins)
         val px = (sizeDp * ctx.resources.displayMetrics.density).roundToInt()
         holder.addView(rv.apply(ctx, holder), FrameLayout.LayoutParams(px, px))
         return holder

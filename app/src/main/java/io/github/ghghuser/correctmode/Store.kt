@@ -42,8 +42,8 @@ object Store {
     fun setPerf(ctx: Context, key: String, ms: Long) { sp(ctx).edit().putLong("perf_$key", ms).apply() }
 
     /**
-     * Diagnostics: what the last widget tap did. 0 = handled, 1 = ignored (too soon after the previous tap finished),
-     * 2 = ignored (too soon after turn-on), 3 = the profile of the widget is missing. [ms] = the time since that event.
+     * Diagnostics: what the last widget tap did. 0 = handled, 1 = ignored (the previous switch was still being
+     * applied), 3 = the profile of the widget is missing. [ms] = the time left of the greyed look.
      */
     fun tapOutcome(ctx: Context): Pair<Int, Long> = sp(ctx).getInt("tapOut", -1) to sp(ctx).getLong("tapOutMs", 0L)
     fun setTapOutcome(ctx: Context, code: Int, ms: Long) { sp(ctx).edit().putInt("tapOut", code).putLong("tapOutMs", ms).apply() }

@@ -265,14 +265,14 @@ object Ui {
 interface BackGuard { fun leave() }
 
 object Flow {
-    /** Set by TapActivity while it handles a widget tap: a successful switch then gives the profile's vibration. */
-    @Volatile var fromWidget = false
+    /** true while a tap on a widget / on a profile icon is handled: a successful switch then gives the profile's vibration. */
+    @Volatile var vibrateOnSwitch = false
 
     fun toggle(a: Activity, p: Profile, onDone: () -> Unit) {
         if (Store.state(a).activeId == p.id) {
             val r = Engine.release(a, Reason.USER)
             if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
-            if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, false)
+            if (r.ok) Settle.begin(a, if (vibrateOnSwitch && p.tapVibe) Settle.Tick.OFF else Settle.Tick.NONE)
             onDone()
         } else start(a, p, onDone)
     }
@@ -377,11 +377,11 @@ object Flow {
     }
 
     private fun go(a: Activity, p: Profile, expiresAt: Long, onDone: () -> Unit) {
-        // The tick for "on" is given AFTER the quiet state is applied, like the one for "off" (which is reported to work).
-        // Unverified guess for why the old tick before the change never came: the system cancels a vibration that is
-        // running while the ringer mode / DND changes.
+        // The tick is given when the device has settled (Settle), not after a fixed time. Unverified guess for the old
+        // "no tick when switching from one profile to another": the system applies the change asynchronously and cancels
+        // a vibration that is running meanwhile.
         val r = Engine.activate(a, p, expiresAt)
-        if (r.ok && fromWidget && p.tapVibe) Haptics.tap(a, true)
+        if (r.ok) Settle.begin(a, if (vibrateOnSwitch && p.tapVibe) Settle.Tick.ON else Settle.Tick.NONE)
         if (!r.ok || r.message != null) Ui.toast(a, r.message ?: "", true)
         if (!r.ok && r.needAccess) Ui.openAccessSettings(a)
         if (r.ok) nagPermissions(a, p)

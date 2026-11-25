@@ -454,10 +454,14 @@ object Engine {
         val nm = nm(ctx)
         val am = am(ctx)
         val tr = ringerOf(p.ringer)
-        if (tr != AudioManager.RINGER_MODE_NORMAL) am.ringerMode = tr // quiet first
+        // Only what really differs is written (a write that changes nothing still costs time and makes the system send
+        // its change notifications): switching between profiles that share the ringer mode or the DND policy is quicker.
+        if (tr != AudioManager.RINGER_MODE_NORMAL && am.ringerMode != tr) am.ringerMode = tr // quiet first
         when (p.dnd) {
             Dnd.PRIORITY -> {
-                nm.notificationPolicy = buildPolicy(p, bt, nm.notificationPolicy)
+                val current = nm.notificationPolicy
+                val wanted = buildPolicy(p, bt, current)
+                if (wanted != current) nm.notificationPolicy = wanted
                 nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
             }
             Dnd.NONE -> {
