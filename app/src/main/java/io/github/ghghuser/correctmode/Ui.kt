@@ -267,6 +267,7 @@ object Ui {
     fun durationLabel(ctx: Context, d: Int): String = when (d) {
         Dur.ASK -> Loc.str(ctx, R.string.duration_ask)
         Dur.NONE -> Loc.str(ctx, R.string.duration_none)
+        Dur.ASK_TIME -> Loc.str(ctx, R.string.duration_time_every)
         Dur.ASK_DATETIME -> Loc.str(ctx, R.string.duration_datetime)
         30 -> Loc.str(ctx, R.string.duration_30)
         60 -> Loc.str(ctx, R.string.duration_60)
@@ -302,6 +303,7 @@ object Flow {
         when (p.duration) {
             Dur.ASK -> ask(a, p, onDone)
             Dur.NONE -> go(a, p, 0L, onDone)
+            Dur.ASK_TIME -> pickTime(a, p, onDone)
             Dur.ASK_DATETIME -> pickDateTime(a, p, onDone)
             else -> go(a, p, System.currentTimeMillis() + p.duration * 60_000L, onDone)
         }
@@ -387,7 +389,11 @@ object Flow {
                     set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                 }
                 if (c.timeInMillis <= System.currentTimeMillis() + 1000) c.add(Calendar.DAY_OF_YEAR, 1)
-                go(a, p, c.timeInMillis, onDone)
+                // a time that does not exist (the hour skipped when the clock goes forward) is moved by Calendar: refuse it
+                if (c.get(Calendar.HOUR_OF_DAY) != h || c.get(Calendar.MINUTE) != m) {
+                    Ui.toast(a, Loc.str(a, R.string.duration_datetime_invalid), true)
+                    onDone()
+                } else go(a, p, c.timeInMillis, onDone)
             },
             (now.get(Calendar.HOUR_OF_DAY) + 1) % 24, 0,
             android.text.format.DateFormat.is24HourFormat(a),

@@ -42,7 +42,7 @@ class ProfileEditActivity : Activity(), BackGuard {
             0xFF1F6FEBL, 0xFF0F9D8AL, 0xFF2E7D32L, 0xFFF9A825L, 0xFFEF6C00L, 0xFFD32F2FL, 0xFFC2185BL,
             0xFF7B1FA2L, 0xFF455A64L, 0xFF000000L, 0xFFFFFFFFL, 0xFFE3E6EAL, 0xFF30343AL, 0xFF8AB4FFL,
         ).map { it.toInt() }
-        val DURATIONS = listOf(Dur.ASK, Dur.ASK_DATETIME, Dur.NONE, 15, 30, 60, 120, 180, 240)
+        val DURATIONS = listOf(Dur.ASK, Dur.ASK_TIME, Dur.ASK_DATETIME, Dur.NONE, 15, 30, 60, 120, 180, 240)
     }
 
     private lateinit var p: Profile
