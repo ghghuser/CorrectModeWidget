@@ -156,9 +156,12 @@ class ProfileEditActivity : Activity(), BackGuard {
         for (on in listOf(false, true)) {
             val col = Ui.vbox(this).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(dp(6), 0, dp(6), 0) }
             col.addView(Widgets.preview(this, p, on, 72, outline = true, margins = Widgets.Margins.OWN))
-            col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true))
-            // tap the preview: the look window opens
-            if (tapToEdit) col.setOnClickListener { openLook() }
+            // the label sits centred right under its own icon
+            col.addView(Ui.text(this, s(if (on) R.string.state_on else R.string.state_off), 11f, secondary = true).apply { gravity = Gravity.CENTER })
+            // tap an icon: the look window opens on that state's tab (off = left, on = middle); inside the window the tab changes
+            val tab = if (on) 1 else 0
+            if (tapToEdit) col.setOnClickListener { openLook(tab) }
+            else col.setOnClickListener { if (lookTab != tab) { lookTab = tab; renderLook() } }
             box.addView(col)
         }
     }
@@ -444,8 +447,9 @@ class ProfileEditActivity : Activity(), BackGuard {
     }
 
     /** The look (icon, colours, shape, margins) is edited in its own window; the preview stays on top of it. */
-    private fun openLook() {
+    private fun openLook(startTab: Int? = null) {
         lookDialog?.dismiss()
+        if (startTab != null) lookTab = startTab
         val d = android.app.Dialog(this, R.style.LookDialog)
         val box = Ui.vbox(this)
         val header = Ui.hbox(this).apply { setPadding(dp(16), dp(8), dp(8), dp(4)) }
