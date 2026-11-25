@@ -267,6 +267,7 @@ object Ui {
     fun durationLabel(ctx: Context, d: Int): String = when (d) {
         Dur.ASK -> Loc.str(ctx, R.string.duration_ask)
         Dur.NONE -> Loc.str(ctx, R.string.duration_none)
+        Dur.ASK_TIME -> Loc.str(ctx, R.string.duration_time_every)
         Dur.ASK_DATETIME -> Loc.str(ctx, R.string.duration_datetime)
         30 -> Loc.str(ctx, R.string.duration_30)
         60 -> Loc.str(ctx, R.string.duration_60)
@@ -302,6 +303,7 @@ object Flow {
         when (p.duration) {
             Dur.ASK -> ask(a, p, onDone)
             Dur.NONE -> go(a, p, 0L, onDone)
+            Dur.ASK_TIME -> pickTime(a, p, onDone)
             Dur.ASK_DATETIME -> pickDateTime(a, p, onDone)
             else -> go(a, p, System.currentTimeMillis() + p.duration * 60_000L, onDone)
         }
@@ -383,11 +385,20 @@ object Flow {
             a,
             { _, h, m ->
                 chosen = true
-                val c = Calendar.getInstance().apply {
+                // today if that time is still ahead, otherwise the next day. A time that does not exist on a day (the hour skipped
+                // when the clock goes forward) is moved by Calendar, so it is checked for each day and that day is skipped
+                val base = System.currentTimeMillis() // read once: the days are counted from the same moment
+                fun candidate(dayOffset: Int): Calendar? = Calendar.getInstance().apply {
+                    timeInMillis = base
+                    add(Calendar.DAY_OF_YEAR, dayOffset)
                     set(Calendar.HOUR_OF_DAY, h); set(Calendar.MINUTE, m); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-                }
-                if (c.timeInMillis <= System.currentTimeMillis() + 1000) c.add(Calendar.DAY_OF_YEAR, 1)
-                go(a, p, c.timeInMillis, onDone)
+                }.takeIf { it.get(Calendar.HOUR_OF_DAY) == h && it.get(Calendar.MINUTE) == m }
+                // the next day (within a week) on which that time exists and is still ahead
+                val c = (0..7).firstNotNullOfOrNull { off -> candidate(off)?.takeIf { it.timeInMillis > base + 1000 } }
+                if (c == null) {
+                    Ui.toast(a, Loc.str(a, R.string.duration_datetime_invalid), true)
+                    onDone()
+                } else go(a, p, c.timeInMillis, onDone)
             },
             (now.get(Calendar.HOUR_OF_DAY) + 1) % 24, 0,
             android.text.format.DateFormat.is24HourFormat(a),
