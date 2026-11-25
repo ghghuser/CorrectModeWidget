@@ -20,6 +20,8 @@ object Dnd {
 object Dur {
     const val ASK = -1
     const val NONE = 0
+    /** at turn-on, ask for the date and time of the auto release (not saved) */
+    const val ASK_DATETIME = -2
 }
 
 object Shape {
@@ -114,7 +116,7 @@ data class Profile(
     var mediaOnBt: Boolean = true,
     /** which Bluetooth devices count for [mediaOnBt]: BtMode.ALL_AUDIO or BtMode.EARPHONE_ONLY */
     var btScope: Int = BtMode.ALL_AUDIO,
-    /** Dur.ASK, Dur.NONE or minutes */
+    /** Dur.ASK, Dur.NONE, Dur.ASK_DATETIME or minutes */
     var duration: Int = Dur.ASK,
     var emoji: String = "🔕",
     var imageFile: String? = null,
