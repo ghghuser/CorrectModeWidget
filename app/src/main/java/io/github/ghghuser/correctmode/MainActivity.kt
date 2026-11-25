@@ -38,11 +38,9 @@ class MainActivity : Activity() {
         val t0 = SystemClock.elapsedRealtime()
         Engine.reconcile(this)
         Schedules.reschedule(this) // safety net: keeps the timer alarm in step with the profiles
-        val t1 = SystemClock.elapsedRealtime()
-        rebuild()
         // diagnostics only (Settings): where the time goes when this screen comes back
-        Store.setPerf(this, "check", t1 - t0)
-        Store.setPerf(this, "list", SystemClock.elapsedRealtime() - t1)
+        Store.setPerf(this, "check", SystemClock.elapsedRealtime() - t0)
+        rebuild()
     }
 
     private fun s(id: Int, vararg a: Any): String = getString(id, *a)
@@ -82,10 +80,13 @@ class MainActivity : Activity() {
     // ---- screen ---------------------------------------------------------------------------
 
     private fun rebuild() {
+        val t0 = SystemClock.elapsedRealtime()
         content.removeAllViews()
         addNoAccessBanner()
         addStatus()
         addProfiles()
+        // diagnostics only: every rebuild (coming back, switching the tab, ...) is measured, the last one is shown in Settings
+        Store.setPerf(this, "list", SystemClock.elapsedRealtime() - t0)
     }
 
     private fun addNoAccessBanner() {

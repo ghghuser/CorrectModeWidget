@@ -107,8 +107,14 @@ class ProfileEditActivity : Activity(), BackGuard {
         setContentView(screen)
         refreshBehavior()
         refreshLook()
-        // diagnostics only (Settings): from the start of onCreate to the first drawn frame (rough)
-        window.decorView.post { Store.setPerf(this, "edit", android.os.SystemClock.elapsedRealtime() - tStart) }
+        // diagnostics only (Settings): from the start of onCreate to just before the first frame is drawn (rough)
+        window.decorView.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                window.decorView.viewTreeObserver.removeOnPreDrawListener(this)
+                Store.setPerf(this@ProfileEditActivity, "edit", android.os.SystemClock.elapsedRealtime() - tStart)
+                return true
+            }
+        })
         // swipe / back button: ask first when something was changed (target 36 does not call onBackPressed any more)
         onBackInvokedDispatcher.registerOnBackInvokedCallback(android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT) { leave() }
     }
