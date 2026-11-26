@@ -34,6 +34,18 @@ object Store {
     fun releaseFailures(ctx: Context): Int = sp(ctx).getInt("relFail", 0)
     fun setReleaseFailures(ctx: Context, n: Int) { sp(ctx).edit().putInt("relFail", n).commit() }
 
+    /** The lengths (minutes, newest first, at most [RECENT_MAX]) typed into "Enter freely" for the auto release; shown at the top of that dialog. */
+    fun recentDurations(ctx: Context): List<Int> =
+        (sp(ctx).getString("recentDur", "") ?: "").split(',').mapNotNull { it.toIntOrNull() }.filter { it in 1..1440 }.distinct().take(RECENT_MAX)
+
+    fun addRecentDuration(ctx: Context, minutes: Int) {
+        if (minutes !in 1..1440) return
+        val list = (listOf(minutes) + recentDurations(ctx).filter { it != minutes }).take(RECENT_MAX)
+        sp(ctx).edit().putString("recentDur", list.joinToString(",")).apply()
+    }
+
+    const val RECENT_MAX = 5
+
     /** Diagnostics: how long the last widget tap took inside the app (ms), see TapActivity. */
     fun lastTapMs(ctx: Context): Long = sp(ctx).getLong("tapMs", -1L)
 
