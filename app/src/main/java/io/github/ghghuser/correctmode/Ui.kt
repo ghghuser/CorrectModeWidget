@@ -414,6 +414,10 @@ object Flow {
         fun row(label: String, onClick: () -> Unit) {
             box.addView(Ui.button(a, label) { onClick() })
         }
+        // lengths typed in before (newest first, at most 5): the ones that are not already a fixed row below come first
+        for (m in Store.recentDurations(a).filter { it != 30 && it != 60 && it != 120 }) {
+            row(Ui.durationLabel(a, m)) { Store.addRecentDuration(a, m); pickDuration(m) }
+        }
         row(Ui.durationLabel(a, 30)) { pickDuration(30) }
         row(Ui.durationLabel(a, 60)) { pickDuration(60) }
         row(Ui.durationLabel(a, 120)) { pickDuration(120) }
@@ -422,7 +426,10 @@ object Flow {
             Ui.promptText(a, Loc.str(a, R.string.duration_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
                 val m = parseMinutes(text)
                 if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
-                else if (remember.isChecked) pickDuration(m) else go(a, p, rel(p, m), onDone)
+                else {
+                    Store.addRecentDuration(a, m)
+                    if (remember.isChecked) pickDuration(m) else go(a, p, rel(p, m), onDone)
+                }
             }
         }
         row(Loc.str(a, R.string.duration_time)) {
