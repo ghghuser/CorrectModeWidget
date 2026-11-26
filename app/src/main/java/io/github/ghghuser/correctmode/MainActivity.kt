@@ -88,6 +88,7 @@ class MainActivity : Activity() {
         content.removeAllViews()
         addNoAccessBanner()
         addStatus()
+        addPending()
         addProfiles()
         // diagnostics only: every rebuild (coming back, switching the tab, ...) is measured, the last one is shown in Settings
         Store.setPerf(this, "list", SystemClock.elapsedRealtime() - t0)
@@ -99,6 +100,23 @@ class MainActivity : Activity() {
         card.addView(Ui.text(this, "⚠️ " + s(R.string.perm_dnd_hint), 14f))
         card.addView(Ui.button(this, s(R.string.fix)) { Ui.openAccessSettings(this) })
         content.addView(card)
+    }
+
+    /** planned turn-ons ("30 minutes later"): shown with a button to cancel the plan */
+    private fun addPending() {
+        for (o in Schedules.onceList(this)) {
+            val p = Store.profile(this, o.id) ?: continue
+            val card = Ui.card(this)
+            card.addView(Ui.text(this, s(R.string.pending_title), 13f, secondary = true))
+            card.addView(Ui.text(this, p.name, 16f, bold = true))
+            card.addView(Ui.text(this, s(R.string.pending_at, Ui.clockText(this, o.at)), 14f))
+            card.addView(Ui.button(this, s(R.string.pending_cancel)) {
+                // it may have been carried out meanwhile: then there is nothing to cancel, just show the current state
+                if (Schedules.onceFor(this, o.id) != null) Schedules.cancelOnce(this, o.id)
+                rebuild()
+            })
+            content.addView(card)
+        }
     }
 
     private fun addStatus() {
