@@ -460,6 +460,13 @@ class WizardActivity : Activity() {
 
     /** The profiles the answers lead to (one per ringer case). Two answers that lead to the same behaviour give one profile. */
     private fun buildProfiles(): List<Made> {
+        val out = buildAll()
+        // Several profiles at once: their timers would all start with the same unseen default time, so none is switched on here
+        if (out.size > 1) out.forEach { it.p.schedOn = false; it.p.schedEnd = -1 }
+        return out
+    }
+
+    private fun buildAll(): List<Made> {
         val useBt = bt == YES
         val out = ArrayList<Made>()
         fun add(p: Profile, patIdx: Int) {
@@ -504,8 +511,6 @@ class WizardActivity : Activity() {
                 add(prep(p), Patterns.find(r, Dnd.PRIORITY, if (p.mediaOnBt) p.btScope else Patterns.NO_BT, false))
             }
         }
-        // Several profiles at once: their timers would all start with the same unseen default time, so none is switched on here
-        if (out.size > 1) out.forEach { it.p.schedOn = false; it.p.schedEnd = -1 }
         return out
     }
 
