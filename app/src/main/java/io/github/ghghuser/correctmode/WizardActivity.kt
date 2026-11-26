@@ -468,6 +468,8 @@ class WizardActivity : Activity() {
         fun prep(p: Profile): Profile {
             p.duration = if (autoOff) Dur.ASK_TIME else Dur.NONE
             p.schedOn = autoOn
+            // A planned start does not ask for a time, so with "off by itself" too it needs an end time (the editor's default: 8 h later)
+            if (autoOn && autoOff) p.schedEnd = (p.schedStart + 8 * 60) % 1440
             p.releaseAll = !restore
             p.volMode = volMode
             p.volFixed = volFixed
@@ -503,7 +505,7 @@ class WizardActivity : Activity() {
             }
         }
         // Several profiles at once: their timers would all start with the same unseen default time, so none is switched on here
-        if (out.size > 1) out.forEach { it.p.schedOn = false }
+        if (out.size > 1) out.forEach { it.p.schedOn = false; it.p.schedEnd = -1 }
         return out
     }
 
@@ -514,6 +516,11 @@ class WizardActivity : Activity() {
         else -> "pri:${p.ringer}:${p.calls}:${p.messages}:${p.media}:${p.alarms}:${p.system}:${p.reminders}:${p.events}:" +
             (if (p.mediaOnBt && !p.media) "bt${p.btScope}" else "-")
     }
+
+    /** The whole answer set: the behaviour above plus what happens on release and the tick. Equal keys = nothing new to create. */
+    private fun fullKey(p: Profile): String =
+        behaviorKey(p) + "|" + p.duration + "|" + p.releaseAll + "|" + p.volMode + "|" +
+            (if (p.volMode == VolMode.FIXED) p.volFixed.joinToString(",") else "-") + "|" + p.tapVibe
 
     /** Emojis that tell apart two profiles of the same behaviour name: what the filter lets through, Bluetooth, timers. */
     private fun emojiTail(p: Profile): String {
@@ -537,9 +544,9 @@ class WizardActivity : Activity() {
         body.addView(label(s(R.string.wiz_profiles)), Ui.lp())
         body.addView(small(s(R.string.wiz_pick_hint)), Ui.lp())
         val made = buildProfiles()
-        // same sound behaviour AND same auto release time = the same profile (name, look and schedule do not count)
-        val existing = Store.profiles(this).filter { it.tab == 0 }.map { behaviorKey(it) + "|" + it.duration }.toSet()
-        val fresh = made.filter { behaviorKey(it.p) + "|" + it.p.duration !in existing }
+        // same sound behaviour AND same release answers (time, restore, volumes, tick) = the same profile (name, look and schedule do not count)
+        val existing = Store.profiles(this).filter { it.tab == 0 }.map { fullKey(it) }.toSet()
+        val fresh = made.filter { fullKey(it.p) !in existing }
         if (!pickedInit) {
             pickedInit = true
             picked.clear()
@@ -559,7 +566,11 @@ class WizardActivity : Activity() {
                 taken.add(name)
             }
             m.p.name = name
-            val box = Ui.card(this, active = selected).apply { gravity = Gravity.CENTER_HORIZONTAL }
+            val box = Ui.card(this, active = selected).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+                isSelected = selected
+                stateDescription = if (selected) s(R.string.selected_state) else null // read out by screen readers
+            }
             box.addView(Widgets.preview(this, m.p, false, 48), Ui.lp(dp(48), dp(48)).apply { gravity = Gravity.CENTER_HORIZONTAL })
             box.addView(Ui.text(this, name, 15f, bold = true).apply { gravity = Gravity.CENTER; setPadding(0, dp(4), 0, 0) }, Ui.lp())
             box.addView(Ui.chipsView(this, m.p, centered = true), Ui.lp())
@@ -580,6 +591,10 @@ class WizardActivity : Activity() {
         if (bt == YES && mode == MODE_CUSTOM && media) notes.add(s(R.string.wiz_note_bt_media))
         if (mode == MODE_CUSTOM && (callsOn || msgsOn) && Ringer.MUTE in ringers() && ringers().size > 1) notes.add(s(R.string.wiz_note_mute_calls))
         if (autoOn && made.size > 1) notes.add(s(R.string.wiz_note_timer))
+        if (autoOn && made.size == 1) {
+            val p = made[0].p
+            notes.add(if (autoOff) s(R.string.wiz_note_sched, Ui.clock(p.schedStart), Ui.clock(p.schedEnd)) else s(R.string.wiz_note_sched_on, Ui.clock(p.schedStart)))
+        }
         for (n in notes) body.addView(small("※ $n"), Ui.lp())
         body.addView(Ui.text(this, s(R.string.legend), 11f, secondary = true).apply { setPadding(0, dp(GAP_DP), 0, 0) }, Ui.lp())
         val chosen = made.indices.filter { it in picked && made[it] in fresh }.map { made[it].p }

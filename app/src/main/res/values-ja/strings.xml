@@ -408,4 +408,6 @@
     <string name="wiz_h_restore">オフ時の状態</string>
     <string name="wiz_h_vol">オフ時の音量</string>
     <string name="wiz_note_timer">プロファイルが複数のため、自動でオンは設定していません。作成後に、それぞれの編集画面で設定してください。</string>
+    <string name="wiz_note_sched">自動でオンは毎日 %1$s、自動でオフは %2$s に仮置きしています。作成後に編集画面で変更できます。</string>
+    <string name="wiz_note_sched_on">自動でオンは毎日 %1$s に仮置きしています。作成後に編集画面で変更できます。</string>
 </resources>

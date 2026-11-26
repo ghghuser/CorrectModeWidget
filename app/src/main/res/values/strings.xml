@@ -408,4 +408,6 @@
     <string name="wiz_h_restore">On release: state</string>
     <string name="wiz_h_vol">On release: volumes</string>
     <string name="wiz_note_timer">There are several profiles, so no automatic turn-on is set. Set it in each editor after creating.</string>
+    <string name="wiz_note_sched">Turn-on every day at %1$s and turn-off at %2$s are placeholders. Change them in the editor after creating.</string>
+    <string name="wiz_note_sched_on">Turn-on every day at %1$s is a placeholder. Change it in the editor after creating.</string>
 </resources>
