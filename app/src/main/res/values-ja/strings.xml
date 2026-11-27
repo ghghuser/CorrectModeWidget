@@ -230,6 +230,9 @@
     <string name="duration_free_title">自動解除までの時間</string>
     <string name="duration_free_hint">分(例 90)または 時:分(例 1:30)</string>
     <string name="duration_free_bad">1分〜24時間で入力してください(例 90 / 1:30)。</string>
+    <string name="recent_delete_hint">長押しで履歴から削除</string>
+    <string name="recent_delete_confirm">履歴から削除: %1$s</string>
+    <string name="start_free_title">オンにするまでの時間</string>
     <string name="ask_dont_again">もう尋ねない</string>
     <string name="ask_dont_again_confirm">今後は「%1$s」で自動解除し、この質問を出さなくします。\n変更は、プロファイル編集画面の「自動解除」でいつでも「毎回選ぶ」に戻せます。よろしいですか?</string>
     <string name="ask_time_not_saved">指定時刻は保存できません(今回だけ使います)。</string>

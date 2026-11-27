@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.CheckBox
 
 /**
@@ -64,14 +65,19 @@ class WidgetConfigActivity : Activity() {
             }
         }
         for (p in profiles) {
-            val label = p.titlePrefix() + p.name + "\n" + Describe.summary(this, p)
-            val cb = CheckBox(this).apply { text = label; isChecked = p.id in current }
+            val cb = CheckBox(this).apply { isChecked = p.id in current }
             cb.setOnCheckedChangeListener { _, v ->
                 if (v) { if (p.id !in order) order.add(p.id) } else order.remove(p.id)
                 showOrder()
             }
-            list.addView(cb)
-            rows.add(Triple(p, cb, cb))
+            // tick, the profile's icon at text size, name + summary (a tap on the text ticks too)
+            val row = Ui.hbox(this).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
+            row.addView(cb)
+            row.addView(Ui.profileIcon(this, p), Ui.lp(ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginStart = dp(4) })
+            row.addView(Ui.text(this, p.name + "\n" + Describe.summary(this, p), 15f).apply { setOnClickListener { cb.toggle() } },
+                Ui.lp(0, weight = 1f).apply { marginStart = dp(8) })
+            list.addView(row)
+            rows.add(Triple(p, cb, row))
         }
 
         val firstTicked = profiles.firstOrNull { it.id in current }?.tab
