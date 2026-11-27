@@ -170,17 +170,25 @@ object Ui {
     }
 
     /** The profile's own icon (picture, built-in icon or emoji, in that order) at the size of 15 sp text, for list rows. */
-    fun profileIcon(ctx: Context, p: Profile, sp: Float = 15f): View {
+    fun profileIcon(ctx: Context, p: Profile, sp: Float = 15f, marginStartDp: Int = 0): View {
         val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp * 1.25f, ctx.resources.displayMetrics).roundToInt()
         val bmp = p.imageFile?.let { android.graphics.BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
         val res = FlatIcons.res(p.iconKey)
         return when {
-            bmp != null -> android.widget.ImageView(ctx).apply { setImageBitmap(bmp); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER; minimumWidth = px; minimumHeight = px }
+            // a fixed size: a saved picture must not keep its own (larger) size and push the name out of the row
+            bmp != null -> android.widget.ImageView(ctx).apply {
+                setImageBitmap(bmp); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(px, px).apply { marginStart = ctx.dp(marginStartDp) }
+            }
             res != null -> android.widget.ImageView(ctx).apply {
                 setImageResource(res); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
-                setColorFilter(text(ctx, "", sp).currentTextColor); minimumWidth = px; minimumHeight = px
+                setColorFilter(text(ctx, "", sp).currentTextColor)
+                layoutParams = LinearLayout.LayoutParams(px, px).apply { marginStart = ctx.dp(marginStartDp) }
             }
-            else -> text(ctx, p.emoji, sp).apply { gravity = Gravity.CENTER }
+            else -> text(ctx, p.emoji, sp).apply {
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginStart = ctx.dp(marginStartDp) }
+            }
         }
     }
 

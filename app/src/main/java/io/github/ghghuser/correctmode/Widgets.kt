@@ -156,10 +156,10 @@ object Widgets {
             rv.setImageViewBitmap(R.id.item_image, bmp)
         } else if (iconRes != null) {
             rv.setImageViewResource(R.id.item_icon, iconRes)
-            rv.setColorInt(R.id.item_icon, "setColorFilter", fg.first, fg.second)
+            rv.setColorInt(R.id.item_icon, "setColorFilter", fg0.first, fg0.second) // the fade comes from the image alpha below
         } else {
             rv.setTextViewText(R.id.item_emoji, if (useOn) p.emojiOn else p.emoji)
-            rv.setColorInt(R.id.item_emoji, "setTextColor", fg.first, fg.second)
+            rv.setColorInt(R.id.item_emoji, "setTextColor", fg0.first, fg0.second) // the fade comes from the view alpha below
         }
         rv.setViewVisibility(R.id.item_label, if (p.showLabel) View.VISIBLE else View.GONE)
         rv.setTextViewText(R.id.item_label, p.name)
