@@ -308,7 +308,7 @@ class WizardActivity : Activity() {
         if (v is TextView) {
             v.breakStrategy = Layout.BREAK_STRATEGY_BALANCED
             v.hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
-            v.setLineBreakConfig(LineBreakConfig.Builder().setLineBreakWordStyle(LineBreakConfig.LINE_BREAK_WORD_STYLE_PHRASE).build())
+            v.setLineBreakWordStyle(LineBreakConfig.LINE_BREAK_WORD_STYLE_PHRASE)
         }
         if (v is ViewGroup) for (i in 0 until v.childCount) phraseBreaks(v.getChildAt(i))
     }
