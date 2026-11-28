@@ -317,10 +317,7 @@ class WizardActivity : Activity() {
         // only the switches this answer depends on: ring vibration for a vibrating call, alarm / touch for the tick
         val needed = ArrayList<Pair<Int, VibSettings.State>>()
         if (vib == YES || vib == DEPENDS) needed.add(R.string.wiz_vib_ring to VibSettings.ring(this))
-        if (tapVibe) {
-            needed.add(R.string.wiz_vib_alarm to VibSettings.alarm(this))
-            needed.add(R.string.wiz_vib_touch to VibSettings.touch(this))
-        }
+        if (tapVibe) needed.add(R.string.wiz_vib_alarm to VibSettings.alarm(this)) // the tick uses no touch switch
         if (needed.isNotEmpty()) {
             val allOn = needed.all { it.second == VibSettings.State.ON }
             body.addView(Ui.vbox(this).apply {

@@ -14,9 +14,10 @@ object VibSettings {
     private fun int(ctx: Context, key: String): Int? =
         try { Settings.System.getInt(ctx.contentResolver, key) } catch (e: Exception) { null }
 
-    private fun state(vararg values: Int?): State {
+    private fun state(ctx: Context, vararg values: Int?): State {
         val known = values.filterNotNull()
         return when {
+            int(ctx, "vibrate_on") == 0 -> State.OFF // the main switch of "Vibration & haptics" (Android 16), above the single ones
             known.isEmpty() -> State.UNKNOWN
             known.any { it == 0 } -> State.OFF
             else -> State.ON
@@ -26,14 +27,14 @@ object VibSettings {
     /** "Ring vibration" (while a call comes in). */
     fun ring(ctx: Context): State {
         val intensity = int(ctx, "ring_vibration_intensity")
-        return if (intensity != null) state(intensity) else state(int(ctx, "vibrate_when_ringing"))
+        return if (intensity != null) state(ctx, intensity) else state(ctx, int(ctx, "vibrate_when_ringing"))
     }
 
     /** "Alarm vibration". */
-    fun alarm(ctx: Context): State = state(int(ctx, "alarm_vibration_intensity"))
+    fun alarm(ctx: Context): State = state(ctx, int(ctx, "alarm_vibration_intensity"))
 
     /** "Touch feedback" (haptics of the interface). */
-    fun touch(ctx: Context): State = state(int(ctx, "haptic_feedback_enabled"), int(ctx, "haptic_feedback_intensity"))
+    fun touch(ctx: Context): State = state(ctx, int(ctx, "haptic_feedback_enabled"), int(ctx, "haptic_feedback_intensity"))
 
     fun label(ctx: Context, s: State): String = Loc.str(ctx, when (s) {
         State.ON -> R.string.vibs_on

@@ -14,8 +14,9 @@ import android.os.VibratorManager
  * The usage decides which phone switch and which silent state applies. ALARM works while the alarm channel is open
  * (reported to work for the normal / vibrate ringer and a filter that lets alarms through). In the other states
  * (muted ringer, a filter without alarms, all blocked) the same vibration stayed silent, so the "accessibility" usage
- * is used there: it is not one of the categories the ringer / filter silence. UNVERIFIED on a device (see the
- * diagnostics line in Settings, which shows the usage of the last tick).
+ * is used there: it is not one of the categories the ringer / filter silence. UNVERIFIED on a device. Also unverified: the
+ * system may drop a vibration of that usage requested by a background app. Settings > diagnostics shows the usage that was
+ * REQUESTED last, not whether it was played.
  */
 object Haptics {
     fun vibrate(ctx: Context, turnedOn: Boolean) {
@@ -39,7 +40,7 @@ object Haptics {
         return when (nm.currentInterruptionFilter) {
             NotificationManager.INTERRUPTION_FILTER_NONE -> false
             NotificationManager.INTERRUPTION_FILTER_PRIORITY ->
-                nm.notificationPolicy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_ALARMS != 0
+                nm.consolidatedNotificationPolicy.priorityCategories and NotificationManager.Policy.PRIORITY_CATEGORY_ALARMS != 0
             else -> true
         }
     }
