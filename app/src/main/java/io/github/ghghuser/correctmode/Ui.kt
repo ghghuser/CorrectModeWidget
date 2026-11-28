@@ -395,7 +395,7 @@ object Flow {
         }
     }
 
-    /** "5", "90" = minutes, "1:30" = 1 h 30 min. null = not a usable number (1 minute .. 24 hours). */
+    /** "5", "90" = minutes, "1:30" = 1 h 30 min. null = not a usable number (1 minute .. 7 days). */
     fun parseMinutes(text: String): Int? {
         val t = text.trim()
         val m = if (':' in t) {
@@ -405,7 +405,7 @@ object Flow {
             if (parts.size != 2) return null
             h * 60 + mi
         } else t.toIntOrNull() ?: return null
-        return if (m in 1..1440) m else null
+        return if (m in 1..Dur.MAX_MINUTES) m else null
     }
 
     private fun ask(a: Activity, p: Profile, onDone: () -> Unit) {

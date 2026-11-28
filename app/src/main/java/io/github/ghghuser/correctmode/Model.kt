@@ -18,6 +18,8 @@ object Dnd {
 }
 
 object Dur {
+    /** longest time that can be typed in or kept: 7 days */
+    const val MAX_MINUTES = 10080
     const val ASK = -1
     const val NONE = 0
     /** at turn-on, ask for the date and time of the auto release (not saved) */
