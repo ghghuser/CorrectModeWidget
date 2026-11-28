@@ -74,6 +74,10 @@ object Store {
     fun tapOutcome(ctx: Context): Pair<Int, Long> = sp(ctx).getInt("tapOut", -1) to sp(ctx).getLong("tapOutMs", 0L)
     fun setTapOutcome(ctx: Context, code: Int, ms: Long) { sp(ctx).edit().putInt("tapOut", code).putLong("tapOutMs", ms).apply() }
 
+    /** Diagnostics: the usage of the last tap vibration ("alarm" / "touch"), null = none yet. */
+    fun lastTick(ctx: Context): String? = sp(ctx).getString("lastTick", null)
+    fun setLastTick(ctx: Context, usage: String) { sp(ctx).edit().putString("lastTick", usage).apply() }
+
     /** Until this time (wall clock) the widget buttons are drawn greyed: a tap is being handled / ignored. */
     fun busyUntil(ctx: Context): Long = sp(ctx).getLong("busyUntil", 0L)
     fun setBusyUntil(ctx: Context, t: Long) { sp(ctx).edit().putLong("busyUntil", t).apply() }

@@ -381,6 +381,15 @@
     <string name="wiz_tap_vibe">ウィジェットタップで切替時に振動</string>
     <string name="wiz_vib_need">「バイブレーションとハプティクス」の有効化が必要です。</string>
     <string name="wiz_open_settings">端末設定を開く</string>
+    <string name="vibs_on">オン</string>
+    <string name="vibs_off">オフ</string>
+    <string name="vibs_unknown">不明</string>
+    <string name="wiz_vib_ring">着信時のバイブレーション: %1$s</string>
+    <string name="wiz_vib_alarm">アラームのバイブレーション: %1$s</string>
+    <string name="wiz_vib_touch">タッチフィードバック: %1$s</string>
+    <string name="wiz_vib_ok">設定は十分</string>
+    <string name="diag_vib_switches">振動スイッチの読み取り: 着信 %1$s / アラーム %2$s / タッチ %3$s</string>
+    <string name="diag_vib_last">直近のタップ振動: 用途 %1$s</string>
     <string name="wiz_settings_failed">端末設定を開けませんでした。</string>
     <string name="wiz_bt_yes">はい</string>
     <string name="wiz_bt_no">いいえ</string>
