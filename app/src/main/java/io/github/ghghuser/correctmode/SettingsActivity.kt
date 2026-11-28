@@ -192,6 +192,9 @@ class SettingsActivity : Activity() {
         card.addView(Ui.text(this, s(R.string.diag_version, BuildConfig.VERSION_NAME, BuildConfig.BUILD_NUMBER), 13f))
         val tapMs = Store.lastTapMs(this)
         if (tapMs >= 0) card.addView(Ui.text(this, s(R.string.diag_tap_ms, tapMs), 13f, secondary = true))
+        card.addView(Ui.text(this, s(R.string.diag_vib_switches, VibSettings.label(this, VibSettings.ring(this)),
+            VibSettings.label(this, VibSettings.alarm(this)), VibSettings.label(this, VibSettings.touch(this))), 13f, secondary = true))
+        Store.lastTick(this)?.let { card.addView(Ui.text(this, s(R.string.diag_vib_last, it), 13f, secondary = true)) }
         val (outCode, outMs) = Store.tapOutcome(this)
         when (outCode) {
             0 -> card.addView(Ui.text(this, s(R.string.diag_tap_handled), 13f, secondary = true))

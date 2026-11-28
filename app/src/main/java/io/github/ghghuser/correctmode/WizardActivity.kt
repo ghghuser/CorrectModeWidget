@@ -269,6 +269,12 @@ class WizardActivity : Activity() {
         return l.joinToString(", ")
     }
 
+    /** Back from the phone settings (opened by the vibration question): the switches may have changed, so the question is drawn again. */
+    override fun onResume() {
+        super.onResume()
+        if (page == P_VIB && ::body.isInitialized) render()
+    }
+
     private fun render() {
         body.removeAllViews()
         stepText.text = if (page == P_DONE) s(R.string.wiz_done_head) else {
@@ -308,12 +314,21 @@ class WizardActivity : Activity() {
             text = s(R.string.wiz_tap_vibe); isChecked = tapVibe
             setOnCheckedChangeListener { _, v -> tapVibe = v; render() }
         }, Ui.lp().apply { topMargin = dp(GAP_DP * 2) })
-        val needSetting = vib == YES || vib == DEPENDS || tapVibe
-        val between: View? = if (!needSetting) null else Ui.vbox(this).apply {
-            addView(small(s(R.string.wiz_vib_need)), Ui.lp())
-            addView(Ui.button(this@WizardActivity, s(R.string.wiz_open_settings)) { openVibrationSettings() }, Ui.lp().apply { topMargin = dp(GAP_DP) })
+        // only the switches this answer depends on: ring vibration for a vibrating call, alarm / touch for the tick
+        val needed = ArrayList<Pair<Int, VibSettings.State>>()
+        if (vib == YES || vib == DEPENDS) needed.add(R.string.wiz_vib_ring to VibSettings.ring(this))
+        if (tapVibe) needed.add(R.string.wiz_vib_alarm to VibSettings.alarm(this)) // the tick uses no touch switch
+        if (needed.isNotEmpty()) {
+            val allOn = needed.all { it.second == VibSettings.State.ON }
+            body.addView(Ui.vbox(this).apply {
+                for ((res, st) in needed) addView(small(s(res, VibSettings.label(this@WizardActivity, st))), Ui.lp())
+                if (allOn) addView(small(s(R.string.wiz_vib_ok)), Ui.lp())
+                else {
+                    addView(small(s(R.string.wiz_vib_need)), Ui.lp())
+                    addView(Ui.button(this@WizardActivity, s(R.string.wiz_open_settings)) { openVibrationSettings() }, Ui.lp().apply { topMargin = dp(GAP_DP) })
+                }
+            }, Ui.lp())
         }
-        if (between != null) body.addView(between, Ui.lp())
         nav(vib != UNSET) { go(after(P_VIB)) }
     }
 
