@@ -617,7 +617,8 @@ class WizardActivity : Activity() {
             val chips = Ui.chipsView(this, m.p)
             col.addView(android.widget.HorizontalScrollView(this).apply {
                 isHorizontalScrollBarEnabled = false
-                addView(chips, ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+                isFillViewport = true // the chip row is as wide as the column: the empty part right of the last chip takes the tap too
+                addView(chips, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
             })
             col.addView(Ui.text(this, Describe.summary(this, m.p), 12f, secondary = true))
             val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, m.p.duration), Ui.timerLabel(this, m.p)).joinToString("  ")
