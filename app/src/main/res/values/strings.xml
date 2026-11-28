@@ -229,7 +229,7 @@
     <string name="duration_free">Enter freely…</string>
     <string name="duration_free_title">Time until auto release</string>
     <string name="duration_free_hint">minutes (e.g. 90) or h:mm (e.g. 1:30)</string>
-    <string name="duration_free_bad">Enter 1 minute to 24 hours (e.g. 90 / 1:30).</string>
+    <string name="duration_free_bad">Enter 1 minute to 7 days (10080 minutes) (e.g. 90 / 1:30).</string>
     <string name="recent_delete_hint">Long press: delete from history</string>
     <string name="recent_delete_confirm">Delete from history: %1$s</string>
     <string name="start_free_title">Time until turn-on</string>
@@ -296,10 +296,6 @@
     <string name="margin_right">Right %1$d dp</string>
     <string name="time_dialog_title">Change times</string>
     <string name="time_action">Time</string>
-    <string name="time_release_in">Release in (from now)</string>
-    <string name="time_minutes_hint">Minutes (1-10080)</string>
-    <string name="time_minutes_bad">Enter 1 to 10080 minutes</string>
-    <string name="time_next_start">Next automatic start (daily at this time, chosen days)</string>
     <string name="time_sched_off">Automatic start is off</string>
     <string name="time_set_start">Set start time and turn auto start on</string>
     <string name="time_saved">Start time saved</string>

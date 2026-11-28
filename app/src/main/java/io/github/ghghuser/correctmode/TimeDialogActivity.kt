@@ -4,9 +4,6 @@ import android.app.Activity
 import android.app.TimePickerDialog
 import android.content.Context
 import android.os.Bundle
-import android.text.InputType
-import android.widget.EditText
-import android.widget.LinearLayout
 import java.text.DateFormat
 import java.util.Date
 
@@ -32,31 +29,21 @@ class TimeDialogActivity : Activity() {
         root.addView(Ui.text(this, getString(R.string.time_dialog_title), 17f, bold = true))
         val now = System.currentTimeMillis()
 
-        // 1) time until release
+        // 1) release: the same rows as everywhere else (TimeChooser). The time is counted from now.
         root.addView(Ui.text(this, p.titlePrefix() + p.name, 15f, bold = true))
         root.addView(Ui.text(this, if (st.expiresAt > 0) Ui.untilText(this, st.expiresAt) else getString(R.string.no_limit), 13f, secondary = true))
-        root.addView(Ui.text(this, getString(R.string.time_release_in), 13f).apply { setPadding(0, dp(8), 0, 0) })
-        val presets = Ui.hbox(this)
-        for (m in intArrayOf(15, 30, 60, 120)) {
-            presets.addView(Ui.button(this, if (m < 60) "${m}m" else "${m / 60}h") { setExpiry(System.currentTimeMillis() + m * 60_000L) }, Ui.lp(0, weight = 1f))
+        root.addView(Ui.text(this, getString(R.string.duration_label), 16f, bold = true).apply { setPadding(0, dp(12), 0, dp(4)) })
+        TimeChooser.rows(this, root, TimeChooser.Kind.RELEASE, null, false, onCancel = {}, onRefresh = { recreate() }) { code ->
+            when (code) {
+                Dur.NONE -> setExpiry(0L)
+                Dur.ASK_TIME -> Flow.pickTimeAt(this, {}) { setExpiry(it) }
+                Dur.ASK_DATETIME -> Flow.pickDateTimeAt(this, {}) { setExpiry(it) }
+                else -> setExpiry(System.currentTimeMillis() + code * 60_000L)
+            }
         }
-        root.addView(presets)
-        val custom = Ui.hbox(this)
-        val minutes = EditText(this).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER; hint = getString(R.string.time_minutes_hint)
-            filters = arrayOf(android.text.InputFilter.LengthFilter(5))
-        }
-        custom.addView(minutes, Ui.lp(0, weight = 1f))
-        custom.addView(Ui.button(this, getString(R.string.decide)) {
-            val m = minutes.text.toString().toIntOrNull()
-            if (m == null || m < 1 || m > 10080) Ui.toast(this, getString(R.string.time_minutes_bad))
-            else setExpiry(System.currentTimeMillis() + m * 60_000L)
-        })
-        root.addView(custom)
-        root.addView(Ui.button(this, getString(R.string.no_limit)) { setExpiry(0L) })
 
-        // 2) next automatic start (time of day, kept for this profile)
-        root.addView(Ui.text(this, getString(R.string.time_next_start), 13f).apply { setPadding(0, dp(12), 0, 0) })
+        // 2) the timer that turns the profile on by itself
+        root.addView(Ui.text(this, getString(R.string.sched_title), 16f, bold = true).apply { setPadding(0, dp(16), 0, dp(4)) })
         val next = if (p.schedOn) Schedules.nextStart(p, now) else null
         root.addView(Ui.text(this, if (next != null) java.text.DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(next)) else getString(R.string.time_sched_off), 13f, secondary = true))
         root.addView(Ui.button(this, getString(R.string.time_set_start)) {
