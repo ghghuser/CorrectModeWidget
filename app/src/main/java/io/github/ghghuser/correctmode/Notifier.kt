@@ -118,7 +118,10 @@ object Notifier {
         val c = Loc.wrap(ctx)
         // DEFAULT (not MIN / LOW): the notification sits in the top section, right under the quick settings tiles.
         // It stays silent: no sound, no vibration, no light (set below), and it only alerts once.
-        val active = NotificationChannel(CH_ACTIVE, c.getString(R.string.channel_active), NotificationManager.IMPORTANCE_DEFAULT)
+        // a user who had switched the old channel off keeps it off (importance can only be chosen when the channel is created)
+        val oldOff = nm(ctx).getNotificationChannel(CH_ACTIVE_OLD)?.importance == NotificationManager.IMPORTANCE_NONE
+        val active = NotificationChannel(CH_ACTIVE, c.getString(R.string.channel_active),
+            if (oldOff) NotificationManager.IMPORTANCE_NONE else NotificationManager.IMPORTANCE_DEFAULT)
         val info = NotificationChannel(CH_INFO, c.getString(R.string.channel_info), NotificationManager.IMPORTANCE_LOW)
         for (ch in listOf(active, info)) {
             ch.setSound(null, null)
