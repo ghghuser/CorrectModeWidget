@@ -26,7 +26,7 @@ object Haptics {
             val alarm = alarmChannelOpen(ctx)
             val usage = if (alarm) AudioAttributes.USAGE_ALARM else AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY
             v.vibrate(effect, AudioAttributes.Builder().setUsage(usage).build())
-            Store.setLastTick(ctx, if (alarm) "alarm" else "touch")
+            Store.setLastTick(ctx, if (alarm) "alarm" else "accessibility")
         } catch (e: Exception) {
             // no vibrator / not allowed: nothing to report
         }

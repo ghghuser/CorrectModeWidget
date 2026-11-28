@@ -269,6 +269,12 @@ class WizardActivity : Activity() {
         return l.joinToString(", ")
     }
 
+    /** Back from the phone settings (opened by the vibration question): the switches may have changed, so the question is drawn again. */
+    override fun onResume() {
+        super.onResume()
+        if (page == P_VIB && ::body.isInitialized) render()
+    }
+
     private fun render() {
         body.removeAllViews()
         stepText.text = if (page == P_DONE) s(R.string.wiz_done_head) else {

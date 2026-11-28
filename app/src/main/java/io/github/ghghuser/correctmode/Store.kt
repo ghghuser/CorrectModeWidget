@@ -74,7 +74,7 @@ object Store {
     fun tapOutcome(ctx: Context): Pair<Int, Long> = sp(ctx).getInt("tapOut", -1) to sp(ctx).getLong("tapOutMs", 0L)
     fun setTapOutcome(ctx: Context, code: Int, ms: Long) { sp(ctx).edit().putInt("tapOut", code).putLong("tapOutMs", ms).apply() }
 
-    /** Diagnostics: the usage of the last tap vibration ("alarm" / "touch"), null = none yet. */
+    /** Diagnostics: the usage of the last tap vibration ("alarm" / "accessibility"), null = none yet. */
     fun lastTick(ctx: Context): String? = sp(ctx).getString("lastTick", null)
     fun setLastTick(ctx: Context, usage: String) { sp(ctx).edit().putString("lastTick", usage).apply() }
 
