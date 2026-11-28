@@ -17,8 +17,6 @@ object TimeChooser {
 
     private val FIXED = listOf(30, 60, 120)
 
-    private fun recentKey(k: Kind) = if (k == Kind.START) Store.RECENT_START else Store.RECENT_RELEASE
-
     /** the saved-setting label (edit screen, "every time ...") */
     fun label(a: Activity, k: Kind, code: Int): String =
         if (k == Kind.START) Ui.startLabel(a, code) else Ui.durationLabel(a, code)
@@ -31,10 +29,11 @@ object TimeChooser {
      * "ask every time" and uses the "every time" labels for the time rows). [onRefresh] redraws after a history delete.
      */
     fun rows(a: Activity, box: LinearLayout, k: Kind, current: Int?, withAsk: Boolean, onCancel: () -> Unit, onRefresh: () -> Unit, onPick: (Int) -> Unit) {
+        if (current != null) box.addView(Ui.text(a, Loc.str(a, R.string.current_mark_hint), 11f, secondary = true))
         fun mark(code: Int, text: String) = if (current == code) "✓ $text" else text
         fun row(code: Int, text: String, remember: Boolean = false, tap: (() -> Unit)? = null) {
             box.addView(Ui.button(a, mark(code, text)) {
-                if (remember) Store.addRecent(a, recentKey(k), code)
+                if (remember) Store.addRecent(a, Store.RECENT, code)
                 if (tap != null) tap() else onPick(code)
             })
         }
@@ -42,7 +41,7 @@ object TimeChooser {
         row(Dur.NONE, label(a, k, Dur.NONE))
 
         // history: typed-in lengths (the fixed ones are not stored), long press = delete
-        val key = recentKey(k)
+        val key = Store.RECENT
         val hist = Store.recent(a, key).filter { it !in FIXED }
         val extra = if (withAsk && current != null && current > 0 && current !in FIXED && current !in hist) listOf(current) else emptyList()
         for (m in extra + hist) {
