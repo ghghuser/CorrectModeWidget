@@ -39,10 +39,14 @@ object Store {
      * [key]: [RECENT_RELEASE] (auto release) or [RECENT_START] (turn on later), each with its own list.
      */
     fun recent(ctx: Context, key: String): List<Int> =
-        (sp(ctx).getString(key, "") ?: "").split(',').mapNotNull { it.toIntOrNull() }.filter { it in 1..1440 }.distinct().take(RECENT_MAX)
+        (sp(ctx).getString(key, "") ?: "").split(',').mapNotNull { it.toIntOrNull() }
+            .filter { it in 1..1440 && it !in FIXED_ROWS }.distinct().take(RECENT_MAX)
+
+    /** The lengths that already have a fixed row in the dialogs: they are not kept in the history (it would hide them there). */
+    private val FIXED_ROWS = setOf(30, 60, 120)
 
     fun addRecent(ctx: Context, key: String, minutes: Int) {
-        if (minutes !in 1..1440) return
+        if (minutes !in 1..1440 || minutes in FIXED_ROWS) return
         saveRecent(ctx, key, listOf(minutes) + recent(ctx, key).filter { it != minutes })
     }
 
