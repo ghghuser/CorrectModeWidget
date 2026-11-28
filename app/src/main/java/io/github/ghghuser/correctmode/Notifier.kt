@@ -103,7 +103,9 @@ object Scheduler {
  * make a noise while a quiet profile is on.
  */
 object Notifier {
-    private const val CH_ACTIVE = "active"
+    /** Not "active": a channel keeps the importance it was created with, so the raised one needs a new id. */
+    private const val CH_ACTIVE = "active2"
+    private const val CH_ACTIVE_OLD = "active"
     private const val CH_INFO = "info"
     private const val ID_ACTIVE = 1
     private const val ID_INFO = 2
@@ -114,7 +116,12 @@ object Notifier {
 
     private fun ensureChannels(ctx: Context) {
         val c = Loc.wrap(ctx)
-        val active = NotificationChannel(CH_ACTIVE, c.getString(R.string.channel_active), NotificationManager.IMPORTANCE_MIN)
+        // DEFAULT (not MIN / LOW): the notification sits in the top section, right under the quick settings tiles.
+        // It stays silent: no sound, no vibration, no light (set below), and it only alerts once.
+        // a user who had switched the old channel off keeps it off (importance can only be chosen when the channel is created)
+        val oldOff = nm(ctx).getNotificationChannel(CH_ACTIVE_OLD)?.importance == NotificationManager.IMPORTANCE_NONE
+        val active = NotificationChannel(CH_ACTIVE, c.getString(R.string.channel_active),
+            if (oldOff) NotificationManager.IMPORTANCE_NONE else NotificationManager.IMPORTANCE_DEFAULT)
         val info = NotificationChannel(CH_INFO, c.getString(R.string.channel_info), NotificationManager.IMPORTANCE_LOW)
         for (ch in listOf(active, info)) {
             ch.setSound(null, null)
@@ -123,6 +130,7 @@ object Notifier {
             ch.setShowBadge(false)
         }
         nm(ctx).createNotificationChannels(listOf(active, info))
+        nm(ctx).deleteNotificationChannel(CH_ACTIVE_OLD) // the old low channel (no-op when it does not exist)
     }
 
     private fun openApp(ctx: Context): PendingIntent = PendingIntent.getActivity(

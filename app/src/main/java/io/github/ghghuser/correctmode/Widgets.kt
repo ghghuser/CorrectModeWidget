@@ -75,6 +75,9 @@ object Widgets {
     /** Which sides of a button are the OUTER sides of its widget (only those get the outer margin in a joined set). */
     class Edges(val left: Boolean, val top: Boolean, val right: Boolean, val bottom: Boolean)
 
+    /** How much of the normal look stays visible while a button is faded (busy / another one is on). */
+    private const val FADE_PERCENT = 35
+
     private fun withAlpha(color: Int, percent: Int): Int =
         if (percent >= 100) color else (((color ushr 24) * percent / 100) shl 24) or (color and 0xFFFFFF)
 
@@ -104,19 +107,18 @@ object Widgets {
         val dp = ctx.resources.displayMetrics.density
         val bg0 = if (active) pair(p.bgOn, BG_ON) else pair(p.bgOff, BG_OFF)
         val a = if (active) p.bgOnA else p.bgOffA
-        // greyed while the app is busy with the last tap, or (switch widget) while another button is on:
-        // the colours turn grey but the opacity setting of the background is kept
+        // faded while the app is busy with the last tap, or (switch widget) while another button is on:
+        // the normal look at a strong transparency ([FADE_PERCENT]), not a grey colour
         val grey = dim || (tap != null && System.currentTimeMillis() < Store.busyUntil(ctx))
         // opaque colour + image alpha: a translucent colour filter would only be blended with the white shape (stays opaque)
-        val bg = if (grey) 0xFF8A8A8A.toInt() to 0xFF8A8A8A.toInt()
-            else (bg0.first or 0xFF000000.toInt()) to (bg0.second or 0xFF000000.toInt())
-        val fg = if (grey) 0xFFB0B0B0.toInt() to 0xFFB0B0B0.toInt()
-            else if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
+        val bg = (bg0.first or 0xFF000000.toInt()) to (bg0.second or 0xFF000000.toInt())
+        val fg0 = if (active) pair(p.fgOn, FG_ON) else pair(p.fgOff, FG_OFF)
+        val fg = if (grey) withAlpha(fg0.first, FADE_PERCENT) to withAlpha(fg0.second, FADE_PERCENT) else fg0
         // "no background": the button area stays tappable, only the coloured shape is not drawn
         rv.setViewVisibility(R.id.item_bg, if (noBg || a == 0 || (if (active) p.bgOn else p.bgOff) == ColorMark.TRANSPARENT) View.GONE else View.VISIBLE)
         rv.setImageViewResource(R.id.item_bg, joinShape ?: shapeRes(p.shape))
         rv.setColorInt(R.id.item_bg, "setColorFilter", bg.first, bg.second)
-        rv.setInt(R.id.item_bg, "setImageAlpha", (a * 255 / 100).coerceIn(0, 255))
+        rv.setInt(R.id.item_bg, "setImageAlpha", ((if (grey) a * FADE_PERCENT / 100 else a) * 255 / 100).coerceIn(0, 255))
         // margins: the profile's own, the same small one for every button of a list (otherwise it looks ragged), or none
         val mL = when (margins) { Margins.OWN -> p.mL; Margins.LIST -> LIST_MARGIN; else -> 0 }
         val mT = when (margins) { Margins.OWN -> p.mT; Margins.LIST -> LIST_MARGIN; else -> 0 }
@@ -154,10 +156,10 @@ object Widgets {
             rv.setImageViewBitmap(R.id.item_image, bmp)
         } else if (iconRes != null) {
             rv.setImageViewResource(R.id.item_icon, iconRes)
-            rv.setColorInt(R.id.item_icon, "setColorFilter", fg.first, fg.second)
+            rv.setColorInt(R.id.item_icon, "setColorFilter", fg0.first, fg0.second) // the fade comes from the image alpha below
         } else {
             rv.setTextViewText(R.id.item_emoji, if (useOn) p.emojiOn else p.emoji)
-            rv.setColorInt(R.id.item_emoji, "setTextColor", fg.first, fg.second)
+            rv.setColorInt(R.id.item_emoji, "setTextColor", fg0.first, fg0.second) // the fade comes from the view alpha below
         }
         rv.setViewVisibility(R.id.item_label, if (p.showLabel) View.VISIBLE else View.GONE)
         rv.setTextViewText(R.id.item_label, p.name)
@@ -169,8 +171,9 @@ object Widgets {
 
         val state = Loc.str(ctx, if (active) R.string.state_on else R.string.state_off)
         rv.setFloat(R.id.item_root, "setAlpha", 1f)
-        rv.setFloat(R.id.item_emoji, "setAlpha", if (grey) 0.4f else 1f) // colour emojis ignore the text colour
-        rv.setInt(R.id.item_image, "setImageAlpha", if (grey) 110 else 255)
+        rv.setFloat(R.id.item_emoji, "setAlpha", if (grey) FADE_PERCENT / 100f else 1f) // colour emojis ignore the text colour
+        rv.setInt(R.id.item_image, "setImageAlpha", if (grey) FADE_PERCENT * 255 / 100 else 255)
+        rv.setInt(R.id.item_icon, "setImageAlpha", if (grey) FADE_PERCENT * 255 / 100 else 255)
         // a warning mark while the last problem (changed from outside, release failed ...) is still not cleared
         rv.setViewVisibility(R.id.item_warn, if (tap != null && Store.lastError(ctx) != null) View.VISIBLE else View.GONE)
         rv.setContentDescription(R.id.item_root, p.name + ": " + state)

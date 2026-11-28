@@ -34,16 +34,30 @@ object Store {
     fun releaseFailures(ctx: Context): Int = sp(ctx).getInt("relFail", 0)
     fun setReleaseFailures(ctx: Context, n: Int) { sp(ctx).edit().putInt("relFail", n).commit() }
 
-    /** The lengths (minutes, newest first, at most [RECENT_MAX]) typed into "Enter freely" for the auto release; shown at the top of that dialog. */
-    fun recentDurations(ctx: Context): List<Int> =
-        (sp(ctx).getString("recentDur", "") ?: "").split(',').mapNotNull { it.toIntOrNull() }.filter { it in 1..1440 }.distinct().take(RECENT_MAX)
+    /**
+     * The lengths (minutes, newest first, at most [RECENT_MAX]) typed into "Enter freely"; shown at the top of that dialog.
+     * [key]: [RECENT_RELEASE] (auto release) or [RECENT_START] (turn on later), each with its own list.
+     */
+    fun recent(ctx: Context, key: String): List<Int> =
+        (sp(ctx).getString(key, "") ?: "").split(',').mapNotNull { it.toIntOrNull() }
+            .filter { it in 1..1440 && it !in FIXED_ROWS }.distinct().take(RECENT_MAX)
 
-    fun addRecentDuration(ctx: Context, minutes: Int) {
-        if (minutes !in 1..1440) return
-        val list = (listOf(minutes) + recentDurations(ctx).filter { it != minutes }).take(RECENT_MAX)
-        sp(ctx).edit().putString("recentDur", list.joinToString(",")).apply()
+    /** The lengths that already have a fixed row in the dialogs: they are not kept in the history (it would hide them there). */
+    private val FIXED_ROWS = setOf(30, 60, 120)
+
+    fun addRecent(ctx: Context, key: String, minutes: Int) {
+        if (minutes !in 1..1440 || minutes in FIXED_ROWS) return
+        saveRecent(ctx, key, listOf(minutes) + recent(ctx, key).filter { it != minutes })
     }
 
+    fun removeRecent(ctx: Context, key: String, minutes: Int) = saveRecent(ctx, key, recent(ctx, key).filter { it != minutes })
+
+    private fun saveRecent(ctx: Context, key: String, list: List<Int>) {
+        sp(ctx).edit().putString(key, list.take(RECENT_MAX).joinToString(",")).apply()
+    }
+
+    const val RECENT_RELEASE = "recentDur"
+    const val RECENT_START = "recentStart"
     const val RECENT_MAX = 5
 
     /** Diagnostics: how long the last widget tap took inside the app (ms), see TapActivity. */

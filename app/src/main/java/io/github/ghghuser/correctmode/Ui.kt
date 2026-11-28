@@ -169,6 +169,29 @@ object Ui {
         return row
     }
 
+    /** The profile's own icon (picture, built-in icon or emoji, in that order) at the size of 15 sp text, for list rows. */
+    fun profileIcon(ctx: Context, p: Profile, sp: Float = 15f, marginStartDp: Int = 0): View {
+        val px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp * 1.25f, ctx.resources.displayMetrics).roundToInt()
+        val bmp = p.imageFile?.let { android.graphics.BitmapFactory.decodeFile(Store.imageFile(ctx, it).path) }
+        val res = FlatIcons.res(p.iconKey)
+        return when {
+            // a fixed size: a saved picture must not keep its own (larger) size and push the name out of the row
+            bmp != null -> android.widget.ImageView(ctx).apply {
+                setImageBitmap(bmp); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                layoutParams = LinearLayout.LayoutParams(px, px).apply { marginStart = ctx.dp(marginStartDp) }
+            }
+            res != null -> android.widget.ImageView(ctx).apply {
+                setImageResource(res); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                setColorFilter(text(ctx, "", sp).currentTextColor)
+                layoutParams = LinearLayout.LayoutParams(px, px).apply { marginStart = ctx.dp(marginStartDp) }
+            }
+            else -> text(ctx, p.emoji, sp).apply {
+                gravity = Gravity.CENTER
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginStart = ctx.dp(marginStartDp) }
+            }
+        }
+    }
+
     /** Boxes side by side (emoji above the label); the chosen one is outlined. */
     fun boxChoice(ctx: Context, items: List<Pair<String, String>>, current: Int, onPick: (Int) -> Unit): LinearLayout {
         val row = hbox(ctx)
@@ -366,7 +389,16 @@ object Flow {
         var dialog: AlertDialog? = null
         fun row(label: String, onClick: () -> Unit) { box.addView(Ui.button(a, label) { dialog?.dismiss(); onClick() }) }
         row(Loc.str(a, R.string.start_now)) { onPick(0L) }
+        addRecentRows(a, box, Store.RECENT_START, setOf(30, 60, 120), { Ui.startLabel(a, it) },
+            { m -> dialog?.dismiss(); onPick(System.currentTimeMillis() + m * 60_000L) }) { dialog?.dismiss(); askStart(a, onDone, onPick) }
         for (m in listOf(30, 60, 120)) row(Ui.startLabel(a, m)) { onPick(System.currentTimeMillis() + m * 60_000L) }
+        row(Loc.str(a, R.string.duration_free)) {
+            Ui.promptText(a, Loc.str(a, R.string.start_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
+                val m = parseMinutes(text)
+                if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
+                else { Store.addRecent(a, Store.RECENT_START, m); onPick(System.currentTimeMillis() + m * 60_000L) }
+            }
+        }
         row(Loc.str(a, R.string.duration_time)) { pickTimeAt(a, onDone, onPick = onPick) }
         row(Loc.str(a, R.string.duration_datetime_row)) { pickDateTimeAt(a, onDone, onPick = onPick) }
         dialog = AlertDialog.Builder(a)
@@ -387,6 +419,30 @@ object Flow {
             h * 60 + mi
         } else t.toIntOrNull() ?: return null
         return if (m in 1..1440) m else null
+    }
+
+    /**
+     * Rows for the lengths typed in before (newest first). A tap picks one, a long press asks to delete it from the history
+     * ([onChanged] then shows the dialog again). [skip] = lengths that already have a fixed row.
+     */
+    private fun addRecentRows(
+        a: Activity, box: LinearLayout, key: String, skip: Set<Int>, label: (Int) -> String,
+        onPick: (Int) -> Unit, onChanged: () -> Unit,
+    ) {
+        val list = Store.recent(a, key).filter { it !in skip }
+        for (m in list) {
+            box.addView(Ui.button(a, label(m)) { Store.addRecent(a, key, m); onPick(m) }.apply {
+                setOnLongClickListener {
+                    AlertDialog.Builder(a)
+                        .setMessage(Loc.str(a, R.string.recent_delete_confirm, label(m)))
+                        .setPositiveButton(android.R.string.ok) { _, _ -> Store.removeRecent(a, key, m); onChanged() }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                    true
+                }
+            })
+        }
+        if (list.isNotEmpty()) box.addView(Ui.text(a, Loc.str(a, R.string.recent_delete_hint), 11f, secondary = true))
     }
 
     private fun ask(a: Activity, p: Profile, onDone: () -> Unit) {
@@ -415,8 +471,8 @@ object Flow {
             box.addView(Ui.button(a, label) { onClick() })
         }
         // lengths typed in before (newest first, at most 5): the ones that are not already a fixed row below come first
-        for (m in Store.recentDurations(a).filter { it != 30 && it != 60 && it != 120 }) {
-            row(Ui.durationLabel(a, m)) { Store.addRecentDuration(a, m); pickDuration(m) }
+        addRecentRows(a, box, Store.RECENT_RELEASE, setOf(30, 60, 120), { Ui.durationLabel(a, it) }, { pickDuration(it) }) {
+            dialog?.dismiss(); ask(a, p, onDone)
         }
         row(Ui.durationLabel(a, 30)) { pickDuration(30) }
         row(Ui.durationLabel(a, 60)) { pickDuration(60) }
@@ -427,7 +483,7 @@ object Flow {
                 val m = parseMinutes(text)
                 if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
                 else {
-                    Store.addRecentDuration(a, m)
+                    Store.addRecent(a, Store.RECENT_RELEASE, m)
                     if (remember.isChecked) pickDuration(m) else go(a, p, rel(p, m), onDone)
                 }
             }

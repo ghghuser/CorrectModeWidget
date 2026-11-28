@@ -230,6 +230,9 @@
     <string name="duration_free_title">Time until auto release</string>
     <string name="duration_free_hint">minutes (e.g. 90) or h:mm (e.g. 1:30)</string>
     <string name="duration_free_bad">Enter 1 minute to 24 hours (e.g. 90 / 1:30).</string>
+    <string name="recent_delete_hint">Long press: delete from history</string>
+    <string name="recent_delete_confirm">Delete from history: %1$s</string>
+    <string name="start_free_title">Time until turn-on</string>
     <string name="ask_dont_again">Do not ask again</string>
     <string name="ask_dont_again_confirm">From now on %1$s is used for the auto release and this question is not shown.\nYou can switch back to ask every time under Auto release in the profile editor. Continue?</string>
     <string name="ask_time_not_saved">A set time cannot be saved (used this once only).</string>

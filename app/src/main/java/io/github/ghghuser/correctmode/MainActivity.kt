@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 
 /** Main screen = the profiles (two tabs). Everything else lives behind the gear icon (SettingsActivity). */
@@ -213,12 +214,13 @@ class MainActivity : Activity() {
         // chips (its child) take the tap / long press (before, a tap on this row did nothing and the editor did not open).
         col.addView(android.widget.HorizontalScrollView(this).apply {
             isHorizontalScrollBarEnabled = false
+            isFillViewport = true // the chip row is as wide as the screen: the empty part right of the last chip takes the tap too
             addView(Ui.chipsView(this@MainActivity, p).apply {
                 // the chips take the touch (not col), so they need their own pressed state
                 setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener { edit(p) }
                 setOnLongClickListener { showMenu(p); true }
-            })
+            }, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         })
         col.addView(Ui.text(this, Describe.summary(this, p), 12f, secondary = true))
         val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, p.duration), Ui.timerLabel(this, p)).joinToString("  ")
