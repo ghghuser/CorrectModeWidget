@@ -5,10 +5,13 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.GradientDrawable
+import android.graphics.text.LineBreakConfig
 import android.os.Bundle
 import android.provider.Settings
+import android.text.Layout
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -45,7 +48,8 @@ class WizardActivity : Activity() {
         const val YES = 0; const val NO = 1; const val DEPENDS = 2
         const val MODE_CUSTOM = 0; const val MODE_NONE = 1; const val MODE_ALL = 2
         const val UNSET = -1
-        const val GAP_DP = 8
+        const val GAP_DP = 12
+        const val SIDE_DP = 18 // left / right padding of the card content (before: 28, which left the text a narrow column)
     }
 
     // answers
@@ -81,7 +85,7 @@ class WizardActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT) // fixed size
-        val root = Ui.vbox(this).apply { setPadding(dp(28), dp(24), dp(28), dp(20)) }
+        val root = Ui.vbox(this).apply { setPadding(dp(SIDE_DP), dp(24), dp(SIDE_DP), dp(20)) }
         stepText = Ui.text(this, "", 14f, secondary = true).apply { gravity = Gravity.CENTER }
         root.addView(stepText, Ui.lp())
         body = Ui.vbox(this)
@@ -169,10 +173,10 @@ class WizardActivity : Activity() {
     private fun choice(text: String, selected: Boolean, enabled: Boolean = true, onClick: () -> Unit): TextView =
         Ui.text(this, text, 15f, bold = selected).apply {
             gravity = Gravity.CENTER
-            minHeight = dp(48)
-            setPadding(dp(8), dp(10), dp(8), dp(10))
+            minHeight = dp(56)
+            setPadding(dp(16), dp(14), dp(16), dp(14))
             background = GradientDrawable().apply {
-                cornerRadius = dp(12).toFloat()
+                cornerRadius = dp(32).toFloat() // larger than half the height: a pill, also when the label takes two lines
                 if (selected) { setColor(0x331F6FEB); setStroke(dp(2), 0xFF1F6FEB.toInt()) } else setStroke(dp(1), 0x55808080)
             }
             isSelected = selected
@@ -293,6 +297,20 @@ class WizardActivity : Activity() {
             else -> renderDone()
         }
         addHistory()
+        phraseBreaks(body)
+    }
+
+    /**
+     * Line breaks between phrases (bunsetsu) instead of anywhere, with the lines of a text about equally long. Every text
+     * of the page gets it, so a larger / smaller system font size is handled by the same rule. Needs API 33 (minSdk is 34).
+     */
+    private fun phraseBreaks(v: View) {
+        if (v is TextView) {
+            v.breakStrategy = Layout.BREAK_STRATEGY_BALANCED
+            v.hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
+            v.setLineBreakConfig(LineBreakConfig.Builder().setLineBreakWordStyle(LineBreakConfig.LINE_BREAK_WORD_STYLE_PHRASE).build())
+        }
+        if (v is ViewGroup) for (i in 0 until v.childCount) phraseBreaks(v.getChildAt(i))
     }
 
     // ---- 1 / 2: ringer and vibration --------------------------------------------------------
@@ -587,20 +605,34 @@ class WizardActivity : Activity() {
             }
             m.p.name = name
             val box = Ui.card(this, active = selected).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
                 isSelected = selected
                 stateDescription = if (selected) s(R.string.selected_state) else null // read out by screen readers
             }
-            box.addView(Widgets.preview(this, m.p, false, 48), Ui.lp(dp(48), dp(48)).apply { gravity = Gravity.CENTER_HORIZONTAL })
-            box.addView(Ui.text(this, name, 15f, bold = true).apply { gravity = Gravity.CENTER; setPadding(0, dp(4), 0, 0) }, Ui.lp())
-            box.addView(Ui.chipsView(this, m.p, centered = true), Ui.lp())
-            box.addView(Ui.text(this, Describe.summary(this, m.p), 12f, secondary = true).apply { gravity = Gravity.CENTER }, Ui.lp())
+            // the same row as the profile list: icon on the left, then name / chips / summary / time lines (left aligned)
+            val row = Ui.hbox(this).apply { gravity = Gravity.TOP }
+            row.addView(Widgets.preview(this, m.p, selected, 60), Ui.lp(dp(60), dp(60)))
+            val col = Ui.vbox(this).apply { setPadding(dp(12), 0, 0, 0) }
+            col.addView(Ui.text(this, name, 16f, bold = true))
+            // scrolls sideways if the chips are wider than the row (large font); the chips (its child) take the tap
+            val chips = Ui.chipsView(this, m.p)
+            col.addView(android.widget.HorizontalScrollView(this).apply {
+                isHorizontalScrollBarEnabled = false
+                addView(chips, ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+            })
+            col.addView(Ui.text(this, Describe.summary(this, m.p), 12f, secondary = true))
+            val extra = listOfNotNull(s(R.string.duration_label) + ": " + Ui.durationLabel(this, m.p.duration), Ui.timerLabel(this, m.p)).joinToString("  ")
+            col.addView(Ui.text(this, extra, 12f, secondary = true))
+            row.addView(col, Ui.lp(0, weight = 1f))
+            box.addView(row)
             if (!isNew) {
-                box.addView(Ui.text(this, s(R.string.wiz_exists), 12f, bold = true).apply { gravity = Gravity.CENTER }, Ui.lp())
+                box.addView(Ui.text(this, s(R.string.wiz_exists), 12f, bold = true).apply { setPadding(0, dp(GAP_DP / 2), 0, 0) }, Ui.lp())
                 box.alpha = 0.6f
             } else {
+                val toggle = View.OnClickListener { if (i in picked) picked.remove(i) else picked.add(i); render() }
                 box.isClickable = true
-                box.setOnClickListener { if (i in picked) picked.remove(i) else picked.add(i); render() }
+                box.setOnClickListener(toggle)
+                chips.setOnClickListener(toggle) // inside the scroll view, which does not pass the tap on
+                chips.setOnLongClickListener { rename(i, name); true }
             }
             box.setOnLongClickListener { rename(i, name); true }
             body.addView(box, Ui.lp().apply { topMargin = dp(GAP_DP) })
