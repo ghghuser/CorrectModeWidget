@@ -385,27 +385,14 @@ object Flow {
     }
 
     private fun askStart(a: Activity, onDone: () -> Unit, onPick: (Long) -> Unit) {
-        val box = Ui.vbox(a).apply { setPadding(a.dp(16), a.dp(8), a.dp(16), 0) }
-        var dialog: AlertDialog? = null
-        fun row(label: String, onClick: () -> Unit) { box.addView(Ui.button(a, label) { dialog?.dismiss(); onClick() }) }
-        row(Loc.str(a, R.string.start_now)) { onPick(0L) }
-        addRecentRows(a, box, Store.RECENT_START, setOf(30, 60, 120), { Ui.startLabel(a, it) },
-            { m -> dialog?.dismiss(); onPick(System.currentTimeMillis() + m * 60_000L) }) { dialog?.dismiss(); askStart(a, onDone, onPick) }
-        for (m in listOf(30, 60, 120)) row(Ui.startLabel(a, m)) { onPick(System.currentTimeMillis() + m * 60_000L) }
-        row(Loc.str(a, R.string.duration_free)) {
-            Ui.promptText(a, Loc.str(a, R.string.start_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
-                val m = parseMinutes(text)
-                if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
-                else { Store.addRecent(a, Store.RECENT_START, m); onPick(System.currentTimeMillis() + m * 60_000L) }
+        TimeChooser.show(a, Loc.str(a, R.string.start_ask_title), TimeChooser.Kind.START, null, false, onCancel = onDone) { code ->
+            when (code) {
+                Dur.NONE -> onPick(0L)
+                Dur.ASK_TIME -> pickTimeAt(a, onDone, onPick = onPick)
+                Dur.ASK_DATETIME -> pickDateTimeAt(a, onDone, onPick = onPick)
+                else -> onPick(System.currentTimeMillis() + code * 60_000L)
             }
         }
-        row(Loc.str(a, R.string.duration_time)) { pickTimeAt(a, onDone, onPick = onPick) }
-        row(Loc.str(a, R.string.duration_datetime_row)) { pickDateTimeAt(a, onDone, onPick = onPick) }
-        dialog = AlertDialog.Builder(a)
-            .setTitle(Loc.str(a, R.string.start_ask_title))
-            .setView(android.widget.ScrollView(a).apply { addView(box) })
-            .setOnCancelListener { onDone() }
-            .show()
     }
 
     /** "5", "90" = minutes, "1:30" = 1 h 30 min. null = not a usable number (1 minute .. 24 hours). */
@@ -421,38 +408,11 @@ object Flow {
         return if (m in 1..1440) m else null
     }
 
-    /**
-     * Rows for the lengths typed in before (newest first). A tap picks one, a long press asks to delete it from the history
-     * ([onChanged] then shows the dialog again). [skip] = lengths that already have a fixed row.
-     */
-    private fun addRecentRows(
-        a: Activity, box: LinearLayout, key: String, skip: Set<Int>, label: (Int) -> String,
-        onPick: (Int) -> Unit, onChanged: () -> Unit,
-    ) {
-        val list = Store.recent(a, key).filter { it !in skip }
-        for (m in list) {
-            box.addView(Ui.button(a, label(m)) { Store.addRecent(a, key, m); onPick(m) }.apply {
-                setOnLongClickListener {
-                    AlertDialog.Builder(a)
-                        .setMessage(Loc.str(a, R.string.recent_delete_confirm, label(m)))
-                        .setPositiveButton(android.R.string.ok) { _, _ -> Store.removeRecent(a, key, m); onChanged() }
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .show()
-                    true
-                }
-            })
-        }
-        if (list.isNotEmpty()) box.addView(Ui.text(a, Loc.str(a, R.string.recent_delete_hint), 11f, secondary = true))
-    }
-
     private fun ask(a: Activity, p: Profile, onDone: () -> Unit) {
-        val box = Ui.vbox(a).apply { setPadding(a.dp(16), a.dp(8), a.dp(16), 0) }
-        var dialog: AlertDialog? = null
         val remember = android.widget.CheckBox(a).apply { text = Loc.str(a, R.string.ask_dont_again) }
 
         // a fixed length (minutes, 0 = no limit): with the tick, it is kept for next time after one more confirmation
         fun pickDuration(minutes: Int) {
-            dialog?.dismiss()
             if (!remember.isChecked) { go(a, p, if (minutes == 0) 0L else rel(p, minutes), onDone); return }
             val label = if (minutes == 0) Ui.durationLabel(a, Dur.NONE) else Ui.durationLabel(a, minutes)
             AlertDialog.Builder(a)
@@ -467,51 +427,30 @@ object Flow {
                 .show()
         }
 
-        fun row(label: String, onClick: () -> Unit) {
-            box.addView(Ui.button(a, label) { onClick() })
-        }
-        // lengths typed in before (newest first, at most 5): the ones that are not already a fixed row below come first
-        addRecentRows(a, box, Store.RECENT_RELEASE, setOf(30, 60, 120), { Ui.durationLabel(a, it) }, { pickDuration(it) }) {
-            dialog?.dismiss(); ask(a, p, onDone)
-        }
-        row(Ui.durationLabel(a, 30)) { pickDuration(30) }
-        row(Ui.durationLabel(a, 60)) { pickDuration(60) }
-        row(Ui.durationLabel(a, 120)) { pickDuration(120) }
-        row(Loc.str(a, R.string.duration_free)) {
-            dialog?.dismiss()
-            Ui.promptText(a, Loc.str(a, R.string.duration_free_title), Loc.str(a, R.string.duration_free_hint), "", 6, numeric = true, onCancel = { onDone() }) { text ->
-                val m = parseMinutes(text)
-                if (m == null) { Ui.toast(a, Loc.str(a, R.string.duration_free_bad), true); onDone() }
-                else {
-                    Store.addRecent(a, Store.RECENT_RELEASE, m)
-                    if (remember.isChecked) pickDuration(m) else go(a, p, rel(p, m), onDone)
+        TimeChooser.show(a, p.titlePrefix() + p.name, TimeChooser.Kind.RELEASE, null, false,
+            footer = { box ->
+                // bottom right: "do not ask again" (the dialog is built again after a history delete: take the tick out of the old one)
+                (remember.parent as? ViewGroup)?.removeView(remember)
+                box.addView(remember, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    gravity = Gravity.END; topMargin = a.dp(8)
+                })
+            },
+            onCancel = onDone,
+        ) { code ->
+            when (code) {
+                Dur.ASK_TIME, Dur.ASK_DATETIME -> {
+                    if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
+                    if (code == Dur.ASK_TIME) pickTime(a, p, onDone) else pickDateTime(a, p, onDone)
                 }
+                else -> pickDuration(code) // 0 = no limit, else minutes
             }
         }
-        row(Loc.str(a, R.string.duration_time)) {
-            if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
-            dialog?.dismiss(); pickTime(a, p, onDone)
-        }
-        row(Loc.str(a, R.string.duration_datetime_row)) {
-            if (remember.isChecked) Ui.toast(a, Loc.str(a, R.string.ask_time_not_saved), true)
-            dialog?.dismiss(); pickDateTime(a, p, onDone)
-        }
-        row(Ui.durationLabel(a, Dur.NONE)) { pickDuration(0) }
-        // bottom right: "do not ask again"
-        box.addView(remember, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
-            gravity = Gravity.END; topMargin = a.dp(8)
-        })
-        dialog = AlertDialog.Builder(a)
-            .setTitle(p.titlePrefix() + p.name)
-            .setView(android.widget.ScrollView(a).apply { addView(box) })
-            .setOnCancelListener { onDone() }
-            .show()
     }
 
     private fun pickTime(a: Activity, p: Profile, onDone: () -> Unit) = pickTimeAt(a, onDone, plannedStart[p.id]) { go(a, p, it, onDone) }
 
     /** [from] = the moment the picked time must come after (a release: the planned start); null = now */
-    private fun pickTimeAt(a: Activity, onDone: () -> Unit, from: Long? = null, onPick: (Long) -> Unit) {
+    fun pickTimeAt(a: Activity, onDone: () -> Unit, from: Long? = null, onPick: (Long) -> Unit) {
         val now = Calendar.getInstance().apply { if (from != null) timeInMillis = from }
         var chosen = false
         val dlg = TimePickerDialog(
@@ -543,7 +482,7 @@ object Flow {
     /** Date, then time of day: the auto release happens then. A date and time in the past is refused. */
     private fun pickDateTime(a: Activity, p: Profile, onDone: () -> Unit) = pickDateTimeAt(a, onDone, plannedStart[p.id]) { go(a, p, it, onDone) }
 
-    private fun pickDateTimeAt(a: Activity, onDone: () -> Unit, from: Long? = null, onPick: (Long) -> Unit) {
+    fun pickDateTimeAt(a: Activity, onDone: () -> Unit, from: Long? = null, onPick: (Long) -> Unit) {
         val now = Calendar.getInstance().apply { if (from != null) timeInMillis = from }
         var chosen = false
         val date = DatePickerDialog(a, { _, y, mo, d ->
