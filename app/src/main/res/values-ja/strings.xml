@@ -230,6 +230,7 @@
     <string name="duration_free_title">自動解除までの時間</string>
     <string name="duration_free_hint">分(例 90)または 時:分(例 1:30)</string>
     <string name="duration_free_bad">1分〜7日(10080分)で入力してください(例 90 / 1:30)。</string>
+    <string name="current_mark_hint">✓ = 現在の設定</string>
     <string name="recent_delete_hint">長押しで履歴から削除</string>
     <string name="recent_delete_confirm">履歴から削除: %1$s</string>
     <string name="start_free_title">オンにするまでの時間</string>

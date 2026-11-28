@@ -230,6 +230,7 @@
     <string name="duration_free_title">Time until auto release</string>
     <string name="duration_free_hint">minutes (e.g. 90) or h:mm (e.g. 1:30)</string>
     <string name="duration_free_bad">Enter 1 minute to 7 days (10080 minutes) (e.g. 90 / 1:30).</string>
+    <string name="current_mark_hint">✓ = current setting</string>
     <string name="recent_delete_hint">Long press: delete from history</string>
     <string name="recent_delete_confirm">Delete from history: %1$s</string>
     <string name="start_free_title">Time until turn-on</string>

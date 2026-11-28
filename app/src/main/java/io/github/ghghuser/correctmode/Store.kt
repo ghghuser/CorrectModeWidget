@@ -35,8 +35,8 @@ object Store {
     fun setReleaseFailures(ctx: Context, n: Int) { sp(ctx).edit().putInt("relFail", n).commit() }
 
     /**
-     * The lengths (minutes, newest first, at most [RECENT_MAX]) typed into "Enter freely"; shown at the top of that dialog.
-     * [key]: [RECENT_RELEASE] (auto release) or [RECENT_START] (turn on later), each with its own list.
+     * The lengths (minutes, newest first, at most [RECENT_MAX]) typed into "Enter freely"; shown in the time lists.
+     * One list shared by "turn on later" and "auto release" (both are a length in minutes).
      */
     fun recent(ctx: Context, key: String): List<Int> =
         (sp(ctx).getString(key, "") ?: "").split(',').mapNotNull { it.toIntOrNull() }
@@ -56,8 +56,7 @@ object Store {
         sp(ctx).edit().putString(key, list.take(RECENT_MAX).joinToString(",")).apply()
     }
 
-    const val RECENT_RELEASE = "recentDur"
-    const val RECENT_START = "recentStart"
+    const val RECENT = "recentDur"
     const val RECENT_MAX = 5
 
     /** Diagnostics: how long the last widget tap took inside the app (ms), see TapActivity. */
